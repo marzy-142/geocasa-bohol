@@ -1,0 +1,340 @@
+@import url("https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Crimson+Pro:ital,wght@0,200..900;1,200..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=DM+Serif+Display:ital,wght@0,400;1,400&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    * {
+        @apply border-neutral-200;
+    }
+
+    body {
+        @apply font-sans bg-white text-neutral-900 antialiased;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+        font-variation-settings: "opsz" 16;
+        font-optical-sizing: auto;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Enhanced Typography Scale */
+    h1 {
+        @apply font-serif text-neutral-900 text-4xl md:text-5xl lg:text-6xl font-normal leading-tight tracking-tight;
+        font-feature-settings: "ss01", "ss02", "kern";
+        font-variation-settings: "opsz" 48;
+        text-wrap: balance;
+    }
+
+    h2 {
+        @apply font-serif text-neutral-900 text-3xl md:text-4xl lg:text-5xl font-normal leading-tight tracking-tight;
+        font-feature-settings: "ss01", "ss02", "kern";
+        font-variation-settings: "opsz" 36;
+        text-wrap: balance;
+    }
+
+    h3 {
+        @apply font-serif text-neutral-900 text-2xl md:text-3xl lg:text-4xl font-normal leading-snug tracking-tight;
+        font-feature-settings: "ss01", "ss02", "kern";
+        font-variation-settings: "opsz" 32;
+        text-wrap: balance;
+    }
+
+    h4 {
+        @apply font-serif text-neutral-900 text-xl md:text-2xl lg:text-3xl font-normal leading-snug tracking-tight;
+        font-feature-settings: "ss01", "ss02", "kern";
+        font-variation-settings: "opsz" 28;
+        text-wrap: balance;
+    }
+
+    h5 {
+        @apply font-serif text-neutral-900 text-lg md:text-xl lg:text-2xl font-normal leading-snug tracking-tight;
+        font-feature-settings: "ss01", "ss02", "kern";
+        font-variation-settings: "opsz" 24;
+        text-wrap: balance;
+    }
+
+    h6 {
+        @apply font-serif text-neutral-900 text-base md:text-lg lg:text-xl font-normal leading-snug tracking-tight;
+        font-feature-settings: "ss01", "ss02", "kern";
+        font-variation-settings: "opsz" 20;
+        text-wrap: balance;
+    }
+
+    /* Enhanced Body Text */
+    p {
+        @apply text-neutral-700 leading-relaxed;
+        font-feature-settings: "kern", "liga", "clig", "calt";
+        font-variation-settings: "opsz" 16;
+        text-wrap: pretty;
+    }
+
+    /* Enhanced Lists */
+    ul,
+    ol {
+        @apply text-neutral-700 leading-relaxed;
+        font-feature-settings: "kern", "liga", "clig", "calt";
+        font-variation-settings: "opsz" 16;
+    }
+
+    /* Enhanced Links */
+    a {
+        font-feature-settings: "kern", "liga", "clig", "calt";
+        text-decoration-skip-ink: auto;
+    }
+
+    /* Enhanced Code */
+    code,
+    pre {
+        font-feature-settings: "kern", "liga", "clig", "calt", "zero";
+        font-variant-numeric: slashed-zero;
+    }
+
+    /* Enhanced Numbers */
+    .tabular-nums {
+        font-feature-settings: "kern", "tnum";
+        font-variant-numeric: tabular-nums;
+    }
+
+    .oldstyle-nums {
+        font-feature-settings: "kern", "onum";
+        font-variant-numeric: oldstyle-nums;
+    }
+}
+
+@layer components {
+    /* Enhanced Typography Utilities */
+    .text-display {
+        @apply font-serif text-5xl md:text-6xl lg:text-7xl font-normal leading-none tracking-tighter;
+        font-feature-settings: "ss01", "ss02", "kern";
+        font-variation-settings: "opsz" 72;
+        text-wrap: balance;
+    }
+
+    .text-headline {
+        @apply font-serif text-3xl md:text-4xl lg:text-5xl font-normal leading-tight tracking-tight;
+        font-feature-settings: "ss01", "ss02", "kern";
+        font-variation-settings: "opsz" 36;
+        text-wrap: balance;
+    }
+
+    .text-subheadline {
+        @apply font-sans text-xl md:text-2xl font-medium leading-snug tracking-tight;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01", "kern";
+        font-variation-settings: "opsz" 20;
+        text-wrap: balance;
+    }
+
+    .text-body-large {
+        @apply font-sans text-lg leading-relaxed;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern", "liga";
+        font-variation-settings: "opsz" 18;
+        text-wrap: pretty;
+    }
+
+    .text-body {
+        @apply font-sans text-base leading-relaxed;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern", "liga";
+        font-variation-settings: "opsz" 16;
+        text-wrap: pretty;
+    }
+
+    .text-body-small {
+        @apply font-sans text-sm leading-relaxed;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern", "liga";
+        font-variation-settings: "opsz" 14;
+        text-wrap: pretty;
+    }
+
+    .text-caption {
+        @apply font-sans text-xs leading-normal tracking-wide;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern";
+        font-variation-settings: "opsz" 12;
+    }
+
+    .text-overline {
+        @apply font-sans text-xs font-semibold uppercase tracking-wider;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern", "smcp";
+        font-variation-settings: "opsz" 12;
+        letter-spacing: 0.1em;
+    }
+
+    /* GeoCasa Bohol Button Styles with Enhanced Typography */
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-white bg-primary-500 rounded-xl shadow-soft hover:bg-primary-600 hover:shadow-soft-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern";
+        font-variation-settings: "opsz" 14;
+    }
+
+    .btn-primary-sm {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-white bg-primary-500 rounded-lg shadow-soft hover:bg-primary-600 hover:shadow-soft-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern";
+        font-variation-settings: "opsz" 12;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-primary-700 bg-primary-50 rounded-xl shadow-soft hover:bg-primary-100 hover:shadow-soft-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern";
+        font-variation-settings: "opsz" 14;
+    }
+
+    .btn-accent {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-white bg-accent-500 rounded-xl shadow-soft hover:bg-accent-600 hover:shadow-soft-md focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern";
+        font-variation-settings: "opsz" 14;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-neutral-700 bg-transparent rounded-xl hover:bg-neutral-50 hover:shadow-soft focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern";
+        font-variation-settings: "opsz" 14;
+    }
+
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-primary-600 bg-white border border-primary-200 rounded-xl shadow-soft hover:bg-primary-50 hover:border-primary-300 hover:shadow-soft-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern";
+        font-variation-settings: "opsz" 14;
+    }
+
+    /* Card Styles */
+    .card {
+        @apply bg-white rounded-2xl shadow-soft border border-neutral-100 transition-all duration-200 ease-in-out;
+    }
+
+    .card-hover {
+        @apply hover:shadow-soft-md hover:border-neutral-200;
+    }
+
+    .card-interactive {
+        @apply cursor-pointer hover:shadow-soft-lg hover:border-primary-200 hover:-translate-y-0.5;
+    }
+
+    /* Enhanced Input Styles */
+    .input-field {
+        @apply block w-full px-4 py-3 text-sm bg-neutral-50 border-0 rounded-xl placeholder-neutral-500 focus:bg-white focus:ring-2 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200 ease-in-out;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern", "liga";
+        font-variation-settings: "opsz" 14;
+    }
+
+    .input-error {
+        @apply bg-red-50 text-red-900 focus:ring-red-500;
+    }
+
+    /* Enhanced Sidebar Styles */
+    .sidebar-link {
+        @apply flex items-center gap-3 px-4 py-3 text-sm font-medium text-neutral-600 rounded-xl hover:text-primary-700 hover:bg-primary-50 transition-all duration-200 ease-in-out;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern";
+        font-variation-settings: "opsz" 14;
+    }
+
+    .sidebar-link.active {
+        @apply text-primary-700 bg-primary-50 border-r-2 border-primary-500;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+        @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+    }
+
+    .dashboard-card {
+        @apply card card-hover p-6;
+    }
+
+    /* Tropical Accents */
+    .tropical-gradient {
+        @apply bg-gradient-to-br from-primary-400 via-primary-500 to-accent-500;
+    }
+
+    .bohol-pattern {
+        background-image: radial-gradient(
+                circle at 25% 25%,
+                rgba(0, 119, 182, 0.1) 0%,
+                transparent 50%
+            ),
+            radial-gradient(
+                circle at 75% 75%,
+                rgba(0, 168, 107, 0.1) 0%,
+                transparent 50%
+            );
+    }
+
+    /* Enhanced Utility Classes */
+    .text-balance {
+        text-wrap: balance;
+    }
+
+    .text-pretty {
+        text-wrap: pretty;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+@layer utilities {
+    .text-shadow-sm {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .backdrop-blur-xs {
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
+    }
+
+    /* Enhanced Typography Utilities */
+    .font-feature-default {
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern", "liga",
+            "clig", "calt";
+    }
+
+    .font-feature-numeric {
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern", "tnum",
+            "zero";
+    }
+
+    .font-feature-small-caps {
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11", "kern", "smcp";
+    }
+
+    /* Responsive Font Variations */
+    @media (max-width: 640px) {
+        body {
+            font-variation-settings: "opsz" 14;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        body {
+            font-variation-settings: "opsz" 18;
+        }
+    }
+}
+
+@layer utilities {
+    .text-shadow-sm {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .backdrop-blur-xs {
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
+    }
+}
+
+@layer utilities {
+    .text-shadow-sm {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .backdrop-blur-xs {
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
+    }
+}
