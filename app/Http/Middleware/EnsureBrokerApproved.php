@@ -8,11 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureBrokerApproved
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
         if (!auth()->check()) {
@@ -21,8 +16,18 @@ class EnsureBrokerApproved
 
         $user = auth()->user();
 
-        if ($user->role === 'broker' && !$user->is_approved) {
-            return redirect()->route('broker.pending-approval');
+        // IMPROVED: Handle different broker states
+        if ($user->role === 'broker') {
+            if (!$user->is_approved) {
+                // Check application status for better UX
+                if ($user->application_status === 'rejected') {
+                    return redirect()->route('broker.rejected')
+                        ->with('error', 'Your broker application was rejected: ' . $user->rejection_reason);
+                }
+                
+                return redirect()->route('broker.pending-approval')
+                    ->with('info', 'Your broker application is still under review.');
+            }
         }
 
         return $next($request);

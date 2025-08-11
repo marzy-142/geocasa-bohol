@@ -396,15 +396,27 @@ const formatPropertyType = (type) => {
                             <!-- Property Features -->
                             <div class="flex items-center gap-4 mb-4">
                                 <div class="flex items-center gap-1">
-                                    <div class="w-2 h-2 bg-primary-500 rounded-full"></div>
+                                    <div
+                                        class="w-2 h-2 bg-primary-500 rounded-full"
+                                    ></div>
                                     <span class="text-xs text-neutral-600">
-                                        {{ property.has_electricity ? 'Power' : 'No Power' }}
+                                        {{
+                                            property.has_electricity
+                                                ? "Power"
+                                                : "No Power"
+                                        }}
                                     </span>
                                 </div>
                                 <div class="flex items-center gap-1">
-                                    <div class="w-2 h-2 bg-accent-500 rounded-full"></div>
+                                    <div
+                                        class="w-2 h-2 bg-accent-500 rounded-full"
+                                    ></div>
                                     <span class="text-xs text-neutral-600">
-                                        {{ property.has_water ? 'Water' : 'No Water' }}
+                                        {{
+                                            property.has_water
+                                                ? "Water"
+                                                : "No Water"
+                                        }}
                                     </span>
                                 </div>
                             </div>
@@ -419,7 +431,7 @@ const formatPropertyType = (type) => {
                                     :href="
                                         route(
                                             'public.properties.show',
-                                            property.id
+                                            property.slug
                                         )
                                     "
                                     class="btn-primary-sm"

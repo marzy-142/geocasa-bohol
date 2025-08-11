@@ -16,7 +16,7 @@ class BrokerApprovalController extends Controller
      */
     public function index()
     {
-        $pendingBrokers = User::pendingBrokers()
+        $pendingBrokers = User::pendingApplications()
             ->orderBy('created_at', 'desc')
             ->get();
 

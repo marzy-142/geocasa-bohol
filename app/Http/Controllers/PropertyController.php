@@ -13,8 +13,20 @@ class PropertyController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Property::with(['broker', 'client'])
-            ->when($request->search, function ($query, $search) {
+        // Add authorization check for admin access
+        if (auth()->user()->role === 'admin') {
+            // Admins can see all properties without restrictions
+            $query = Property::with(['broker', 'client']);
+        } else {
+            // Regular filtering for other users
+            $query = Property::with(['broker', 'client'])
+                ->when(auth()->user()->role === 'broker', function ($query) {
+                    $query->where('broker_id', auth()->id());
+                });
+        }
+
+        // Apply search and filter conditions
+        $query = $query->when($request->search, function ($query, $search) {
                 $query->where('title', 'like', "%{$search}%")
                       ->orWhere('address', 'like', "%{$search}%")
                       ->orWhere('municipality', 'like', "%{$search}%")
@@ -45,9 +57,6 @@ class PropertyController extends Controller
             ->when($request->utilities, function ($query) {
                 $query->where('electricity_available', true)
                       ->where('water_source', true);
-            })
-            ->when(auth()->user()->role === 'broker', function ($query) {
-                $query->where('broker_id', auth()->id());
             });
 
         $properties = $query->latest()->paginate(12);

@@ -12,7 +12,7 @@ const approveForm = useForm({
 });
 
 const rejectForm = useForm({
-    rejection_reason: "",
+    reason: "",
     admin_notes: "",
 });
 
@@ -587,7 +587,7 @@ const formatDate = (date) => {
                             Rejection Reason <span class="text-red-500">*</span>
                         </label>
                         <textarea
-                            v-model="rejectForm.rejection_reason"
+                            v-model="rejectForm.reason"
                             rows="3"
                             required
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
@@ -619,8 +619,7 @@ const formatDate = (date) => {
                         <button
                             @click="rejectBroker"
                             :disabled="
-                                rejectForm.processing ||
-                                !rejectForm.rejection_reason
+                                rejectForm.processing || !rejectForm.reason
                             "
                             class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
                         >

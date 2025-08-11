@@ -24,15 +24,9 @@ class SellerRequestController extends Controller
         $query = SellerRequest::with(['assignedBroker', 'reviewedBy', 'property']);
         
         // Role-based filtering
+        // Only allow brokers to see their assigned requests
         if ($user->role === 'broker') {
-            // Brokers see requests assigned to them or unassigned pending requests
-            $query->where(function ($q) use ($user) {
-                $q->where('assigned_broker_id', $user->id)
-                  ->orWhere(function ($subQ) {
-                      $subQ->whereNull('assigned_broker_id')
-                           ->where('status', 'pending');
-                  });
-            });
+            $query->where('assigned_broker_id', $user->id);
         }
         // Admins see all requests (no additional filtering needed)
         

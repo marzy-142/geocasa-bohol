@@ -88,4 +88,16 @@ class DashboardController extends Controller
             'recommendedProperties' => $recommendedProperties,
         ]);
     }
+    public function saveProperty(Request $request, Property $property)
+{
+    // Implement saved properties functionality
+}
+public function trackPropertyView(Request $request, Property $property)
+{
+    // Implement property view tracking
+}
+public function addFavoriteArea(Request $request)
+{
+    // Implement favorite areas functionality
+}
 }

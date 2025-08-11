@@ -144,7 +144,14 @@ class Property extends Model
     {
         return $this->images && count($this->images) > 0 
             ? asset('storage/' . $this->images[0])
-            : asset('images/land-placeholder.jpg');
+            : 'data:image/svg+xml;base64,' . base64_encode('
+                <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="400" height="300" fill="#f3f4f6"/>
+                    <text x="200" y="150" text-anchor="middle" fill="#9ca3af" font-family="Arial" font-size="16">
+                        No Image Available
+                    </text>
+                </svg>
+            ');
     }
 
     public function getGoogleMapsLinkAttribute()

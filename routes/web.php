@@ -19,31 +19,33 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/browse-properties', [PublicController::class, 'properties'])->name('public.properties');
 Route::get('/browse-properties/{property:slug}', [PublicController::class, 'showProperty'])->name('public.properties.show');
-Route::post('/browse-properties/{property:slug}/inquire', [PublicController::class, 'storeInquiry'])->name('public.inquiries.store');
+Route::post('/browse-properties/{property:slug}/inquire', [PublicController::class, 'storeInquiry'])
+    ->name('public.inquiries.store')
+    ->middleware('throttle:5,1'); // 5 requests per minute
 
-// Public seller request routes
+// Add the missing seller-requests.create route
 Route::get('/sell-property', [SellerRequestController::class, 'create'])->name('seller-requests.create');
-Route::post('/sell-property', [SellerRequestController::class, 'store'])->name('seller-requests.store');
+Route::post('/sell-property', [SellerRequestController::class, 'store'])
+    ->name('seller-requests.store')
+    ->middleware('throttle:3,1'); // 3 requests per minute
 Route::get('/sell-property/success', [SellerRequestController::class, 'success'])->name('seller-requests.success');
 
 Route::middleware('auth')->group(function () {
     // Dashboard route - redirect based on role
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        } elseif ($user->role === 'broker') {
-            // Check if broker is approved
-            if ($user->is_approved) {
-                return redirect()->route('broker.dashboard');
-            } else {
-                return redirect()->route('broker.pending-approval');
-            }
-        } else {
-            return redirect()->route('client.dashboard');
-        }
-    })->name('dashboard');
+       Route::get('/dashboard', function () {
+    $user = auth()->user();
+    
+    return match($user->role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'broker' => match($user->application_status) {
+            'rejected' => redirect()->route('broker.rejected'),
+            'approved' => redirect()->route('broker.dashboard'),
+            default => redirect()->route('broker.pending-approval')
+        },
+        'client' => redirect()->route('client.dashboard'),
+        default => abort(403, 'Invalid user role')
+    };
+})->name('dashboard')->middleware('auth');
 
     // Client routes
     Route::middleware('role:client')->prefix('client')->name('client.')->group(function () {
@@ -52,22 +54,29 @@ Route::middleware('auth')->group(function () {
 
     // Broker routes - COMPLETELY RESTRUCTURED
     Route::prefix('broker')->name('broker.')->group(function () {
-        // Pending approval route - NO role middleware to avoid conflicts
+    // Pending approval route - accessible to any authenticated broker
+    Route::middleware(['auth'])->group(function () {
         Route::get('/pending-approval', [DashboardController::class, 'pendingApproval'])
-            ->name('pending-approval')
-            ->middleware('auth'); // Only require authentication
+            ->name('pending-approval');
+        Route::get('/rejected', [DashboardController::class, 'rejected'])
+            ->name('rejected');
+    });
         
         // Dashboard and other broker routes - require role AND approval
-        Route::middleware(['role:broker', 'broker.approved'])->group(function () {
-            Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        });
+           Route::middleware(['auth', 'role:broker', 'broker.approved'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        // Add other broker-specific routes here
+    });
     });
 
     // Admin routes
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', function () {
-            return inertia('Admin/Dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+        
+        // Add admin properties routes
+        Route::resource('properties', PropertyController::class);
+        Route::post('properties/{property}/toggle-featured', [PropertyController::class, 'toggleFeatured'])
+            ->name('properties.toggle-featured');
         
         Route::get('/brokers', [BrokerApprovalController::class, 'index'])->name('brokers.index');
         Route::get('/brokers/{user}', [BrokerApprovalController::class, 'show'])->name('brokers.show');

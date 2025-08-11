@@ -36,7 +36,15 @@ class ClientPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, ['admin', 'broker']);
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        if ($user->role === 'broker') {
+            return $user->is_approved && $user->application_status === 'approved';
+        }
+        
+        return false;
     }
 
     /**
@@ -49,7 +57,9 @@ class ClientPolicy
         }
         
         if ($user->role === 'broker') {
-            return $client->broker_id === $user->id;
+            return $user->is_approved && 
+                   $user->application_status === 'approved' && 
+                   $client->broker_id === $user->id;
         }
         
         return false;

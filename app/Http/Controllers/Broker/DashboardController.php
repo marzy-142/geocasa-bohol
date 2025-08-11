@@ -19,7 +19,6 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Real statistics for the broker
         $stats = [
             'totalProperties' => $user->properties()->count(),
             'activeProperties' => $user->properties()->where('status', 'available')->count(),
@@ -31,23 +30,13 @@ class DashboardController extends Controller
             'totalCommission' => $user->transactions()->where('status', 'completed')->sum('commission_amount'),
         ];
 
-        // Recent activities
-        $recentProperties = $user->properties()->latest()->take(5)->get();
         $recentInquiries = Inquiry::whereHas('property', function($query) use ($user) {
             $query->where('broker_id', $user->id);
         })->with(['property', 'client'])->latest()->take(5)->get();
-        
-        $recentTransactions = $user->transactions()
-            ->with(['property', 'client'])
-            ->latest()
-            ->take(5)
-            ->get();
 
         return Inertia::render('Broker/ModernDashboard', [
             'stats' => $stats,
-            'recentProperties' => $recentProperties,
             'recentInquiries' => $recentInquiries,
-            'recentTransactions' => $recentTransactions,
         ]);
     }
 
@@ -58,4 +47,18 @@ class DashboardController extends Controller
     {
         return Inertia::render('Broker/PendingApproval');
     }
+        public function rejected()
+    {
+        $user = auth()->user();
+        
+        if ($user->role !== 'broker' || $user->application_status !== 'rejected') {
+            return redirect()->route('dashboard');
+        }
+        
+        return Inertia::render('Broker/Rejected', [
+            'rejection_reason' => $user->rejection_reason,
+            'reviewed_at' => $user->reviewed_at,
+        ]);
+    }
+    
 }

@@ -345,7 +345,7 @@ watch(
                                     :href="
                                         route(
                                             'public.properties.show',
-                                            property.id
+                                            property.slug
                                         )
                                     "
                                     class="btn-primary-sm flex items-center gap-2"

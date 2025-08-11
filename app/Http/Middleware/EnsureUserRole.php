@@ -8,11 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (!auth()->check()) {
@@ -26,9 +21,12 @@ class EnsureUserRole
             abort(403, 'Unauthorized access.');
         }
 
-        // For brokers, check if they are approved
+        // FIXED: Only check approval for broker routes that require approval
+        // Don't redirect if already on pending-approval route
         if ($user->role === 'broker' && !$user->is_approved) {
-            return redirect()->route('broker.pending-approval');
+            if (!$request->routeIs('broker.pending-approval')) {
+                return redirect()->route('broker.pending-approval');
+            }
         }
 
         return $next($request);

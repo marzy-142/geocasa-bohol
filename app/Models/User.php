@@ -71,7 +71,9 @@ class User extends Authenticatable
     // Scopes for admin dashboard
     public function scopePendingApplications($query)
     {
-        return $query->where('application_status', 'under_review');
+        return $query->where('role', 'broker')
+                    ->where('is_approved', false)
+                    ->where('application_status', 'under_review');
     }
 
     public function scopeRejectedApplications($query)
@@ -178,4 +180,25 @@ class User extends Authenticatable
     {
         return $this->transactions()->finalized()->sum('commission_amount');
     }
+    public function canAccessBrokerDashboard(): bool
+{
+    return $this->role === 'broker' && 
+           $this->is_approved && 
+           $this->application_status === 'approved';
+}
+
+public function getBrokerStatusMessageAttribute(): string
+{
+    if ($this->role !== 'broker') {
+        return '';
+    }
+    
+    return match($this->application_status) {
+        'pending' => 'Application submitted, awaiting review',
+        'under_review' => 'Application is being reviewed by our team',
+        'approved' => 'Application approved - welcome to GeoCasa Bohol!',
+        'rejected' => 'Application rejected: ' . $this->rejection_reason,
+        default => 'Unknown status'
+    };
+}
 }
