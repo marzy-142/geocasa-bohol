@@ -1,13 +1,16 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import { Link } from "@inertiajs/vue3";
+import Pagination from "@/Components/Pagination.vue";
 
 const props = defineProps({
     sellerRequests: Object,
     brokers: Array,
     filters: Object,
     canManage: Boolean,
+    canCreate: Boolean,
 });
 
 const searchForm = useForm({
@@ -64,414 +67,302 @@ const deleteRequest = (request) => {
 </script>
 
 <template>
-    <AppLayout>
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Header -->
-                <div
-                    class="bg-white overflow-hidden shadow-xl sm:rounded-lg mb-6"
-                >
-                    <div class="p-6 sm:px-20 bg-white border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h2
-                                    class="text-2xl font-semibold text-gray-900"
-                                >
-                                    Seller Requests
-                                </h2>
-                                <p class="mt-2 text-sm text-gray-600">
-                                    Manage property listing requests from
-                                    sellers
-                                </p>
-                            </div>
-                            <div class="text-sm text-gray-500">
-                                Total: {{ sellerRequests.total }} requests
-                            </div>
-                        </div>
+    <ModernDashboardLayout>
+        <div class="space-y-6">
+            <!-- Header Section -->
+            <div
+                class="bg-gradient-to-r from-orange-600 to-red-600 rounded-lg p-6 text-white"
+            >
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold">
+                            Seller Request Management
+                        </h1>
+                        <p class="text-orange-100 mt-2">
+                            Manage property seller requests in GeoCasa Bohol ({{
+                                sellerRequests.total || 0
+                            }})
+                        </p>
                     </div>
-                </div>
-
-                <!-- Filters -->
-                <div
-                    class="bg-white overflow-hidden shadow-xl sm:rounded-lg mb-6"
-                >
-                    <div class="p-6">
-                        <form
-                            @submit.prevent="search"
-                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
-                        >
-                            <!-- Search -->
-                            <div>
-                                <label
-                                    for="search"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Search</label
-                                >
-                                <input
-                                    v-model="searchForm.search"
-                                    type="text"
-                                    id="search"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    placeholder="Name, email, property..."
-                                />
-                            </div>
-
-                            <!-- Status Filter -->
-                            <div>
-                                <label
-                                    for="status"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Status</label
-                                >
-                                <select
-                                    v-model="searchForm.status"
-                                    id="status"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">All Statuses</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="under_review">
-                                        Under Review
-                                    </option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                    <option value="listed">Listed</option>
-                                </select>
-                            </div>
-
-                            <!-- Property Type Filter -->
-                            <div>
-                                <label
-                                    for="property_type"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Property Type</label
-                                >
-                                <select
-                                    v-model="searchForm.property_type"
-                                    id="property_type"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">All Types</option>
-                                    <option value="residential">
-                                        Residential
-                                    </option>
-                                    <option value="commercial">
-                                        Commercial
-                                    </option>
-                                    <option value="agricultural">
-                                        Agricultural
-                                    </option>
-                                    <option value="industrial">
-                                        Industrial
-                                    </option>
-                                    <option value="recreational">
-                                        Recreational
-                                    </option>
-                                </select>
-                            </div>
-
-                            <!-- Date From -->
-                            <div>
-                                <label
-                                    for="date_from"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >From Date</label
-                                >
-                                <input
-                                    v-model="searchForm.date_from"
-                                    type="date"
-                                    id="date_from"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                            </div>
-
-                            <!-- Date To -->
-                            <div>
-                                <label
-                                    for="date_to"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >To Date</label
-                                >
-                                <input
-                                    v-model="searchForm.date_to"
-                                    type="date"
-                                    id="date_to"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                            </div>
-
-                            <!-- Filter Buttons -->
-                            <div class="lg:col-span-5 flex items-end space-x-2">
-                                <button
-                                    type="submit"
-                                    :disabled="searchForm.processing"
-                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-                                >
-                                    <span v-if="searchForm.processing"
-                                        >Searching...</span
-                                    >
-                                    <span v-else>Search</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    @click="clearFilters"
-                                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Requests Table -->
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Seller & Property
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Details
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Status
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Assignment
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Date
-                                    </th>
-                                    <th
-                                        v-if="canManage"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr
-                                    v-for="request in sellerRequests.data"
-                                    :key="request.id"
-                                    class="hover:bg-gray-50"
-                                >
-                                    <!-- Seller & Property -->
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div>
-                                            <div
-                                                class="text-sm font-medium text-gray-900"
-                                            >
-                                                {{ request.seller_name }}
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                {{ request.seller_email }}
-                                            </div>
-                                            <div
-                                                class="text-sm font-medium text-gray-700 mt-1"
-                                            >
-                                                {{ request.property_title }}
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                {{ request.property_location }}
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <!-- Details -->
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div>
-                                            <div class="text-sm text-gray-900">
-                                                {{
-                                                    formatPrice(
-                                                        request.asking_price
-                                                    )
-                                                }}
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                {{ request.property_area }}
-                                                {{ request.area_unit }}
-                                            </div>
-                                            <div
-                                                class="text-sm text-gray-500 capitalize"
-                                            >
-                                                {{ request.property_type }}
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <!-- Status -->
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            :class="
-                                                getStatusColor(request.status)
-                                            "
-                                            class="inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize"
-                                        >
-                                            {{
-                                                request.status.replace("_", " ")
-                                            }}
-                                        </span>
-                                    </td>
-
-                                    <!-- Assignment -->
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div
-                                            v-if="request.assigned_broker"
-                                            class="text-sm text-gray-900"
-                                        >
-                                            {{ request.assigned_broker.name }}
-                                        </div>
-                                        <div
-                                            v-else
-                                            class="text-sm text-gray-500"
-                                        >
-                                            Unassigned
-                                        </div>
-                                        <div
-                                            v-if="request.reviewed_by"
-                                            class="text-sm text-gray-500"
-                                        >
-                                            Reviewed by
-                                            {{ request.reviewed_by.name }}
-                                        </div>
-                                    </td>
-
-                                    <!-- Date -->
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                                    >
-                                        <div>
-                                            {{ formatDate(request.created_at) }}
-                                        </div>
-                                        <div
-                                            v-if="request.reviewed_at"
-                                            class="text-xs"
-                                        >
-                                            Reviewed:
-                                            {{
-                                                formatDate(request.reviewed_at)
-                                            }}
-                                        </div>
-                                    </td>
-
-                                    <!-- Actions -->
-                                    <td
-                                        v-if="canManage"
-                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2"
-                                    >
-                                        <a
-                                            :href="
-                                                route(
-                                                    'seller-requests.show',
-                                                    request.id
-                                                )
-                                            "
-                                            class="text-indigo-600 hover:text-indigo-900"
-                                            >View</a
-                                        >
-                                        <a
-                                            :href="
-                                                route(
-                                                    'seller-requests.edit',
-                                                    request.id
-                                                )
-                                            "
-                                            class="text-blue-600 hover:text-blue-900"
-                                            >Edit</a
-                                        >
-                                        <button
-                                            v-if="
-                                                $page.props.auth.user.role ===
-                                                'admin'
-                                            "
-                                            @click="deleteRequest(request)"
-                                            class="text-red-600 hover:text-red-900"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <div
-                        v-if="sellerRequests.links"
-                        class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6"
+                    <Link
+                        v-if="canCreate"
+                        :href="route('seller-requests.create')"
+                        class="bg-white text-orange-600 hover:bg-orange-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
                     >
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1 flex justify-between sm:hidden">
-                                <a
-                                    v-if="sellerRequests.prev_page_url"
-                                    :href="sellerRequests.prev_page_url"
-                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                >
-                                    Previous
-                                </a>
-                                <a
-                                    v-if="sellerRequests.next_page_url"
-                                    :href="sellerRequests.next_page_url"
-                                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                >
-                                    Next
-                                </a>
-                            </div>
-                            <div
-                                class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+                        <span class="flex items-center">
+                            <svg
+                                class="w-5 h-5 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                             >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 4v16m8-8H4"
+                                ></path>
+                            </svg>
+                            New Seller Request
+                        </span>
+                    </Link>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    Search & Filter Seller Requests
+                </h3>
+
+                <!-- Primary Filters -->
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4"
+                >
+                    <input
+                        v-model="searchForm.search"
+                        type="text"
+                        placeholder="Search seller requests..."
+                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        @input="search"
+                    />
+                    <select
+                        v-model="searchForm.status"
+                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        @change="search"
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <select
+                        v-model="searchForm.property_type"
+                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        @change="search"
+                    >
+                        <option value="">All Property Types</option>
+                        <option value="residential">Residential</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="agricultural">Agricultural</option>
+                        <option value="beachfront">Beachfront</option>
+                    </select>
+                    <input
+                        v-model="searchForm.date_from"
+                        type="date"
+                        placeholder="Date From"
+                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        @change="search"
+                    />
+                </div>
+
+                <!-- Clear Filters -->
+                <div class="mt-4">
+                    <button
+                        @click="clearFilters"
+                        class="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                    >
+                        Clear all filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seller Requests Grid -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Seller Requests ({{ sellerRequests.total || 0 }})
+                    </h3>
+                </div>
+
+                <div
+                    v-if="sellerRequests.data.length > 0"
+                    class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+                >
+                    <div
+                        v-for="request in sellerRequests.data"
+                        :key="request.id"
+                        class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                    >
+                        <div class="p-6">
+                            <!-- Header -->
+                            <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <p class="text-sm text-gray-700">
-                                        Showing {{ sellerRequests.from }} to
-                                        {{ sellerRequests.to }} of
-                                        {{ sellerRequests.total }} results
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900"
+                                    >
+                                        {{ request.seller_name }}
+                                    </h3>
+                                    <p class="text-sm text-gray-500">
+                                        {{ request.seller_email }}
+                                    </p>
+                                    <span
+                                        :class="getStatusColor(request.status)"
+                                        class="inline-block px-2 py-1 text-xs font-medium rounded-full mt-1 capitalize"
+                                    >
+                                        {{ request.status.replace("_", " ") }}
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <p
+                                        class="text-lg font-bold text-orange-600"
+                                    >
+                                        {{ formatPrice(request.asking_price) }}
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        {{ request.property_area }}
+                                        {{ request.area_unit }}
                                     </p>
                                 </div>
-                                <div>
-                                    <nav
-                                        class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                            </div>
+
+                            <!-- Property Info -->
+                            <div class="space-y-2 mb-4">
+                                <div
+                                    class="flex items-center text-sm text-gray-600"
+                                >
+                                    <svg
+                                        class="w-4 h-4 mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
                                     >
-                                        <template
-                                            v-for="link in sellerRequests.links"
-                                            :key="link.label"
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                        ></path>
+                                    </svg>
+                                    <span class="font-medium">{{
+                                        request.property_title
+                                    }}</span>
+                                </div>
+                                <div
+                                    class="flex items-center text-sm text-gray-600"
+                                >
+                                    <svg
+                                        class="w-4 h-4 mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                        ></path>
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                        ></path>
+                                    </svg>
+                                    <span>{{ request.property_location }}</span>
+                                </div>
+                                <div
+                                    class="flex items-center text-sm text-gray-600"
+                                >
+                                    <svg
+                                        class="w-4 h-4 mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                                        ></path>
+                                    </svg>
+                                    <span class="capitalize">{{
+                                        request.property_type
+                                    }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Assignment Info -->
+                            <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                                <div class="text-sm">
+                                    <div
+                                        v-if="request.assigned_broker"
+                                        class="text-gray-900"
+                                    >
+                                        <span class="font-medium"
+                                            >Assigned to:</span
                                         >
-                                            <a
-                                                v-if="link.url"
-                                                :href="link.url"
-                                                :class="[
-                                                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                    link.active
-                                                        ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
-                                                ]"
-                                                v-html="link.label"
-                                            >
-                                            </a>
-                                            <span
-                                                v-else
-                                                :class="[
-                                                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                    'bg-white border-gray-300 text-gray-300 cursor-default',
-                                                ]"
-                                                v-html="link.label"
-                                            >
-                                            </span>
-                                        </template>
-                                    </nav>
+                                        {{ request.assigned_broker.name }}
+                                    </div>
+                                    <div v-else class="text-gray-500">
+                                        <span class="font-medium">Status:</span>
+                                        Unassigned
+                                    </div>
+                                    <div
+                                        v-if="request.reviewed_by"
+                                        class="text-gray-500 mt-1"
+                                    >
+                                        <span class="font-medium"
+                                            >Reviewed by:</span
+                                        >
+                                        {{ request.reviewed_by.name }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Timeline Info -->
+                            <div class="text-xs text-gray-500 mb-4">
+                                <p>
+                                    <span class="font-medium">Created:</span>
+                                    {{ formatDate(request.created_at) }}
+                                </p>
+                                <p v-if="request.reviewed_at">
+                                    <span class="font-medium">Reviewed:</span>
+                                    {{ formatDate(request.reviewed_at) }}
+                                </p>
+                            </div>
+
+                            <!-- Actions -->
+                            <div
+                                v-if="canManage"
+                                class="flex justify-between items-center"
+                            >
+                                <Link
+                                    :href="
+                                        route(
+                                            'seller-requests.show',
+                                            request.id
+                                        )
+                                    "
+                                    class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                >
+                                    View Details
+                                </Link>
+                                <div class="flex space-x-2">
+                                    <Link
+                                        :href="
+                                            route(
+                                                'seller-requests.edit',
+                                                request.id
+                                            )
+                                        "
+                                        class="text-gray-600 hover:text-gray-800 text-sm"
+                                    >
+                                        Edit
+                                    </Link>
+                                    <button
+                                        v-if="
+                                            $page.props.auth.user.role ===
+                                            'admin'
+                                        "
+                                        @click="deleteRequest(request)"
+                                        class="text-red-600 hover:text-red-800 text-sm"
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -479,35 +370,22 @@ const deleteRequest = (request) => {
                 </div>
 
                 <!-- Empty State -->
-                <div
-                    v-if="sellerRequests.data.length === 0"
-                    class="bg-white overflow-hidden shadow-xl sm:rounded-lg"
-                >
-                    <div class="p-6 text-center">
-                        <div class="text-gray-500">
-                            <svg
-                                class="mx-auto h-12 w-12 text-gray-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                />
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">
-                                No seller requests found
-                            </h3>
-                            <p class="mt-1 text-sm text-gray-500">
-                                No requests match your current filters.
-                            </p>
-                        </div>
-                    </div>
+                <div v-else class="text-center py-12">
+                    <div class="text-gray-400 text-6xl mb-4">📋</div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">
+                        No seller requests found
+                    </h3>
+                    <p class="text-gray-500">
+                        Try adjusting your search filters or create a new seller
+                        request.
+                    </p>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="sellerRequests.data.length > 0" class="mt-6">
+                    <Pagination :links="sellerRequests.links" />
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </ModernDashboardLayout>
 </template>

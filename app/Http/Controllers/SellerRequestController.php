@@ -8,6 +8,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Notifications\SellerRequestNotification;
 
@@ -24,29 +27,26 @@ class SellerRequestController extends Controller
         $query = SellerRequest::with(['assignedBroker', 'reviewedBy', 'property']);
         
         // Role-based filtering
-        // Only allow brokers to see their assigned requests
         if ($user->role === 'broker') {
             $query->where('assigned_broker_id', $user->id);
         }
-        // Admins see all requests (no additional filtering needed)
         
-        // Status filter
+        // Enhanced filtering
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
         
-        // Search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('seller_name', 'like', "%{$search}%")
                   ->orWhere('seller_email', 'like', "%{$search}%")
                   ->orWhere('property_title', 'like', "%{$search}%")
-                  ->orWhere('property_location', 'like', "%{$search}%");
+                  ->orWhere('property_location', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%");
             });
         }
         
-        // Date range filter
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
@@ -54,9 +54,15 @@ class SellerRequestController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
         
-        // Property type filter
         if ($request->filled('property_type')) {
             $query->where('property_type', $request->property_type);
+        }
+
+        if ($request->filled('price_min')) {
+            $query->where('asking_price', '>=', $request->price_min);
+        }
+        if ($request->filled('price_max')) {
+            $query->where('asking_price', '<=', $request->price_max);
         }
         
         $sellerRequests = $query->orderBy('created_at', 'desc')->paginate(15);
@@ -67,8 +73,9 @@ class SellerRequestController extends Controller
         return Inertia::render('SellerRequests/Index', [
             'sellerRequests' => $sellerRequests,
             'brokers' => $brokers,
-            'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'property_type']),
-            'canManage' => in_array($user->role, ['admin', 'broker'])
+            'filters' => $request->only(['search', 'status', 'date_from', 'date_to', 'property_type', 'price_min', 'price_max']),
+            'canManage' => in_array($user->role, ['admin', 'broker']),
+            'canCreate' => true
         ]);
     }
 
@@ -77,60 +84,117 @@ class SellerRequestController extends Controller
      */
     public function create()
     {
-        return Inertia::render('SellerRequests/Create');
+        // Get available features for the form
+        $availableFeatures = [
+            'Swimming Pool', 'Garden', 'Parking', 'Security', 'Furnished',
+            'Air Conditioning', 'Balcony', 'Terrace', 'Fireplace', 'Storage',
+            'Laundry Room', 'Gym', 'Playground', 'Near Beach', 'Mountain View',
+            'City View', 'Gated Community', 'Pet Friendly', 'Solar Panels'
+        ];
+
+        return Inertia::render('SellerRequests/Create', [
+            'availableFeatures' => $availableFeatures
+        ]);
     }
 
     /**
-     * Store a newly created seller request
+     * Store a newly created seller request with enhanced validation
      */
-    // In the store method, add notification sending:
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'seller_name' => 'required|string|max:255',
-            'seller_email' => 'required|email|max:255',
-            'seller_phone' => 'nullable|string|max:20',
-            'seller_address' => 'nullable|string',
-            'property_title' => 'required|string|max:255',
-            'property_description' => 'required|string',
-            'asking_price' => 'required|numeric|min:0',
-            'property_area' => 'required|numeric|min:0',
-            'area_unit' => 'required|in:sqm,acres,hectares',
-            'property_location' => 'required|string|max:255',
-            'property_address' => 'required|string',
-            'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
-            'zip_code' => 'nullable|string|max:10',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
-            'property_type' => 'required|in:residential,commercial,agricultural,industrial,recreational',
-            'features' => 'nullable|array'
-        ]);
+        try {
+            DB::beginTransaction();
 
-        // Handle image uploads
-        $imagePaths = [];
-        if ($request->hasFile('uploaded_images')) {
-            foreach ($request->file('uploaded_images') as $image) {
-                $path = $image->store('seller-requests', 'public');
-                $imagePaths[] = $path;
+            // Enhanced validation rules
+            $validated = $request->validate([
+                'seller_name' => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/',
+                'seller_email' => 'required|email:rfc,dns|max:255',
+                'seller_phone' => 'required|string|max:20|regex:/^[\+]?[0-9\s\-\(\)]+$/',
+                'seller_address' => 'nullable|string|max:500',
+                'property_title' => 'required|string|max:255|min:10',
+                'property_description' => 'required|string|min:50|max:2000',
+                'asking_price' => 'required|numeric|min:100000|max:1000000000',
+                'property_area' => 'required|numeric|min:1|max:100000',
+                'area_unit' => 'required|in:sqm,acres,hectares',
+                'property_location' => 'required|string|max:255',
+                'property_address' => 'required|string|max:500',
+                'city' => 'required|string|max:100',
+                'state' => 'required|string|max:100',
+                'zip_code' => 'nullable|string|max:10|regex:/^[0-9]{4,10}$/',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
+                'property_type' => 'required|in:residential,commercial,agricultural,industrial,recreational',
+                'features' => 'nullable|array|max:20',
+                'features.*' => 'string|max:100',
+                'uploaded_images' => 'nullable|array|max:10',
+                'uploaded_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120' // 5MB max
+            ], [
+                'seller_name.regex' => 'Name should only contain letters and spaces.',
+                'seller_email.email' => 'Please provide a valid email address.',
+                'seller_phone.required' => 'Phone number is required for contact purposes.',
+                'seller_phone.regex' => 'Please provide a valid phone number.',
+                'property_title.min' => 'Property title should be at least 10 characters.',
+                'property_description.min' => 'Property description should be at least 50 characters.',
+                'asking_price.min' => 'Minimum asking price should be ₱100,000.',
+                'uploaded_images.max' => 'You can upload maximum 10 images.',
+                'uploaded_images.*.max' => 'Each image should not exceed 5MB.'
+            ]);
+
+            // Handle image uploads with better error handling
+            $imagePaths = [];
+            if ($request->hasFile('uploaded_images')) {
+                foreach ($request->file('uploaded_images') as $index => $image) {
+                    try {
+                        // Generate unique filename
+                        $filename = time() . '_' . $index . '.' . $image->getClientOriginalExtension();
+                        $path = $image->storeAs('seller-requests', $filename, 'public');
+                        $imagePaths[] = $path;
+                    } catch (\Exception $e) {
+                        Log::error('Image upload failed: ' . $e->getMessage());
+                        throw new \Exception('Failed to upload image. Please try again.');
+                    }
+                }
             }
+            $validated['uploaded_images'] = $imagePaths;
+
+            // Create seller request
+            $sellerRequest = SellerRequest::create($validated);
+
+            // Send notifications asynchronously
+            $this->sendNotifications($sellerRequest);
+
+            DB::commit();
+
+            return redirect()->route('seller-requests.success', ['id' => $sellerRequest->id])
+                ->with('success', 'Your property listing request has been submitted successfully!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            throw $e;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Seller request creation failed: ' . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => 'Something went wrong. Please try again.']);
         }
-        $validated['uploaded_images'] = $imagePaths;
+    }
 
-        $sellerRequest = SellerRequest::create($validated);
-
-        // Send notification to all admins and approved brokers
-        $admins = User::where('role', 'admin')->get();
-        $brokers = User::where('role', 'broker')->where('is_approved', true)->get();
-        
-        $recipients = $admins->merge($brokers);
-        
-        foreach ($recipients as $recipient) {
-            $recipient->notify(new SellerRequestNotification($sellerRequest));
+    /**
+     * Send notifications to admins and brokers
+     */
+    private function sendNotifications(SellerRequest $sellerRequest)
+    {
+        try {
+            $admins = User::where('role', 'admin')->get();
+            $brokers = User::where('role', 'broker')->where('is_approved', true)->get();
+            
+            $recipients = $admins->merge($brokers);
+            
+            foreach ($recipients as $recipient) {
+                $recipient->notify(new SellerRequestNotification($sellerRequest));
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send notifications: ' . $e->getMessage());
         }
-
-        return redirect()->route('seller-requests.success')
-            ->with('success', 'Your property listing request has been submitted successfully!');
     }
 
     /**
@@ -255,25 +319,50 @@ class SellerRequestController extends Controller
     {
         $user = Auth::user();
         
+        if (!in_array($user->role, ['admin', 'broker'])) {
+            abort(403, 'Unauthorized to update status.');
+        }
+
         $validated = $request->validate([
             'status' => 'required|in:pending,under_review,approved,rejected,listed',
-            'admin_notes' => 'nullable|string',
-            'rejection_reason' => 'nullable|string|required_if:status,rejected',
+            'admin_notes' => 'nullable|string|max:1000',
+            'rejection_reason' => 'nullable|string|max:500|required_if:status,rejected',
             'assigned_broker_id' => 'nullable|exists:users,id'
         ]);
 
-        // Update status and related fields
-        $sellerRequest->update([
-            'status' => $validated['status'],
-            'admin_notes' => $validated['admin_notes'],
-            'rejection_reason' => $validated['rejection_reason'] ?? null,
-            'assigned_broker_id' => $validated['assigned_broker_id'] ?? $sellerRequest->assigned_broker_id,
-            'reviewed_by' => $user->id,
-            'reviewed_at' => now()
-        ]);
+        // Validate broker assignment
+        if ($validated['assigned_broker_id']) {
+            $broker = User::find($validated['assigned_broker_id']);
+            if (!$broker || $broker->role !== 'broker' || !$broker->is_approved) {
+                return back()->withErrors(['assigned_broker_id' => 'Invalid broker selection.']);
+            }
+        }
 
-        return redirect()->route('seller-requests.show', $sellerRequest)
-            ->with('message', 'Request status updated successfully.');
+        try {
+            DB::beginTransaction();
+
+            $sellerRequest->update([
+                'status' => $validated['status'],
+                'admin_notes' => $validated['admin_notes'],
+                'rejection_reason' => $validated['rejection_reason'] ?? null,
+                'assigned_broker_id' => $validated['assigned_broker_id'] ?? $sellerRequest->assigned_broker_id,
+                'reviewed_by' => $user->id,
+                'reviewed_at' => now()
+            ]);
+
+            // Send status update notification to seller
+            // TODO: Implement seller notification
+
+            DB::commit();
+
+            return redirect()->route('seller-requests.show', $sellerRequest)
+                ->with('message', 'Request status updated successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Status update failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to update status. Please try again.']);
+        }
     }
 
     /**
@@ -283,42 +372,58 @@ class SellerRequestController extends Controller
     {
         $user = Auth::user();
         
-        // Only allow conversion of approved requests
+        if ($user->role !== 'admin') {
+            abort(403, 'Only administrators can convert requests to properties.');
+        }
+
         if ($sellerRequest->status !== 'approved') {
             return back()->with('error', 'Only approved requests can be converted to property listings.');
         }
 
-        // Create property from seller request
-        $property = Property::create([
-            'title' => $sellerRequest->property_title,
-            'description' => $sellerRequest->property_description,
-            'type' => $sellerRequest->property_type,
-            'status' => 'available',
-            'price' => $sellerRequest->asking_price,
-            'area' => $sellerRequest->property_area,
-            'area_unit' => $sellerRequest->area_unit,
-            'location' => $sellerRequest->property_location,
-            'address' => $sellerRequest->property_address,
-            'city' => $sellerRequest->city,
-            'state' => $sellerRequest->state,
-            'zip_code' => $sellerRequest->zip_code,
-            'latitude' => $sellerRequest->latitude,
-            'longitude' => $sellerRequest->longitude,
-            'features' => $sellerRequest->features,
-            'images' => $sellerRequest->uploaded_images,
-            'broker_id' => $sellerRequest->assigned_broker_id ?? $user->id,
-            'is_featured' => false
-        ]);
+        if ($sellerRequest->property_id) {
+            return back()->with('error', 'This request has already been converted to a property listing.');
+        }
 
-        // Update seller request
-        $sellerRequest->update([
-            'status' => 'listed',
-            'property_id' => $property->id,
-            'listed_at' => now()
-        ]);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('properties.show', $property)
-            ->with('message', 'Seller request has been successfully converted to a property listing.');
+            $property = Property::create([
+                'title' => $sellerRequest->property_title,
+                'description' => $sellerRequest->property_description,
+                'type' => $sellerRequest->property_type,
+                'status' => 'available',
+                'price' => $sellerRequest->asking_price,
+                'area' => $sellerRequest->property_area,
+                'area_unit' => $sellerRequest->area_unit,
+                'location' => $sellerRequest->property_location,
+                'address' => $sellerRequest->property_address,
+                'city' => $sellerRequest->city,
+                'state' => $sellerRequest->state,
+                'zip_code' => $sellerRequest->zip_code,
+                'latitude' => $sellerRequest->latitude,
+                'longitude' => $sellerRequest->longitude,
+                'features' => $sellerRequest->features,
+                'images' => $sellerRequest->uploaded_images,
+                'broker_id' => $sellerRequest->assigned_broker_id ?? $user->id,
+                'is_featured' => false
+            ]);
+
+            $sellerRequest->update([
+                'status' => 'listed',
+                'property_id' => $property->id,
+                'listed_at' => now()
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('properties.show', $property)
+                ->with('message', 'Seller request has been successfully converted to a property listing.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Property conversion failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to convert to property. Please try again.']);
+        }
     }
 
     /**
@@ -333,14 +438,16 @@ class SellerRequestController extends Controller
             
             if ($sellerRequest) {
                 return Inertia::render('SellerRequests/Success', [
-                    'sellerRequest' => $sellerRequest
+                    'sellerRequest' => $sellerRequest,
+                    'estimatedResponseTime' => '2-3 business days'
                 ]);
             }
         }
         
         // If no ID provided or request not found, show generic success
         return Inertia::render('SellerRequests/Success', [
-            'sellerRequest' => null
+            'sellerRequest' => null,
+            'estimatedResponseTime' => '2-3 business days'
         ]);
     }
 }

@@ -1,18 +1,28 @@
 <script setup>
-import ModernDashboardLayout from '@/Layouts/ModernDashboardLayout.vue';
-import DashboardCard from '@/Components/DashboardCard.vue';
-import ModernTable from '@/Components/ModernTable.vue';
-import ModernButton from '@/Components/ModernButton.vue';
-import { Head } from '@inertiajs/vue3';
-import { 
-    BuildingOfficeIcon, 
-    UserGroupIcon, 
+import { Head } from "@inertiajs/vue3";
+import { computed } from "vue";
+import { usePage } from "@inertiajs/vue3";
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import DashboardCard from "@/Components/DashboardCard.vue";
+import ModernTable from "@/Components/ModernTable.vue";
+import ModernButton from "@/Components/ModernButton.vue";
+import {
+    BuildingOfficeIcon,
+    UserGroupIcon,
     DocumentTextIcon,
     CurrencyDollarIcon,
     ChartBarIcon,
+    PlusIcon,
     EyeIcon,
-    PlusIcon
-} from '@heroicons/vue/24/outline';
+} from "@heroicons/vue/24/outline";
+
+const page = usePage();
+
+// Check if current user can create properties (only brokers, not admins)
+const canCreateProperty = computed(() => {
+    const user = page.props.auth.user;
+    return user.role === "broker" && user.is_approved;
+});
 
 // Mock data - replace with real props
 const stats = {
@@ -21,7 +31,7 @@ const stats = {
     totalClients: 24,
     completedTransactions: 15,
     totalCommission: 125000,
-    monthlyGrowth: 12.5
+    monthlyGrowth: 12.5,
 };
 
 const recentInquiries = [
@@ -31,7 +41,7 @@ const recentInquiries = [
         client: "John Doe",
         date: "2024-01-15",
         status: "pending",
-        amount: "₱2,500,000"
+        amount: "₱2,500,000",
     },
     {
         id: 2,
@@ -39,7 +49,7 @@ const recentInquiries = [
         client: "Jane Smith",
         date: "2024-01-14",
         status: "responded",
-        amount: "₱5,200,000"
+        amount: "₱5,200,000",
     },
     {
         id: 3,
@@ -47,24 +57,24 @@ const recentInquiries = [
         client: "Mike Johnson",
         date: "2024-01-13",
         status: "pending",
-        amount: "₱1,800,000"
-    }
+        amount: "₱1,800,000",
+    },
 ];
 
 const tableColumns = [
-    { key: 'property', label: 'Property', sortable: true },
-    { key: 'client', label: 'Client', sortable: true },
-    { key: 'amount', label: 'Amount', sortable: true },
-    { key: 'date', label: 'Date', sortable: true },
-    { key: 'status', label: 'Status', sortable: false },
-    { key: 'actions', label: 'Actions', sortable: false }
+    { key: "property", label: "Property", sortable: true },
+    { key: "client", label: "Client", sortable: true },
+    { key: "amount", label: "Amount", sortable: true },
+    { key: "date", label: "Date", sortable: true },
+    { key: "status", label: "Status", sortable: false },
+    { key: "actions", label: "Actions", sortable: false },
 ];
 
 const getStatusColor = (status) => {
     const colors = {
-        pending: 'bg-yellow-100 text-yellow-800',
-        responded: 'bg-green-100 text-green-800',
-        closed: 'bg-gray-100 text-gray-800'
+        pending: "bg-yellow-100 text-yellow-800",
+        responded: "bg-green-100 text-green-800",
+        closed: "bg-gray-100 text-gray-800",
     };
     return colors[status] || colors.pending;
 };
@@ -72,17 +82,21 @@ const getStatusColor = (status) => {
 
 <template>
     <Head title="Broker Dashboard" />
-    
+
     <ModernDashboardLayout>
         <!-- Page Header -->
         <div class="mb-8">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-                    <p class="text-gray-600 mt-1">Welcome back! Here's what's happening with your properties.</p>
+                    <p class="text-gray-600 mt-1">
+                        Welcome back! Here's what's happening with your
+                        properties.
+                    </p>
                 </div>
-                <ModernButton 
-                    variant="primary" 
+                <ModernButton
+                    v-if="canCreateProperty"
+                    variant="primary"
                     :icon="PlusIcon"
                     @click="$inertia.visit('/broker/properties/create')"
                 >
@@ -101,7 +115,7 @@ const getStatusColor = (status) => {
                 color="blue"
                 :trend="{ direction: 'up', value: '+2', label: 'this month' }"
             />
-            
+
             <DashboardCard
                 title="Active Inquiries"
                 :value="stats.activeInquiries"
@@ -110,7 +124,7 @@ const getStatusColor = (status) => {
                 color="orange"
                 :trend="{ direction: 'up', value: '+5', label: 'this week' }"
             />
-            
+
             <DashboardCard
                 title="Total Clients"
                 :value="stats.totalClients"
@@ -119,30 +133,46 @@ const getStatusColor = (status) => {
                 color="green"
                 :trend="{ direction: 'up', value: '+3', label: 'this month' }"
             />
-            
+
             <DashboardCard
                 title="Commission Earned"
                 :value="`₱${stats.totalCommission.toLocaleString()}`"
                 subtitle="Total earnings"
                 :icon="CurrencyDollarIcon"
                 color="purple"
-                :trend="{ direction: 'up', value: `+${stats.monthlyGrowth}%`, label: 'vs last month' }"
+                :trend="{
+                    direction: 'up',
+                    value: `+${stats.monthlyGrowth}%`,
+                    label: 'vs last month',
+                }"
             />
         </div>
 
         <!-- Quick Actions -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
+            <div
+                class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200"
+            >
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center"
+                    >
                         <BuildingOfficeIcon class="w-6 h-6 text-white" />
                     </div>
                     <div class="flex-1">
-                        <h3 class="font-semibold text-blue-900">Manage Properties</h3>
-                        <p class="text-sm text-blue-700">Add, edit, or view your listings</p>
+                        <h3 class="font-semibold text-blue-900">
+                            Manage Properties
+                        </h3>
+                        <p class="text-sm text-blue-700">
+                            {{
+                                canCreateProperty
+                                    ? "Add, edit, or view your listings"
+                                    : "View and manage property listings"
+                            }}
+                        </p>
                     </div>
-                    <ModernButton 
-                        variant="outline" 
+                    <ModernButton
+                        variant="outline"
                         size="sm"
                         @click="$inertia.visit('/broker/properties')"
                     >
@@ -151,17 +181,25 @@ const getStatusColor = (status) => {
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200">
+            <div
+                class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200"
+            >
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center"
+                    >
                         <UserGroupIcon class="w-6 h-6 text-white" />
                     </div>
                     <div class="flex-1">
-                        <h3 class="font-semibold text-green-900">Client Management</h3>
-                        <p class="text-sm text-green-700">Connect with your clients</p>
+                        <h3 class="font-semibold text-green-900">
+                            Client Management
+                        </h3>
+                        <p class="text-sm text-green-700">
+                            Connect with your clients
+                        </p>
                     </div>
-                    <ModernButton 
-                        variant="outline" 
+                    <ModernButton
+                        variant="outline"
                         size="sm"
                         @click="$inertia.visit('/broker/clients')"
                     >
@@ -170,17 +208,25 @@ const getStatusColor = (status) => {
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200">
+            <div
+                class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200"
+            >
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
+                    <div
+                        class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center"
+                    >
                         <ChartBarIcon class="w-6 h-6 text-white" />
                     </div>
                     <div class="flex-1">
-                        <h3 class="font-semibold text-purple-900">Performance</h3>
-                        <p class="text-sm text-purple-700">Track your success metrics</p>
+                        <h3 class="font-semibold text-purple-900">
+                            Performance
+                        </h3>
+                        <p class="text-sm text-purple-700">
+                            Track your success metrics
+                        </p>
                     </div>
-                    <ModernButton 
-                        variant="outline" 
+                    <ModernButton
+                        variant="outline"
                         size="sm"
                         @click="$inertia.visit('/leaderboard')"
                     >
@@ -194,11 +240,15 @@ const getStatusColor = (status) => {
         <div class="mb-8">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900">Recent Inquiries</h2>
-                    <p class="text-sm text-gray-600">Latest property inquiries from potential clients</p>
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        Recent Inquiries
+                    </h2>
+                    <p class="text-sm text-gray-600">
+                        Latest property inquiries from potential clients
+                    </p>
                 </div>
-                <ModernButton 
-                    variant="secondary" 
+                <ModernButton
+                    variant="secondary"
                     size="sm"
                     @click="$inertia.visit('/inquiries')"
                 >
@@ -206,17 +256,16 @@ const getStatusColor = (status) => {
                 </ModernButton>
             </div>
 
-            <ModernTable
-                :columns="tableColumns"
-                :data="recentInquiries"
-            >
+            <ModernTable :columns="tableColumns" :data="recentInquiries">
                 <template #cell-property="{ value }">
                     <div class="font-medium text-gray-900">{{ value }}</div>
                 </template>
 
                 <template #cell-client="{ value }">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                        <div
+                            class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
+                        >
                             <span class="text-xs font-medium text-gray-600">
                                 {{ value.charAt(0) }}
                             </span>
@@ -234,10 +283,10 @@ const getStatusColor = (status) => {
                 </template>
 
                 <template #cell-status="{ value }">
-                    <span 
+                    <span
                         :class="[
                             'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize',
-                            getStatusColor(value)
+                            getStatusColor(value),
                         ]"
                     >
                         {{ value }}
@@ -246,8 +295,8 @@ const getStatusColor = (status) => {
 
                 <template #cell-actions="{ item }">
                     <div class="flex items-center gap-2">
-                        <ModernButton 
-                            variant="outline" 
+                        <ModernButton
+                            variant="outline"
                             size="sm"
                             :icon="EyeIcon"
                             @click="$inertia.visit(`/inquiries/${item.id}`)"

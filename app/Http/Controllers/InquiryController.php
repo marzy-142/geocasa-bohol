@@ -66,6 +66,7 @@ class InquiryController extends Controller
             'properties' => $properties,
             'filters' => $request->only(['search', 'status', 'inquiry_type', 'property_id', 'date_from', 'date_to']),
             'can' => [
+                'create' => false, // Inquiries are created by clients through public interface
                 'respond' => $user->role === 'admin' || $user->role === 'broker',
                 'delete' => $user->role === 'admin',
             ]
@@ -74,64 +75,22 @@ class InquiryController extends Controller
 
     /**
      * Show the form for creating a new inquiry
+     * Note: This is disabled - inquiries should be created by clients through public interface
      */
     public function create()
     {
-        $user = Auth::user();
-        
-        if (!in_array($user->role, ['admin', 'broker'])) {
-            abort(403);
-        }
-        
-        // Get properties for selection
-        $properties = $user->role === 'admin' 
-            ? Property::with('broker')->get()
-            : Property::where('broker_id', $user->id)->get();
-            
-        // Get clients for selection
-        $clients = $user->role === 'admin'
-            ? Client::all()
-            : Client::where('broker_id', $user->id)->get();
-        
-        return Inertia::render('Inquiries/Create', [
-            'properties' => $properties,
-            'clients' => $clients,
-        ]);
+        // Inquiries should only be created by clients through the public interface
+        abort(403, 'Inquiries are created by clients through the public property pages.');
     }
 
     /**
      * Store a newly created inquiry
+     * Note: This is disabled - inquiries should be created by clients through public interface
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        
-        if (!in_array($user->role, ['admin', 'broker'])) {
-            abort(403);
-        }
-        
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'message' => 'required|string',
-            'inquiry_type' => 'required|in:general,viewing,purchase,information',
-            'property_id' => 'required|exists:properties,id',
-            'client_id' => 'nullable|exists:clients,id',
-        ]);
-        
-        // Verify property access for brokers
-        if ($user->role === 'broker') {
-            $property = Property::findOrFail($validated['property_id']);
-            if ($property->broker_id !== $user->id) {
-                abort(403);
-            }
-        }
-        
-        $inquiry = Inquiry::create($validated);
-        
-        return redirect()->route('inquiries.show', $inquiry)
-            ->with('success', 'Inquiry created successfully.');
+        // Inquiries should only be created by clients through the public interface
+        abort(403, 'Inquiries are created by clients through the public property pages.');
     }
 
     /**
@@ -273,22 +232,24 @@ class InquiryController extends Controller
             }
         }
         
+        if (!in_array($user->role, ['admin', 'broker'])) {
+            abort(403);
+        }
+        
         $validated = $request->validate([
             'broker_response' => 'required|string',
-            'status' => 'required|in:contacted,scheduled,completed,closed',
+            'status' => 'required|in:new,contacted,scheduled,completed,closed',
             'scheduled_at' => 'nullable|date',
-            'broker_notes' => 'nullable|string',
         ]);
         
         $validated['responded_at'] = now();
         
-        if ($validated['status'] === 'contacted' && $inquiry->status === 'new') {
+        if ($validated['status'] === 'contacted' && $inquiry->status !== 'contacted') {
             $validated['contacted_at'] = now();
         }
         
         $inquiry->update($validated);
         
-        return redirect()->route('inquiries.show', $inquiry)
-            ->with('success', 'Response sent successfully.');
+        return back()->with('success', 'Response sent successfully.');
     }
 }

@@ -436,6 +436,8 @@ const navigationItems = computed(() => {
                                 class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400"
                             />
                             <input
+                                id="global-search"
+                                name="search"
                                 type="text"
                                 placeholder="Search properties, clients, or transactions..."
                                 class="w-full pl-12 pr-4 py-3 bg-neutral-50 border-0 rounded-2xl text-sm placeholder-neutral-500 focus:bg-white focus:ring-2 focus:ring-primary-500 transition-all duration-200"

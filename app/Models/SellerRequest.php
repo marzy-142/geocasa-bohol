@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SellerRequest extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'seller_name',
@@ -50,6 +51,8 @@ class SellerRequest extends Model
         'listed_at' => 'datetime',
     ];
 
+    protected $dates = ['deleted_at'];
+
     // Relationships
     public function assignedBroker()
     {
@@ -87,10 +90,21 @@ class SellerRequest extends Model
         return $query->where('assigned_broker_id', $brokerId);
     }
 
+    public function scopeByPriceRange($query, $min = null, $max = null)
+    {
+        if ($min) {
+            $query->where('asking_price', '>=', $min);
+        }
+        if ($max) {
+            $query->where('asking_price', '<=', $max);
+        }
+        return $query;
+    }
+
     // Accessors
     public function getFormattedAskingPriceAttribute()
     {
-        return '$' . number_format($this->asking_price, 0);
+        return '₱' . number_format($this->asking_price, 0);
     }
 
     public function getFormattedAreaAttribute()
@@ -101,6 +115,18 @@ class SellerRequest extends Model
     public function getStatusLabelAttribute()
     {
         return ucwords(str_replace('_', ' ', $this->status));
+    }
+
+    public function getStatusColorAttribute()
+    {
+        $colors = [
+            'pending' => 'yellow',
+            'under_review' => 'blue',
+            'approved' => 'green',
+            'rejected' => 'red',
+            'listed' => 'emerald'
+        ];
+        return $colors[$this->status] ?? 'gray';
     }
 
     public function getIsPendingAttribute()
@@ -116,5 +142,45 @@ class SellerRequest extends Model
     public function getIsListedAttribute()
     {
         return $this->status === 'listed';
+    }
+
+    public function getCanBeEditedAttribute()
+    {
+        return in_array($this->status, ['pending', 'under_review']);
+    }
+
+    public function getCanBeConvertedAttribute()
+    {
+        return $this->status === 'approved' && !$this->property_id;
+    }
+
+    // Mutators
+    public function setSellerNameAttribute($value)
+    {
+        $this->attributes['seller_name'] = ucwords(strtolower(trim($value)));
+    }
+
+    public function setSellerEmailAttribute($value)
+    {
+        $this->attributes['seller_email'] = strtolower(trim($value));
+    }
+
+    public function setPropertyTitleAttribute($value)
+    {
+        $this->attributes['property_title'] = ucwords(strtolower(trim($value)));
+    }
+
+    // Helper methods
+    public function getDaysOldAttribute()
+    {
+        return $this->created_at->diffInDays(now());
+    }
+
+    public function getResponseTimeAttribute()
+    {
+        if ($this->reviewed_at) {
+            return $this->created_at->diffInHours($this->reviewed_at);
+        }
+        return null;
     }
 }

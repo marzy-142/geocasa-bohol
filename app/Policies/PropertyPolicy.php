@@ -19,7 +19,8 @@ class PropertyPolicy
 
     public function create(User $user): bool
     {
-        return in_array($user->role, ['admin', 'broker']) && $user->is_approved;
+        // Only brokers can create properties, not admins
+        return $user->role === 'broker' && $user->is_approved;
     }
 
     public function update(User $user, Property $property): bool

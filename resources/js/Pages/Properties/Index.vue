@@ -2,7 +2,9 @@
     <ModernDashboardLayout>
         <div class="space-y-6">
             <!-- Header Section -->
-            <div class="bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg p-6 text-white">
+            <div
+                class="bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg p-6 text-white"
+            >
                 <div class="flex justify-between items-center">
                     <div>
                         <h1 class="text-3xl font-bold">Property Management</h1>
@@ -16,8 +18,18 @@
                         class="bg-white text-blue-600 hover:bg-blue-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
                     >
                         <span class="flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            <svg
+                                class="w-5 h-5 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 4v16m8-8H4"
+                                ></path>
                             </svg>
                             Add Property
                         </span>
@@ -27,10 +39,14 @@
 
             <!-- Filters Section -->
             <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Search & Filter Properties</h3>
-                
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    Search & Filter Properties
+                </h3>
+
                 <!-- Primary Filters -->
-                <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
+                <div
+                    class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4"
+                >
                     <input
                         v-model="filters.search"
                         type="text"
@@ -44,11 +60,7 @@
                         @change="filterProperties"
                     >
                         <option value="">All Types</option>
-                        <option
-                            v-for="type in types"
-                            :key="type"
-                            :value="type"
-                        >
+                        <option v-for="type in types" :key="type" :value="type">
                             {{ formatType(type) }}
                         </option>
                     </select>
@@ -112,14 +124,18 @@
                         class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @input="filterProperties"
                     />
-                    <label class="flex items-center space-x-2 bg-gray-50 rounded-lg px-4 py-2">
+                    <label
+                        class="flex items-center space-x-2 bg-gray-50 rounded-lg px-4 py-2"
+                    >
                         <input
                             v-model="filters.utilities"
                             type="checkbox"
                             class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             @change="filterProperties"
                         />
-                        <span class="text-sm text-gray-700">With Utilities</span>
+                        <span class="text-sm text-gray-700"
+                            >With Utilities</span
+                        >
                     </label>
                 </div>
             </div>
@@ -132,7 +148,9 @@
                     </h3>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
                     <div
                         v-for="property in properties.data"
                         :key="property.id"
@@ -164,13 +182,32 @@
                             </div>
                         </div>
                         <div class="p-5">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                            <h3
+                                class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2"
+                            >
                                 {{ property.title }}
                             </h3>
-                            <p class="text-gray-600 text-sm mb-3 flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <p
+                                class="text-gray-600 text-sm mb-3 flex items-center"
+                            >
+                                <svg
+                                    class="w-4 h-4 mr-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                    ></path>
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                    ></path>
                                 </svg>
                                 {{ property.municipality }}, Bohol
                             </p>
@@ -182,16 +219,38 @@
                                     {{ property.formatted_price_per_sqm }}/sqm
                                 </p>
                             </div>
-                            <div class="flex justify-between text-sm text-gray-500 mb-4">
+                            <div
+                                class="flex justify-between text-sm text-gray-500 mb-4"
+                            >
                                 <span class="flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                                    <svg
+                                        class="w-4 h-4 mr-1"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                                        ></path>
                                     </svg>
                                     {{ property.formatted_area }}
                                 </span>
                                 <span class="flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    <svg
+                                        class="w-4 h-4 mr-1"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                        ></path>
                                     </svg>
                                     {{ formatType(property.type) }}
                                 </span>
@@ -227,7 +286,9 @@
 
                             <div class="flex justify-between items-center">
                                 <Link
-                                    :href="route('properties.show', property.slug)"
+                                    :href="
+                                        route('properties.show', property.slug)
+                                    "
                                     class="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200"
                                 >
                                     View Details →
@@ -237,7 +298,12 @@
                                     class="flex space-x-3"
                                 >
                                     <Link
-                                        :href="route('properties.edit', property.slug)"
+                                        :href="
+                                            route(
+                                                'properties.edit',
+                                                property.slug
+                                            )
+                                        "
                                         class="text-green-600 hover:text-green-800 text-sm font-medium transition-colors duration-200"
                                     >
                                         Edit
@@ -271,8 +337,18 @@
                         :href="route('properties.create')"
                         class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
                     >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        <svg
+                            class="w-5 h-5 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 4v16m8-8H4"
+                            ></path>
                         </svg>
                         Add Your First Property
                     </Link>
@@ -293,11 +369,16 @@
             </div>
 
             <!-- Bohol Inspiration Section -->
-            <div class="bg-gradient-to-r from-green-400 to-blue-500 rounded-lg p-6 text-white">
+            <div
+                class="bg-gradient-to-r from-green-400 to-blue-500 rounded-lg p-6 text-white"
+            >
                 <div class="text-center">
-                    <h3 class="text-2xl font-bold mb-2">🏝️ Discover Bohol's Beauty</h3>
+                    <h3 class="text-2xl font-bold mb-2">
+                        🏝️ Discover Bohol's Beauty
+                    </h3>
                     <p class="text-green-100">
-                        From pristine beaches to rolling hills, find your perfect piece of paradise in Bohol
+                        From pristine beaches to rolling hills, find your
+                        perfect piece of paradise in Bohol
                     </p>
                 </div>
             </div>
@@ -325,7 +406,8 @@ const filters = ref({ ...props.filters });
 
 const canCreateProperty = computed(() => {
     const user = page.props.auth.user;
-    return ["admin", "broker"].includes(user.role) && user.is_approved;
+    // Only brokers can create properties, not admins
+    return user.role === "broker" && user.is_approved;
 });
 
 const canEditProperty = (property) => {

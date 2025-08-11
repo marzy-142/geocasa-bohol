@@ -62,52 +62,63 @@ const formatPropertyType = (type) => {
 
         <!-- Hero Section -->
         <section
-            class="relative min-h-screen flex items-center justify-center overflow-hidden bohol-pattern"
+            class="relative min-h-screen flex items-center justify-center overflow-hidden"
         >
+            <!-- Hero Background Image -->
+            <div class="absolute inset-0">
+                <img
+                    src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2532&q=80"
+                    alt="Prime land development and property lots in Bohol"
+                    class="w-full h-full object-cover"
+                />
+                <div
+                    class="absolute inset-0 bg-gradient-to-br from-primary-900/70 via-primary-800/50 to-accent-900/70"
+                ></div>
+            </div>
+
             <!-- Background Elements -->
             <div
-                class="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-accent-50"
+                class="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"
             ></div>
             <div
-                class="absolute top-20 left-10 w-72 h-72 bg-primary-200/30 rounded-full blur-3xl"
-            ></div>
-            <div
-                class="absolute bottom-20 right-10 w-96 h-96 bg-accent-200/30 rounded-full blur-3xl"
+                class="absolute bottom-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"
             ></div>
 
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div
+                class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10"
+            >
                 <div class="text-center animate-fade-in">
                     <!-- Badge -->
                     <div
-                        class="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-primary-200 rounded-full px-6 py-3 mb-8 shadow-soft"
+                        class="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 mb-8 shadow-soft"
                     >
                         <div
                             class="w-2 h-2 bg-accent-500 rounded-full animate-pulse"
                         ></div>
                         <span class="text-sm font-medium text-neutral-700"
-                            >Trusted by 500+ Property Owners</span
+                            >Trusted by 500+ Land Owners</span
                         >
                     </div>
 
                     <!-- Main Heading -->
                     <h1
-                        class="text-5xl md:text-7xl font-bold text-neutral-900 mb-8 text-balance"
+                        class="text-5xl md:text-7xl font-bold text-white mb-8 text-balance drop-shadow-lg"
                     >
                         Find Your Perfect
                         <span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600"
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-accent-300 to-coconut-300"
                         >
-                            Paradise
+                            Land
                         </span>
                         in Bohol
                     </h1>
 
                     <p
-                        class="text-xl md:text-2xl text-neutral-600 mb-12 max-w-4xl mx-auto text-balance"
+                        class="text-xl md:text-2xl text-white/90 mb-12 max-w-4xl mx-auto text-balance drop-shadow-md"
                     >
-                        Discover prime real estate opportunities across Bohol's
-                        stunning landscapes with our licensed brokers and
-                        cutting-edge technology.
+                        Discover prime land opportunities and property
+                        developments across Bohol's strategic locations with our
+                        licensed brokers and cutting-edge technology.
                     </p>
 
                     <!-- CTA Buttons -->
@@ -116,14 +127,14 @@ const formatPropertyType = (type) => {
                     >
                         <Link
                             :href="route('public.properties')"
-                            class="btn-primary text-lg px-8 py-4"
+                            class="bg-white text-primary-600 hover:bg-neutral-50 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 shadow-soft hover:shadow-soft-lg flex items-center justify-center gap-3"
                         >
                             <BuildingOfficeIcon class="w-5 h-5" />
                             Browse Properties
                         </Link>
                         <Link
                             :href="route('seller-requests.create')"
-                            class="btn-outline text-lg px-8 py-4"
+                            class="border-2 border-white text-white hover:bg-white hover:text-primary-600 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-3"
                         >
                             <ArrowRightIcon class="w-5 h-5" />
                             List Your Property
@@ -132,18 +143,18 @@ const formatPropertyType = (type) => {
 
                     <!-- Trust Indicators -->
                     <div
-                        class="flex flex-wrap justify-center items-center gap-8 text-sm text-neutral-500"
+                        class="flex flex-wrap justify-center items-center gap-8 text-sm text-white/80"
                     >
                         <div class="flex items-center gap-2">
-                            <CheckCircleIcon class="w-5 h-5 text-accent-500" />
+                            <CheckCircleIcon class="w-5 h-5 text-accent-300" />
                             <span>Licensed Brokers</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <CheckCircleIcon class="w-5 h-5 text-accent-500" />
+                            <CheckCircleIcon class="w-5 h-5 text-accent-300" />
                             <span>Verified Properties</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <CheckCircleIcon class="w-5 h-5 text-accent-500" />
+                            <CheckCircleIcon class="w-5 h-5 text-accent-300" />
                             <span>Secure Transactions</span>
                         </div>
                     </div>
@@ -596,12 +607,20 @@ const formatPropertyType = (type) => {
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="card overflow-hidden">
-                        <div
-                            class="h-48 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center"
-                        >
-                            <div class="text-center text-white">
-                                <SunIcon class="w-12 h-12 mx-auto mb-3" />
+                    <div
+                        class="card overflow-hidden group hover:shadow-soft-xl transition-all duration-300 hover:-translate-y-1"
+                    >
+                        <div class="relative h-48 overflow-hidden">
+                            <img
+                                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                                alt="Beautiful coastal property in Bohol"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-primary-900/70 via-primary-600/30 to-transparent"
+                            ></div>
+                            <div class="absolute bottom-4 left-4 text-white">
+                                <SunIcon class="w-8 h-8 mb-2" />
                                 <h3 class="text-xl font-bold">
                                     Coastal Properties
                                 </h3>
@@ -615,12 +634,20 @@ const formatPropertyType = (type) => {
                         </div>
                     </div>
 
-                    <div class="card overflow-hidden">
-                        <div
-                            class="h-48 bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center"
-                        >
-                            <div class="text-center text-white">
-                                <MapPinIcon class="w-12 h-12 mx-auto mb-3" />
+                    <div
+                        class="card overflow-hidden group hover:shadow-soft-xl transition-all duration-300 hover:-translate-y-1"
+                    >
+                        <div class="relative h-48 overflow-hidden">
+                            <img
+                                src="https://images.unsplash.com/photo-1586500036706-41963de24d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                                alt="Chocolate Hills mountain retreat in Bohol"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-accent-900/70 via-accent-600/30 to-transparent"
+                            ></div>
+                            <div class="absolute bottom-4 left-4 text-white">
+                                <MapPinIcon class="w-8 h-8 mb-2" />
                                 <h3 class="text-xl font-bold">
                                     Mountain Retreats
                                 </h3>
@@ -634,14 +661,20 @@ const formatPropertyType = (type) => {
                         </div>
                     </div>
 
-                    <div class="card overflow-hidden">
-                        <div
-                            class="h-48 bg-gradient-to-br from-coconut-400 to-coconut-600 flex items-center justify-center"
-                        >
-                            <div class="text-center text-white">
-                                <BuildingOfficeIcon
-                                    class="w-12 h-12 mx-auto mb-3"
-                                />
+                    <div
+                        class="card overflow-hidden group hover:shadow-soft-xl transition-all duration-300 hover:-translate-y-1"
+                    >
+                        <div class="relative h-48 overflow-hidden">
+                            <img
+                                src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                                alt="Modern urban development in Bohol"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-coconut-900/70 via-coconut-600/30 to-transparent"
+                            ></div>
+                            <div class="absolute bottom-4 left-4 text-white">
+                                <BuildingOfficeIcon class="w-8 h-8 mb-2" />
                                 <h3 class="text-xl font-bold">
                                     Urban Developments
                                 </h3>
