@@ -16,50 +16,31 @@ import {
     EyeIcon,
 } from "@heroicons/vue/24/outline";
 
+// Accept real props from backend
+const props = defineProps({
+    stats: Object,
+    recentInquiries: Array,
+});
+
 const page = usePage();
 
-// Check if current user can create properties (only brokers, not admins)
 const canCreateProperty = computed(() => {
     const user = page.props.auth.user;
     return user.role === "broker" && user.is_approved;
 });
 
-// Mock data - replace with real props
-const stats = {
-    totalProperties: 12,
-    activeInquiries: 8,
-    totalClients: 24,
-    completedTransactions: 15,
-    totalCommission: 125000,
-    monthlyGrowth: 12.5,
+// Calculate trend data from monthly stats
+const getTrend = (current, previous, label) => {
+    if (!previous || previous === 0) return null;
+    const change = current - previous;
+    const percentage = ((change / previous) * 100).toFixed(1);
+    return {
+        direction: change >= 0 ? "up" : "down",
+        value: `${change >= 0 ? "+" : ""}${change}`,
+        label: label,
+        percentage: `${percentage}%`,
+    };
 };
-
-const recentInquiries = [
-    {
-        id: 1,
-        property: "Sunset Valley Plot",
-        client: "John Doe",
-        date: "2024-01-15",
-        status: "pending",
-        amount: "₱2,500,000",
-    },
-    {
-        id: 2,
-        property: "Beachfront Land",
-        client: "Jane Smith",
-        date: "2024-01-14",
-        status: "responded",
-        amount: "₱5,200,000",
-    },
-    {
-        id: 3,
-        property: "Mountain View Lot",
-        client: "Mike Johnson",
-        date: "2024-01-13",
-        status: "pending",
-        amount: "₱1,800,000",
-    },
-];
 
 const tableColumns = [
     { key: "property", label: "Property", sortable: true },
@@ -86,226 +67,218 @@ const getStatusColor = (status) => {
     <ModernDashboardLayout>
         <!-- Page Header -->
         <div class="mb-8">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-                    <p class="text-gray-600 mt-1">
-                        Welcome back! Here's what's happening with your
-                        properties.
-                    </p>
-                </div>
-                <ModernButton
-                    v-if="canCreateProperty"
-                    variant="primary"
-                    :icon="PlusIcon"
-                    @click="$inertia.visit('/broker/properties/create')"
-                >
-                    Add Property
-                </ModernButton>
-            </div>
+            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p class="text-gray-600">
+                Welcome back! Here's what's happening with your properties.
+            </p>
         </div>
 
-        <!-- Stats Grid -->
+        <!-- Stats Grid using real data -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <DashboardCard
                 title="Total Properties"
-                :value="stats.totalProperties"
-                subtitle="Active listings"
+                :value="props.stats?.totalProperties || 0"
+                subtitle="Your listings"
                 :icon="BuildingOfficeIcon"
                 color="blue"
-                :trend="{ direction: 'up', value: '+2', label: 'this month' }"
+                :trend="
+                    getTrend(
+                        props.stats?.totalProperties || 0,
+                        props.stats?.activeProperties || 0,
+                        'active'
+                    )
+                "
             />
 
             <DashboardCard
                 title="Active Inquiries"
-                :value="stats.activeInquiries"
+                :value="props.stats?.activeInquiries || 0"
                 subtitle="Pending responses"
                 :icon="DocumentTextIcon"
                 color="orange"
-                :trend="{ direction: 'up', value: '+5', label: 'this week' }"
+                :trend="
+                    props.stats?.monthlyStats
+                        ? getTrend(
+                              props.stats.monthlyStats.currentMonth.inquiries,
+                              props.stats.monthlyStats.lastMonth.inquiries,
+                              'this month'
+                          )
+                        : null
+                "
             />
 
             <DashboardCard
                 title="Total Clients"
-                :value="stats.totalClients"
-                subtitle="Registered clients"
+                :value="props.stats?.totalClients || 0"
+                subtitle="Your clients"
                 :icon="UserGroupIcon"
                 color="green"
-                :trend="{ direction: 'up', value: '+3', label: 'this month' }"
             />
 
             <DashboardCard
                 title="Commission Earned"
-                :value="`₱${stats.totalCommission.toLocaleString()}`"
+                :value="`₱${(
+                    props.stats?.totalCommission || 0
+                ).toLocaleString()}`"
                 subtitle="Total earnings"
                 :icon="CurrencyDollarIcon"
                 color="purple"
-                :trend="{
-                    direction: 'up',
-                    value: `+${stats.monthlyGrowth}%`,
-                    label: 'vs last month',
-                }"
+                :trend="
+                    props.stats?.monthlyStats
+                        ? getTrend(
+                              props.stats.monthlyStats.currentMonth
+                                  .transactions,
+                              props.stats.monthlyStats.lastMonth.transactions,
+                              'transactions'
+                          )
+                        : null
+                "
             />
         </div>
 
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div
-                class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200"
-            >
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center"
-                    >
-                        <BuildingOfficeIcon class="w-6 h-6 text-white" />
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-blue-900">
-                            Manage Properties
-                        </h3>
-                        <p class="text-sm text-blue-700">
-                            {{
-                                canCreateProperty
-                                    ? "Add, edit, or view your listings"
-                                    : "View and manage property listings"
-                            }}
-                        </p>
-                    </div>
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                Quick Actions
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div
+                    class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white"
+                >
+                    <h3 class="font-semibold mb-2">Manage Properties</h3>
+                    <p class="text-blue-100 text-sm mb-4">
+                        Add, edit, or view your property listings
+                    </p>
                     <ModernButton
                         variant="outline"
-                        size="sm"
-                        @click="$inertia.visit('/broker/properties')"
+                        class="border-white text-white hover:bg-white hover:text-blue-600"
+                        @click="
+                            $inertia.visit(route('broker.properties.index'))
+                        "
                     >
-                        View All
+                        View Properties
                     </ModernButton>
                 </div>
-            </div>
 
-            <div
-                class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200"
-            >
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center"
-                    >
-                        <UserGroupIcon class="w-6 h-6 text-white" />
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-green-900">
-                            Client Management
-                        </h3>
-                        <p class="text-sm text-green-700">
-                            Connect with your clients
-                        </p>
-                    </div>
+                <div
+                    class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white"
+                >
+                    <h3 class="font-semibold mb-2">Client Management</h3>
+                    <p class="text-green-100 text-sm mb-4">
+                        Track and manage your client relationships
+                    </p>
                     <ModernButton
                         variant="outline"
-                        size="sm"
-                        @click="$inertia.visit('/broker/clients')"
+                        class="border-white text-white hover:bg-white hover:text-green-600"
+                        @click="$inertia.visit(route('broker.clients.index'))"
                     >
-                        View All
+                        View Clients
                     </ModernButton>
                 </div>
-            </div>
 
-            <div
-                class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200"
-            >
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center"
-                    >
-                        <ChartBarIcon class="w-6 h-6 text-white" />
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-purple-900">
-                            Performance
-                        </h3>
-                        <p class="text-sm text-purple-700">
-                            Track your success metrics
-                        </p>
-                    </div>
+                <div
+                    class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white"
+                >
+                    <h3 class="font-semibold mb-2">Performance Analytics</h3>
+                    <p class="text-purple-100 text-sm mb-4">
+                        View detailed reports and insights
+                    </p>
                     <ModernButton
                         variant="outline"
-                        size="sm"
-                        @click="$inertia.visit('/leaderboard')"
+                        class="border-white text-white hover:bg-white hover:text-purple-600"
+                        @click="$inertia.visit(route('broker.analytics'))"
                     >
-                        View Stats
+                        View Analytics
                     </ModernButton>
                 </div>
             </div>
         </div>
 
         <!-- Recent Inquiries -->
-        <div class="mb-8">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900">
-                        Recent Inquiries
-                    </h2>
-                    <p class="text-sm text-gray-600">
-                        Latest property inquiries from potential clients
-                    </p>
-                </div>
-                <ModernButton
-                    variant="secondary"
-                    size="sm"
-                    @click="$inertia.visit('/inquiries')"
-                >
-                    View All Inquiries
-                </ModernButton>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    Recent Inquiries
+                </h2>
+                <p class="text-sm text-gray-600">
+                    Latest inquiries on your properties
+                </p>
             </div>
 
-            <ModernTable :columns="tableColumns" :data="recentInquiries">
-                <template #cell-property="{ value }">
-                    <div class="font-medium text-gray-900">{{ value }}</div>
-                </template>
+            <div
+                v-if="props.recentInquiries && props.recentInquiries.length > 0"
+            >
+                <ModernTable
+                    :columns="tableColumns"
+                    :data="props.recentInquiries"
+                >
+                    <template #cell-property="{ value }">
+                        <div class="font-medium text-gray-900">{{ value }}</div>
+                    </template>
 
-                <template #cell-client="{ value }">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
-                        >
-                            <span class="text-xs font-medium text-gray-600">
-                                {{ value.charAt(0) }}
-                            </span>
+                    <template #cell-client="{ value }">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
+                            >
+                                <span class="text-xs font-medium text-gray-600">
+                                    {{ value.charAt(0) }}
+                                </span>
+                            </div>
+                            <span class="text-sm text-gray-900">{{
+                                value
+                            }}</span>
                         </div>
-                        <span class="text-sm text-gray-900">{{ value }}</span>
-                    </div>
-                </template>
+                    </template>
 
-                <template #cell-amount="{ value }">
-                    <span class="font-semibold text-gray-900">{{ value }}</span>
-                </template>
+                    <template #cell-amount="{ value }">
+                        <span class="font-semibold text-gray-900">{{
+                            value
+                        }}</span>
+                    </template>
 
-                <template #cell-date="{ value }">
-                    <span class="text-sm text-gray-600">{{ value }}</span>
-                </template>
+                    <template #cell-date="{ value }">
+                        <span class="text-sm text-gray-600">{{ value }}</span>
+                    </template>
 
-                <template #cell-status="{ value }">
-                    <span
-                        :class="[
-                            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize',
-                            getStatusColor(value),
-                        ]"
-                    >
-                        {{ value }}
-                    </span>
-                </template>
-
-                <template #cell-actions="{ item }">
-                    <div class="flex items-center gap-2">
-                        <ModernButton
-                            variant="outline"
-                            size="sm"
-                            :icon="EyeIcon"
-                            @click="$inertia.visit(`/inquiries/${item.id}`)"
+                    <template #cell-status="{ value }">
+                        <span
+                            :class="[
+                                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize',
+                                getStatusColor(value),
+                            ]"
                         >
-                            View
-                        </ModernButton>
-                    </div>
-                </template>
-            </ModernTable>
+                            {{ value }}
+                        </span>
+                    </template>
+
+                    <template #cell-actions="{ item }">
+                        <div class="flex items-center gap-2">
+                            <ModernButton
+                                variant="outline"
+                                size="sm"
+                                :icon="EyeIcon"
+                                @click="$inertia.visit(`/inquiries/${item.id}`)"
+                            >
+                                View
+                            </ModernButton>
+                        </div>
+                    </template>
+                </ModernTable>
+            </div>
+
+            <div v-else class="px-6 py-8 text-center">
+                <DocumentTextIcon
+                    class="w-12 h-12 text-gray-400 mx-auto mb-4"
+                />
+                <h3 class="text-lg font-medium text-gray-900 mb-2">
+                    No inquiries yet
+                </h3>
+                <p class="text-gray-600">
+                    When clients inquire about your properties, they'll appear
+                    here.
+                </p>
+            </div>
         </div>
     </ModernDashboardLayout>
 </template>

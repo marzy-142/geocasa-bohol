@@ -497,6 +497,7 @@ const formatFieldName = (field) => {
                             <div>
                                 <label class="form-label">Full Name *</label>
                                 <input
+                                    id="seller_name"
                                     v-model="form.seller_name"
                                     type="text"
                                     class="form-input"
@@ -516,6 +517,7 @@ const formatFieldName = (field) => {
                                     >Email Address *</label
                                 >
                                 <input
+                                    id="seller_email"
                                     v-model="form.seller_email"
                                     type="email"
                                     class="form-input"
@@ -533,6 +535,7 @@ const formatFieldName = (field) => {
                             <div>
                                 <label class="form-label">Phone Number *</label>
                                 <input
+                                    id="seller_phone"
                                     v-model="form.seller_phone"
                                     type="tel"
                                     class="form-input"
@@ -584,6 +587,7 @@ const formatFieldName = (field) => {
                                     >Property Title *</label
                                 >
                                 <input
+                                    id="property_title"
                                     v-model="form.property_title"
                                     type="text"
                                     class="form-input"
@@ -610,6 +614,7 @@ const formatFieldName = (field) => {
                                     >Property Description *</label
                                 >
                                 <textarea
+                                    id="property_description"
                                     v-model="form.property_description"
                                     class="form-input min-h-[120px]"
                                     placeholder="Describe your property in detail... (minimum 50 characters)"
@@ -661,6 +666,7 @@ const formatFieldName = (field) => {
                                         >Property Area *</label
                                     >
                                     <input
+                                        id="property_area"
                                         v-model="form.property_area"
                                         type="number"
                                         class="form-input"
@@ -678,6 +684,7 @@ const formatFieldName = (field) => {
                                 <div>
                                     <label class="form-label">Area Unit</label>
                                     <select
+                                        id="area_unit"
                                         v-model="form.area_unit"
                                         class="form-input"
                                     >

@@ -52,7 +52,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
     });
 
-    // Broker routes - COMPLETELY RESTRUCTURED
+    // Broker routes - EXPANDED
     Route::prefix('broker')->name('broker.')->group(function () {
     // Pending approval route - accessible to any authenticated broker
     Route::middleware(['auth'])->group(function () {
@@ -61,17 +61,37 @@ Route::middleware('auth')->group(function () {
         Route::get('/rejected', [DashboardController::class, 'rejected'])
             ->name('rejected');
     });
-        
-        // Dashboard and other broker routes - require role AND approval
-           Route::middleware(['auth', 'role:broker', 'broker.approved'])->group(function () {
+    
+    // Dashboard and other broker routes - require role AND approval
+    Route::middleware(['auth', 'role:broker', 'broker.approved'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        // Add other broker-specific routes here
+        
+        // Property management
+        Route::get('/properties', [PropertyController::class, 'brokerIndex'])->name('properties.index');
+        Route::get('/properties/create', [PropertyController::class, 'create'])->name('properties.create');
+        Route::post('/properties', [PropertyController::class, 'store'])->name('properties.store');
+        Route::get('/properties/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
+        Route::put('/properties/{property}', [PropertyController::class, 'update'])->name('properties.update');
+        
+        // Client management
+        Route::get('/clients', [ClientController::class, 'brokerIndex'])->name('clients.index');
+        Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+        
+        // Analytics and reports
+        Route::get('/analytics', [DashboardController::class, 'analytics'])->name('analytics');
+        Route::get('/reports', [DashboardController::class, 'reports'])->name('reports');
     });
-    });
+});
 
     // Admin routes
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+        
+        // User Management Routes (NEW)
+        Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+        Route::post('users/{user}/suspend', [\App\Http\Controllers\Admin\UserController::class, 'suspend'])->name('users.suspend');
+        Route::post('users/{user}/reactivate', [\App\Http\Controllers\Admin\UserController::class, 'reactivate'])->name('users.reactivate');
+        Route::post('users/bulk-actions', [\App\Http\Controllers\Admin\UserController::class, 'bulkActions'])->name('users.bulk-actions');
         
         // Add admin properties routes
         Route::resource('properties', PropertyController::class);

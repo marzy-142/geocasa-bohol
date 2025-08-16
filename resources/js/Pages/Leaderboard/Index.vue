@@ -1,28 +1,49 @@
 <template>
-    <Head title="Broker Leaderboard" />
+    <Head title="Top Broker - GeoCasa Bohol" />
 
-    <div
-        class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50"
-    >
-        <!-- Header -->
-        <div class="bg-white shadow-sm border-b">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900">
-                            🏆 Broker Leaderboard
-                        </h1>
-                        <p class="text-gray-600 mt-1">
-                            Top performing real estate brokers in Bohol
-                        </p>
+    <!-- Public Navigation -->
+    <PublicNavigation
+        :auth="$page.props.auth"
+        currentRoute="leaderboard.index"
+    />
+
+    <div class="min-h-screen bg-white">
+        <!-- Hero Section with Minimal Design -->
+        <div class="bg-white border-b border-neutral-100">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div class="text-center">
+                    <div class="mb-8">
+                        <div
+                            class="inline-flex items-center justify-center w-20 h-20 bg-neutral-900 rounded-full mb-6"
+                        >
+                            <svg
+                                class="w-10 h-10 text-white"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"
+                                />
+                            </svg>
+                        </div>
                     </div>
+                    <h1
+                        class="text-6xl font-light text-neutral-900 mb-4 tracking-tight"
+                    >
+                        Excellence
+                    </h1>
+                    <p class="text-xl text-neutral-500 mb-12 font-light">
+                        Celebrating outstanding performance in Bohol real estate
+                    </p>
 
-                    <!-- Period Filter -->
-                    <div class="flex items-center space-x-4">
+                    <!-- Period Filter - Minimal Design -->
+                    <div
+                        class="inline-flex items-center bg-neutral-50 rounded-full p-1 border border-neutral-200"
+                    >
                         <select
                             v-model="selectedPeriod"
                             @change="updatePeriod"
-                            class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            class="border-0 bg-transparent focus:ring-0 text-sm text-neutral-700 cursor-pointer px-4 py-2 rounded-full"
                         >
                             <option value="all-time">All Time</option>
                             <option value="this-year">This Year</option>
@@ -34,277 +55,224 @@
             </div>
         </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Platform Stats -->
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-            >
-                <div class="bg-white rounded-xl shadow-sm p-6 border">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-green-100">
-                            <CurrencyDollarIcon
-                                class="h-6 w-6 text-green-600"
-                            />
+        <!-- Main Content - Redesigned Layout -->
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <!-- Top Broker Display -->
+            <div v-if="topBroker" class="space-y-16">
+                <!-- Broker Profile - Centered and Minimal -->
+                <div class="text-center">
+                    <div class="inline-block">
+                        <div
+                            class="w-32 h-32 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-white shadow-lg"
+                        >
+                            <span class="text-neutral-600 font-light text-4xl">
+                                {{ topBroker.name.charAt(0) }}
+                            </span>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">
+                        <h2
+                            class="text-4xl font-light text-neutral-900 mb-2 tracking-tight"
+                        >
+                            {{ topBroker.name }}
+                        </h2>
+                        <p class="text-neutral-500 text-lg mb-6">
+                            {{ topBroker.email }}
+                        </p>
+                        <div
+                            class="inline-flex items-center px-6 py-2 bg-neutral-900 text-white rounded-full text-sm font-medium"
+                        >
+                            Leading Broker
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics - Horizontal Layout -->
+                <div
+                    class="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-4xl mx-auto"
+                >
+                    <!-- Total Sales -->
+                    <div class="text-center">
+                        <div class="mb-4">
+                            <div
+                                class="text-5xl font-light text-neutral-900 mb-2"
+                            >
+                                {{ topBroker.total_sales }}
+                            </div>
+                            <div
+                                class="w-12 h-px bg-neutral-300 mx-auto mb-4"
+                            ></div>
+                            <div
+                                class="text-sm uppercase tracking-widest text-neutral-500 font-medium"
+                            >
                                 Total Sales
-                            </p>
-                            <p class="text-2xl font-semibold text-gray-900">
-                                {{ platformStats.total_sales }}
-                            </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sales Value -->
+                    <div class="text-center">
+                        <div class="mb-4">
+                            <div
+                                class="text-4xl font-light text-neutral-900 mb-2"
+                            >
+                                ₱{{ formatNumber(topBroker.total_sales_value) }}
+                            </div>
+                            <div
+                                class="w-12 h-px bg-neutral-300 mx-auto mb-4"
+                            ></div>
+                            <div
+                                class="text-sm uppercase tracking-widest text-neutral-500 font-medium"
+                            >
+                                Sales Value
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commission -->
+                    <div class="text-center">
+                        <div class="mb-4">
+                            <div
+                                class="text-4xl font-light text-neutral-900 mb-2"
+                            >
+                                ₱{{ formatNumber(topBroker.total_commission) }}
+                            </div>
+                            <div
+                                class="w-12 h-px bg-neutral-300 mx-auto mb-4"
+                            ></div>
+                            <div
+                                class="text-sm uppercase tracking-widest text-neutral-500 font-medium"
+                            >
+                                Commission
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm p-6 border">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-blue-100">
-                            <BuildingOfficeIcon class="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">
-                                Properties Sold
-                            </p>
-                            <p class="text-2xl font-semibold text-gray-900">
-                                {{ platformStats.properties_sold }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-sm p-6 border">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-purple-100">
-                            <UserGroupIcon class="h-6 w-6 text-purple-600" />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">
-                                Active Brokers
-                            </p>
-                            <p class="text-2xl font-semibold text-gray-900">
-                                {{ platformStats.active_brokers }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-sm p-6 border">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-yellow-100">
-                            <ChartBarIcon class="h-6 w-6 text-yellow-600" />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-500">
-                                Total Commission
-                            </p>
-                            <p class="text-2xl font-semibold text-gray-900">
-                                ₱{{
-                                    formatNumber(platformStats.total_commission)
-                                }}
-                            </p>
-                        </div>
+                <!-- Achievement Statement - Minimal Typography -->
+                <div class="text-center max-w-3xl mx-auto">
+                    <div class="py-16 border-t border-neutral-100">
+                        <blockquote
+                            class="text-2xl font-light text-neutral-700 leading-relaxed italic"
+                        >
+                            "{{ topBroker.name }} has achieved
+                            <span class="text-neutral-900 font-normal"
+                                >{{ topBroker.total_sales }} successful
+                                transactions</span
+                            >
+                            {{
+                                period === "all-time"
+                                    ? "of all time"
+                                    : `in the ${formatPeriodLabel(
+                                          period
+                                      ).toLowerCase()}`
+                            }}, setting the standard for excellence in Bohol
+                            real estate."
+                        </blockquote>
                     </div>
                 </div>
             </div>
 
-            <!-- Leaderboard -->
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h2 class="text-xl font-semibold text-gray-900">
-                        Top Brokers
-                    </h2>
+            <!-- No Data State - Minimal -->
+            <div v-else class="text-center py-32">
+                <div
+                    class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-8"
+                >
+                    <svg
+                        class="w-8 h-8 text-neutral-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                    </svg>
                 </div>
+                <h3 class="text-2xl font-light text-neutral-900 mb-4">
+                    No Sales Data Available
+                </h3>
+                <p class="text-neutral-500 max-w-md mx-auto">
+                    There are no completed sales for the selected period.
+                </p>
+            </div>
+        </div>
 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                >
-                                    Rank
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                >
-                                    Broker
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                >
-                                    Sales
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                >
-                                    Commission
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                >
-                                    Success Rate
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                >
-                                    Active Listings
-                                </th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                >
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr
-                                v-for="(broker, index) in brokers"
-                                :key="broker.id"
-                                :class="
-                                    index < 3
-                                        ? 'bg-gradient-to-r from-yellow-50 to-yellow-100'
-                                        : ''
-                                "
+        <!-- Call to Action - Minimal and Elegant -->
+        <div class="bg-neutral-50 border-t border-neutral-100">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div class="text-center">
+                    <h3
+                        class="text-3xl font-light text-neutral-900 mb-6 tracking-tight"
+                    >
+                        Work with Excellence
+                    </h3>
+                    <p
+                        class="text-lg text-neutral-600 mb-12 max-w-2xl mx-auto font-light"
+                    >
+                        Connect with our top-performing brokers to find your
+                        perfect property in Bohol.
+                    </p>
+                    <div
+                        class="flex flex-col sm:flex-row gap-6 justify-center items-center"
+                    >
+                        <Link
+                            :href="route('public.properties')"
+                            class="inline-flex items-center px-8 py-4 bg-neutral-900 text-white font-medium rounded-full hover:bg-neutral-800 transition-colors"
+                        >
+                            Browse Properties
+                            <svg
+                                class="w-4 h-4 ml-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                             >
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <span
-                                            v-if="index === 0"
-                                            class="text-2xl"
-                                            >🥇</span
-                                        >
-                                        <span
-                                            v-else-if="index === 1"
-                                            class="text-2xl"
-                                            >🥈</span
-                                        >
-                                        <span
-                                            v-else-if="index === 2"
-                                            class="text-2xl"
-                                            >🥉</span
-                                        >
-                                        <span
-                                            v-else
-                                            class="text-lg font-semibold text-gray-600"
-                                            >{{ index + 1 }}</span
-                                        >
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            <div
-                                                class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center"
-                                            >
-                                                <span
-                                                    class="text-white font-semibold"
-                                                    >{{
-                                                        broker.name.charAt(0)
-                                                    }}</span
-                                                >
-                                            </div>
-                                        </div>
-                                        <div class="ml-4">
-                                            <div
-                                                class="text-sm font-medium text-gray-900"
-                                            >
-                                                {{ broker.name }}
-                                            </div>
-                                            <div class="text-sm text-gray-500">
-                                                {{ broker.email }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div
-                                        class="text-sm font-medium text-gray-900"
-                                    >
-                                        {{ broker.total_sales }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        ₱{{
-                                            formatNumber(
-                                                broker.total_sales_value
-                                            )
-                                        }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div
-                                        class="text-sm font-medium text-green-600"
-                                    >
-                                        ₱{{
-                                            formatNumber(
-                                                broker.total_commission
-                                            )
-                                        }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div
-                                            class="text-sm font-medium text-gray-900"
-                                        >
-                                            {{ broker.success_rate }}%
-                                        </div>
-                                        <div
-                                            class="ml-2 w-16 bg-gray-200 rounded-full h-2"
-                                        >
-                                            <div
-                                                class="bg-green-500 h-2 rounded-full"
-                                                :style="{
-                                                    width:
-                                                        broker.success_rate +
-                                                        '%',
-                                                }"
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td
-                                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                                >
-                                    {{ broker.active_listings }}
-                                </td>
-                                <td
-                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium"
-                                >
-                                    <Link
-                                        :href="
-                                            route(
-                                                'leaderboard.broker',
-                                                broker.id
-                                            )
-                                        "
-                                        class="text-blue-600 hover:text-blue-900"
-                                    >
-                                        View Details
-                                    </Link>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </Link>
+                        <Link
+                            :href="route('register')"
+                            class="inline-flex items-center px-8 py-4 text-neutral-700 font-medium hover:text-neutral-900 transition-colors"
+                        >
+                            Join as Broker
+                            <svg
+                                class="w-4 h-4 ml-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Public Footer -->
+    <PublicFooter />
 </template>
 
 <script setup>
 import { ref } from "vue";
-import { Head, Link, router } from "@inertiajs/vue3";
-import {
-    CurrencyDollarIcon,
-    BuildingOfficeIcon,
-    UserGroupIcon,
-    ChartBarIcon,
-} from "@heroicons/vue/24/outline";
+import { Head, router, Link } from "@inertiajs/vue3";
+import PublicNavigation from "@/Components/PublicNavigation.vue";
+import PublicFooter from "@/Components/PublicFooter.vue";
 
 const props = defineProps({
-    brokers: Array,
-    platformStats: Object,
+    topBroker: Object,
     period: String,
 });
 
@@ -323,5 +291,16 @@ const updatePeriod = () => {
 
 const formatNumber = (number) => {
     return new Intl.NumberFormat("en-PH").format(number || 0);
+};
+
+const formatPeriodLabel = (period) => {
+    const labels = {
+        "all-time": "All Time",
+        "this-year": "This Year",
+        "this-month": "This Month",
+        "last-30-days": "Last 30 Days",
+        "last-90-days": "Last 90 Days",
+    };
+    return labels[period] || "All Time";
 };
 </script>

@@ -30,6 +30,22 @@ class DashboardController extends Controller
             'totalTransactions' => Transaction::where('status', 'completed')->count(),
         ];
 
+        // Get top performing broker
+        $topBroker = User::where('role', 'broker')
+            ->where('is_approved', true)
+            ->withCount([
+                'transactions as total_sales' => function ($query) {
+                    $query->where('status', 'finalized');
+                }
+            ])
+            ->withSum([
+                'transactions as total_sales_value' => function ($query) {
+                    $query->where('status', 'finalized');
+                }
+            ], 'final_price')
+            ->orderByDesc('total_sales')
+            ->first();
+
         // Get pending broker applications
         $pendingBrokers = User::pendingApplications()
             ->select(['id', 'name', 'email', 'created_at'])
@@ -54,6 +70,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
+            'topBroker' => $topBroker,
             'pendingBrokers' => $pendingBrokers,
             'systemHealth' => $systemHealth,
         ]);

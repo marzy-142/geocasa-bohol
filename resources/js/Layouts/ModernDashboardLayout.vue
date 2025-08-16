@@ -5,6 +5,7 @@ import {
     HomeIcon,
     BuildingOfficeIcon,
     UserGroupIcon,
+    UsersIcon, // Add this import
     DocumentTextIcon,
     CreditCardIcon,
     BellIcon,
@@ -98,6 +99,13 @@ const navigation = computed(() => {
                 icon: UserGroupIcon,
                 current: false,
             },
+            // Then use UsersIcon for the User Management link:
+            {
+                name: "Manage Users",
+                href: "/admin/users",
+                icon: UsersIcon,
+                current: false,
+            },
             {
                 name: "All Properties",
                 href: "/admin/properties",
@@ -122,12 +130,7 @@ const navigation = computed(() => {
                 icon: ClipboardDocumentListIcon,
                 current: false,
             },
-            {
-                name: "Leaderboard",
-                href: "/leaderboard",
-                icon: ChartBarIcon,
-                current: false,
-            },
+            // Removed Leaderboard from admin navigation
         ];
     }
 

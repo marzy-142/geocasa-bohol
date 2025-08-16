@@ -112,17 +112,62 @@ class User extends Authenticatable
         return $this->is_approved;
     }
 
+    // Add these methods to the existing User model
+    
     // Relationships
-    public function approvedBy()
+    public function suspendedBy()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'suspended_by');
     }
-
-    public function approvedUsers()
+    
+    public function suspendedUsers()
     {
-        return $this->hasMany(User::class, 'approved_by');
+        return $this->hasMany(User::class, 'suspended_by');
     }
-
+    
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->whereNull('suspended_at')
+                     ->orWhere('suspended_until', '<', now());
+    }
+    
+    public function scopeSuspended($query)
+    {
+        return $query->whereNotNull('suspended_at')
+                     ->where(function ($q) {
+                         $q->whereNull('suspended_until')
+                           ->orWhere('suspended_until', '>', now());
+                     });
+    }
+    
+    // Accessors
+    public function getIsSuspendedAttribute()
+    {
+        if (!$this->suspended_at) {
+            return false;
+        }
+        
+        if (!$this->suspended_until) {
+            return true; // Permanent suspension
+        }
+        
+        return $this->suspended_until->isFuture();
+    }
+    
+    public function getSuspensionStatusAttribute()
+    {
+        if (!$this->is_suspended) {
+            return 'active';
+        }
+        
+        if (!$this->suspended_until) {
+            return 'permanently_suspended';
+        }
+        
+        return 'temporarily_suspended';
+    }
+    
     // Broker relationships
     public function properties()
     {

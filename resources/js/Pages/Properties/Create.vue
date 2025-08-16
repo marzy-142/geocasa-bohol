@@ -579,7 +579,9 @@
                         <label
                             class="flex items-center space-x-3 mt-8"
                         >
+                            // Around line 583-587
                             <input
+                                id="is_featured"
                                 v-model="form.is_featured"
                                 type="checkbox"
                                 class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"

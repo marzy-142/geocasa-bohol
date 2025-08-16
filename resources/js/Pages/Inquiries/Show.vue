@@ -1,35 +1,41 @@
 <template>
-    <AppLayout title="Inquiry Details">
-        <template #header>
+    <ModernDashboardLayout>
+        <!-- Header Section -->
+        <div
+            class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white mb-6"
+        >
             <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Inquiry Details
-                </h2>
+                <div>
+                    <h1 class="text-3xl font-bold">Inquiry Details</h1>
+                    <p class="text-blue-100 mt-2">
+                        View and manage inquiry information
+                    </p>
+                </div>
                 <div class="flex space-x-2">
                     <Link
                         v-if="can.edit"
                         :href="route('inquiries.edit', inquiry.id)"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                     >
                         Edit
                     </Link>
                     <button
                         v-if="can.respond && !showResponseForm"
                         @click="showResponseForm = true"
-                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                        class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                     >
                         Respond
                     </button>
                     <button
                         v-if="can.delete"
                         @click="deleteInquiry"
-                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                        class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                     >
                         Delete
                     </button>
                 </div>
             </div>
-        </template>
+        </div>
 
         <div class="py-12">
             <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -444,14 +450,14 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </ModernDashboardLayout>
 </template>
 
 <script setup>
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import { ref } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import { Link, router } from "@inertiajs/vue3";
-import AppLayout from "@/Layouts/AppLayout.vue";
 
 const props = defineProps({
     inquiry: Object,

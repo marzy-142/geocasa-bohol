@@ -20,6 +20,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    topBroker: {
+        type: Object,
+        default: null,
+    },
     pendingBrokers: {
         type: Array,
         required: true,
@@ -29,6 +33,11 @@ const props = defineProps({
         required: true,
     },
 });
+
+// Add the formatNumber function
+const formatNumber = (number) => {
+    return new Intl.NumberFormat("en-PH").format(number || 0);
+};
 
 // Convert stats to dashboard cards format
 const statsCards = [
@@ -96,7 +105,7 @@ const getHealthIndicatorColor = (status) => {
             >
                 <div>
                     <h1 class="text-3xl font-bold text-neutral-900 mb-2">
-                        Admin Dashboard 🛡️
+                        Admin Dashboard
                     </h1>
                     <p class="text-neutral-600 text-lg">
                         System overview and management for GeoCasa Bohol
@@ -135,6 +144,49 @@ const getHealthIndicatorColor = (status) => {
 
         <!-- Pending Broker Approvals -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- Top Performing Broker Widget -->
+            <div class="card p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-neutral-900">
+                        Top Performing Broker
+                    </h2>
+                    <Link
+                        :href="route('leaderboard.index')"
+                        class="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                        View Full Leaderboard →
+                    </Link>
+                </div>
+                
+                <div v-if="topBroker" class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary-400 to-accent-400 rounded-xl flex items-center justify-center text-white font-semibold">
+                            {{ topBroker.name.charAt(0) }}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-neutral-900">{{ topBroker.name }}</h3>
+                            <p class="text-sm text-neutral-600">{{ topBroker.email }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-100">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-neutral-900">{{ topBroker.total_sales }}</div>
+                            <div class="text-xs text-neutral-500 uppercase tracking-wide">Total Sales</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-neutral-900">₱{{ formatNumber(topBroker.total_sales_value) }}</div>
+                            <div class="text-xs text-neutral-500 uppercase tracking-wide">Sales Value</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-else class="text-center py-8">
+                    <div class="text-neutral-400 mb-2">📊</div>
+                    <p class="text-sm text-neutral-500">No sales data available</p>
+                </div>
+            </div>
+            
             <div class="card p-8">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold text-neutral-900">
