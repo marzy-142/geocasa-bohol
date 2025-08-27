@@ -7,7 +7,7 @@ import ModernTable from "@/Components/ModernTable.vue";
 import ModernButton from "@/Components/ModernButton.vue";
 import {
     ChartBarIcon,
-    TrendingUpIcon,
+    ArrowTrendingUpIcon,
     CurrencyDollarIcon,
     EyeIcon,
     DocumentArrowDownIcon,
@@ -40,7 +40,7 @@ const performanceMetrics = computed(() => {
             title: "Conversion Rate",
             value: `${analytics.conversionRate || 0}%`,
             subtitle: "Inquiries to Sales",
-            icon: TrendingUpIcon,
+            icon: ArrowTrendingUpIcon,
             trend: {
                 direction: "up",
                 value: "+2.3%",

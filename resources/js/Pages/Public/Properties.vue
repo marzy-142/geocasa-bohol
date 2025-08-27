@@ -15,6 +15,7 @@ import {
     BeakerIcon,
     UserIcon,
     EyeIcon,
+    VideoCameraIcon,
 } from "@heroicons/vue/24/outline";
 
 const props = defineProps({
@@ -33,6 +34,7 @@ const form = reactive({
     max_price: props.filters.max_price || "",
     utilities: props.filters.utilities || false,
     featured: props.filters.featured || false,
+    virtual_tour: props.filters.virtual_tour || false,
 });
 
 const search = () => {
@@ -46,6 +48,15 @@ const formatPropertyType = (type) => {
     return type.charAt(0).toUpperCase() + type.slice(1);
 };
 
+// Check if property has virtual tour data
+const hasVirtualTour = (property) => {
+    return (
+        property.has_virtual_tour &&
+        property.virtual_tour_images &&
+        property.virtual_tour_images.length > 0
+    );
+};
+
 // Auto-search when filters change
 watch(
     form,
@@ -57,38 +68,31 @@ watch(
 </script>
 
 <template>
-    <Head title="Properties - GeoCasa Bohol" />
+    <div class="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
+        <Head title="Properties - GeoCasa Bohol" />
 
-    <div
-        class="min-h-screen bg-gradient-to-br from-primary-50/30 via-white to-accent-50/30"
-    >
         <!-- Navigation -->
-        <PublicNavigation :auth="auth" current-route="public.properties" />
+        <PublicNavigation :auth="auth" />
 
         <!-- Hero Section -->
         <section class="relative py-20 overflow-hidden">
-            <!-- Background Elements -->
             <div
-                class="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-accent-50"
+                class="absolute inset-0 bg-gradient-to-r from-primary-600/10 to-accent-600/10"
             ></div>
             <div
-                class="absolute top-10 left-10 w-64 h-64 bg-primary-200/20 rounded-full blur-3xl"
-            ></div>
-            <div
-                class="absolute bottom-10 right-10 w-80 h-80 bg-accent-200/20 rounded-full blur-3xl"
-            ></div>
-
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
+                class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+            >
+                <div class="max-w-4xl mx-auto">
                     <h1
                         class="text-4xl md:text-6xl font-bold text-neutral-900 mb-6"
                     >
-                        Discover Your Perfect
+                        Discover Your
                         <span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600"
+                            class="text-gradient bg-gradient-to-r from-primary-600 to-accent-600"
                         >
-                            Property
+                            Dream Property
                         </span>
+                        in Bohol
                     </h1>
                     <p class="text-xl text-neutral-600 max-w-3xl mx-auto">
                         Browse through {{ properties.total }} premium properties
@@ -166,7 +170,7 @@ watch(
                                 />
                             </div>
 
-                            <div class="flex items-center justify-center gap-6">
+                            <div class="flex items-center justify-center gap-4">
                                 <label
                                     class="flex items-center gap-2 cursor-pointer"
                                 >
@@ -192,6 +196,21 @@ watch(
                                         class="text-sm font-medium text-neutral-700"
                                         >Featured</span
                                     >
+                                </label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer"
+                                >
+                                    <input
+                                        v-model="form.virtual_tour"
+                                        type="checkbox"
+                                        class="modern-checkbox"
+                                    />
+                                    <span
+                                        class="text-sm font-medium text-neutral-700 flex items-center gap-1"
+                                    >
+                                        <VideoCameraIcon class="w-4 h-4" />
+                                        Virtual Tour
+                                    </span>
                                 </label>
                             </div>
                         </div>
@@ -238,6 +257,13 @@ watch(
                                     class="bg-gradient-to-r from-accent-500 to-accent-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-soft"
                                 >
                                     ⭐ Featured
+                                </div>
+                                <div
+                                    v-if="hasVirtualTour(property)"
+                                    class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-soft flex items-center gap-1"
+                                >
+                                    <VideoCameraIcon class="w-3 h-3" />
+                                    Virtual Tour
                                 </div>
                                 <div
                                     class="bg-primary-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-soft"
@@ -290,7 +316,7 @@ watch(
                                 </div>
                             </div>
 
-                            <!-- Utilities -->
+                            <!-- Utilities & Features -->
                             <div class="flex items-center gap-4 mb-6">
                                 <div class="flex items-center gap-1">
                                     <BoltIcon class="w-4 h-4 text-accent-500" />
@@ -312,6 +338,19 @@ watch(
                                                 ? "Water"
                                                 : "No Water"
                                         }}
+                                    </span>
+                                </div>
+                                <div
+                                    v-if="hasVirtualTour(property)"
+                                    class="flex items-center gap-1"
+                                >
+                                    <VideoCameraIcon
+                                        class="w-4 h-4 text-purple-500"
+                                    />
+                                    <span
+                                        class="text-xs text-purple-600 font-medium"
+                                    >
+                                        360° Tour
                                     </span>
                                 </div>
                             </div>
@@ -351,7 +390,10 @@ watch(
                                     class="btn-primary-sm flex items-center gap-2"
                                 >
                                     <EyeIcon class="w-4 h-4" />
-                                    View Details
+                                    <span v-if="hasVirtualTour(property)"
+                                        >View & Tour</span
+                                    >
+                                    <span v-else>View Details</span>
                                 </Link>
                             </div>
                         </div>

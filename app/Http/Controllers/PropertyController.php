@@ -11,20 +11,17 @@ use Illuminate\Support\Str;
 
 class PropertyController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Display properties for broker dashboard
+     */
+    public function brokerIndex(Request $request)
     {
-        // Add authorization check for admin access
-        if (auth()->user()->role === 'admin') {
-            // Admins can see all properties without restrictions
-            $query = Property::with(['broker', 'client']);
-        } else {
-            // Regular filtering for other users
-            $query = Property::with(['broker', 'client'])
-                ->when(auth()->user()->role === 'broker', function ($query) {
-                    $query->where('broker_id', auth()->id());
-                });
-        }
-
+        // Ensure only brokers can access this method
+        $this->authorize('viewAny', Property::class);
+        
+        $query = Property::with(['broker', 'client', 'inquiries', 'transactions'])
+            ->where('broker_id', auth()->id());
+    
         // Apply search and filter conditions
         $query = $query->when($request->search, function ($query, $search) {
                 $query->where('title', 'like', "%{$search}%")
@@ -58,15 +55,23 @@ class PropertyController extends Controller
                 $query->where('electricity_available', true)
                       ->where('water_source', true);
             });
-
+    
         $properties = $query->latest()->paginate(12);
-
+    
+        // Use the existing Properties/Index component instead of non-existent Broker/Properties/Index
         return Inertia::render('Properties/Index', [
             'properties' => $properties,
             'filters' => $request->only(['search', 'type', 'status', 'municipality', 'min_price', 'max_price', 'min_area', 'max_area', 'utilities']),
             'types' => Property::TYPES,
             'statuses' => Property::STATUSES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
+            'stats' => [
+                'total' => Property::where('broker_id', auth()->id())->count(),
+                'active' => Property::where('broker_id', auth()->id())->where('status', 'available')->count(),
+                'sold' => Property::where('broker_id', auth()->id())->where('status', 'sold')->count(),
+                'pending' => Property::where('broker_id', auth()->id())->where('status', 'pending')->count(),
+            ],
+            'isBrokerView' => true // Add flag to differentiate broker view from admin view
         ]);
     }
 
@@ -86,19 +91,32 @@ class PropertyController extends Controller
         $clients = auth()->user()->role === 'broker' 
             ? auth()->user()->clients()->get(['id', 'name', 'email'])
             : collect();
-
+    
         return Inertia::render('Properties/Create', [
             'clients' => $clients,
             'types' => Property::TYPES,
             'statuses' => Property::STATUSES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
+            'gisConfig' => [
+                'enabled' => true,
+                'defaultCenter' => [
+                    'lat' => 9.8349,
+                    'lng' => 124.1436
+                ],
+                'zoom' => 10
+            ],
+            'virtualTourConfig' => [
+                'enabled' => true,
+                'maxFiles' => 20,
+                'allowedTypes' => ['jpg', 'jpeg', 'png']
+            ]
         ]);
     }
 
     public function store(Request $request)
     {
         $this->authorize('create', Property::class);
-
+    
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -127,16 +145,27 @@ class PropertyController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'documents' => 'nullable|array|max:5',
             'documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+            // GIS and 360-degree view fields
+            'gis_data' => 'nullable|json',
+            'virtual_tour_images' => 'nullable|array|max:20',
+            'virtual_tour_images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+            'has_virtual_tour' => 'boolean',
+            'tour_hotspots' => 'nullable|json'
         ]);
-
+    
+        // Enforce public visibility for broker-created listings
+        if (auth()->user()->role === 'broker') {
+            $validated['status'] = 'available';
+        }
+    
         $validated['broker_id'] = auth()->id();
         $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(6);
-
+    
         // Calculate hectares if not provided
-        if (!$validated['lot_area_hectares']) {
+        if (empty($validated['lot_area_hectares'])) {
             $validated['lot_area_hectares'] = $validated['lot_area_sqm'] / 10000;
         }
-
+    
         // Handle image uploads
         if ($request->hasFile('images')) {
             $imagePaths = [];
@@ -146,7 +175,7 @@ class PropertyController extends Controller
             }
             $validated['images'] = $imagePaths;
         }
-
+    
         // Handle document uploads
         if ($request->hasFile('documents')) {
             $documentPaths = [];
@@ -156,11 +185,26 @@ class PropertyController extends Controller
             }
             $validated['documents'] = $documentPaths;
         }
-
+    
+        // Handle virtual tour images
+        if ($request->hasFile('virtual_tour_images')) {
+            $tourImagePaths = [];
+            foreach ($request->file('virtual_tour_images') as $image) {
+                $path = $image->store('properties/virtual-tours', 'public');
+                $tourImagePaths[] = $path;
+            }
+            $validated['virtual_tour_images'] = $tourImagePaths;
+            // Automatically set has_virtual_tour to true when images are uploaded
+            $validated['has_virtual_tour'] = true;
+        } else {
+            // Set to false if no virtual tour images are uploaded
+            $validated['has_virtual_tour'] = false;
+        }
+    
         $property = Property::create($validated);
-
-        return redirect()->route('properties.show', $property)
-            ->with('success', 'Land property created successfully.');
+    
+        return redirect()->route('broker.properties.index')
+            ->with('success', 'Land property created successfully with enhanced features.');
     }
 
     public function edit(Property $property)
@@ -183,41 +227,82 @@ class PropertyController extends Controller
     public function update(Request $request, Property $property)
     {
         $this->authorize('update', $property);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'type' => 'required|in:' . implode(',', Property::TYPES),
-            'status' => 'required|in:' . implode(',', Property::STATUSES),
-            'price_per_sqm' => 'required|numeric|min:0',
-            'total_price' => 'required|numeric|min:0',
-            'address' => 'required|string|max:500',
-            'municipality' => 'required|in:' . implode(',', Property::BOHOL_MUNICIPALITIES),
-            'barangay' => 'required|string|max:100',
-            'lot_area_sqm' => 'required|numeric|min:1',
-            'lot_area_hectares' => 'nullable|numeric|min:0',
-            'title_type' => 'nullable|in:titled,tax_declared,mother_title,cct',
-            'title_number' => 'nullable|string|max:100',
-            'tax_declaration_number' => 'nullable|string|max:100',
-            'coordinates_lat' => 'nullable|numeric|between:-90,90',
-            'coordinates_lng' => 'nullable|numeric|between:-180,180',
-            'road_access' => 'boolean',
-            'water_source' => 'boolean',
-            'electricity_available' => 'boolean',
-            'internet_available' => 'boolean',
-            'nearby_landmarks' => 'nullable|array',
-            'zoning_classification' => 'nullable|string|max:100',
-            'client_id' => 'nullable|exists:clients,id',
-            'new_images' => 'nullable|array|max:10',
-            'new_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'new_documents' => 'nullable|array|max:5',
-            'new_documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-            'remove_images' => 'nullable|array',
-            'remove_images.*' => 'string',
-            'remove_documents' => 'nullable|array',
-            'remove_documents.*' => 'string',
+    
+        // Add debugging to track the request data
+        \Log::info('PropertyController update method called', [
+            'property_id' => $property->id,
+            'has_new_virtual_tour_images' => $request->hasFile('new_virtual_tour_images'),
+            'new_virtual_tour_images_count' => $request->hasFile('new_virtual_tour_images') ? count($request->file('new_virtual_tour_images')) : 0,
+            'current_has_virtual_tour' => $property->has_virtual_tour,
+            'request_data_keys' => array_keys($request->all())
         ]);
+    
+        try {
+            \Log::info('About to validate request data');
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'type' => 'required|in:' . implode(',', Property::TYPES),
+                'status' => 'required|in:' . implode(',', Property::STATUSES),
+                'price_per_sqm' => 'required|numeric|min:0',
+                'total_price' => 'required|numeric|min:0',
+                'address' => 'required|string|max:500',
+                'municipality' => 'required|in:' . implode(',', Property::BOHOL_MUNICIPALITIES),
+                'barangay' => 'required|string|max:100',
+                'lot_area_sqm' => 'required|numeric|min:1',
+                'lot_area_hectares' => 'nullable|numeric|min:0',
+                'title_type' => 'nullable|in:titled,tax_declared,mother_title,cct',
+                'title_number' => 'nullable|string|max:100',
+                'tax_declaration_number' => 'nullable|string|max:100',
+                'coordinates_lat' => 'nullable|numeric|between:-90,90',
+                'coordinates_lng' => 'nullable|numeric|between:-180,180',
+                'road_access' => 'boolean',
+                'water_source' => 'boolean',
+                'electricity_available' => 'boolean',
+                'internet_available' => 'boolean',
+                'nearby_landmarks' => 'nullable|array',
+                'zoning_classification' => 'nullable|string|max:100',
+                'client_id' => 'nullable|exists:clients,id',
+                'new_images' => 'nullable|array|max:10',
+                'new_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'new_documents' => 'nullable|array|max:5',
+                'new_documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+                'remove_images' => 'nullable|array',
+                'remove_images.*' => 'string',
+                'remove_documents' => 'nullable|array',
+                'remove_documents.*' => 'string',
+                // Add missing virtual tour validation rules for update
+                'new_virtual_tour_images' => 'nullable|array|max:20',
+                // Changed from 'image|mimes:jpeg,png,jpg|max:5120' to 'file|mimes:jpeg,png,jpg|max:5120'
+                'new_virtual_tour_images.*' => 'file|mimes:jpeg,png,jpg|max:5120',
+                'remove_virtual_tour_images' => 'nullable|array',
+                'remove_virtual_tour_images.*' => 'string',
+                'has_virtual_tour' => 'boolean',
+                'gis_data' => 'nullable|json',
+                'tour_hotspots' => 'nullable|json',
+            ]);
+            \Log::info('Validation completed successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed:', [
+                'errors' => $e->errors(),
+                'message' => $e->getMessage()
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error during validation:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            throw $e;
+        }
 
+        // Add debugging after validation
+        \Log::info('Validated data:', [
+            'has_new_virtual_tour_images_in_validated' => isset($validated['new_virtual_tour_images']),
+            'validated_keys' => array_keys($validated)
+        ]);
+    
         // Update slug if title changed
         if ($validated['title'] !== $property->title) {
             $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(6);
@@ -229,9 +314,33 @@ class PropertyController extends Controller
         }
 
         // Handle file removals and additions
-        $this->handleFileUpdates($request, $property, $validated);
+        try {
+            \Log::info('About to call handleFileUpdates');
+            $this->handleFileUpdates($request, $property, $validated);
+            \Log::info('handleFileUpdates completed successfully');
+        } catch (\Exception $e) {
+            \Log::error('Exception in handleFileUpdates:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+
+        // Add debugging before update
+        \Log::info('Before property update:', [
+            'validated_has_virtual_tour' => $validated['has_virtual_tour'] ?? 'not_set',
+            'validated_virtual_tour_images' => $validated['virtual_tour_images'] ?? 'not_set'
+        ]);
 
         $property->update($validated);
+
+        // Add debugging after update
+        \Log::info('After property update:', [
+            'property_has_virtual_tour' => $property->fresh()->has_virtual_tour,
+            'property_virtual_tour_images' => $property->fresh()->virtual_tour_images
+        ]);
 
         return redirect()->route('properties.show', $property)
             ->with('success', 'Land property updated successfully.');
@@ -271,6 +380,17 @@ class PropertyController extends Controller
 
     private function handleFileUpdates(Request $request, Property $property, array &$validated)
     {
+        \Log::info('=== handleFileUpdates START ===');
+        
+        // Add comprehensive debugging at the start
+        \Log::info('handleFileUpdates called:', [
+            'has_new_virtual_tour_images_file' => $request->hasFile('new_virtual_tour_images'),
+            'new_virtual_tour_images_input' => $request->input('new_virtual_tour_images'),
+            'all_files' => array_keys($request->allFiles()),
+            'request_method' => $request->method(),
+            'content_type' => $request->header('Content-Type')
+        ]);
+
         // Handle image removal
         if ($request->has('remove_images')) {
             $currentImages = $property->images ?? [];
@@ -282,7 +402,7 @@ class PropertyController extends Controller
             }
             $validated['images'] = array_values($currentImages);
         }
-
+    
         // Handle document removal
         if ($request->has('remove_documents')) {
             $currentDocuments = $property->documents ?? [];
@@ -294,7 +414,7 @@ class PropertyController extends Controller
             }
             $validated['documents'] = array_values($currentDocuments);
         }
-
+    
         // Handle new image uploads
         if ($request->hasFile('new_images')) {
             $currentImages = $validated['images'] ?? $property->images ?? [];
@@ -304,7 +424,7 @@ class PropertyController extends Controller
             }
             $validated['images'] = $currentImages;
         }
-
+    
         // Handle new document uploads
         if ($request->hasFile('new_documents')) {
             $currentDocuments = $validated['documents'] ?? $property->documents ?? [];
@@ -314,5 +434,45 @@ class PropertyController extends Controller
             }
             $validated['documents'] = $currentDocuments;
         }
+    
+        // Handle virtual tour image removal
+        if ($request->has('remove_virtual_tour_images')) {
+            $currentTourImages = $property->virtual_tour_images ?? [];
+            foreach ($request->remove_virtual_tour_images as $imageToRemove) {
+                if (in_array($imageToRemove, $currentTourImages)) {
+                    Storage::disk('public')->delete($imageToRemove);
+                    $currentTourImages = array_filter($currentTourImages, fn($img) => $img !== $imageToRemove);
+                }
+            }
+            $validated['virtual_tour_images'] = array_values($currentTourImages);
+        }
+    
+        // Handle new virtual tour image uploads
+        if ($request->hasFile('new_virtual_tour_images')) {
+            \Log::info('Processing new virtual tour images');
+            $currentTourImages = $validated['virtual_tour_images'] ?? $property->virtual_tour_images ?? [];
+            foreach ($request->file('new_virtual_tour_images') as $image) {
+                $path = $image->store('properties/virtual-tours', 'public');
+                $currentTourImages[] = $path;
+            }
+            $validated['virtual_tour_images'] = $currentTourImages;
+            
+            // Add debugging
+            \Log::info('Virtual tour images after upload:', [
+                'images' => $currentTourImages,
+                'count' => count($currentTourImages)
+            ]);
+        }
+        
+        // Automatically set has_virtual_tour based on resulting virtual tour images
+        $finalTourImages = $validated['virtual_tour_images'] ?? $property->virtual_tour_images ?? [];
+        $validated['has_virtual_tour'] = !empty($finalTourImages);
+        
+        // Add debugging
+        \Log::info('Setting has_virtual_tour:', [
+            'final_images' => $finalTourImages,
+            'has_virtual_tour' => $validated['has_virtual_tour'],
+            'validated_array' => $validated
+        ]);
     }
 }

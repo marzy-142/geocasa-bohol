@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\ApprovedBrokerController;
 use App\Http\Controllers\Admin\BrokerApprovalController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Broker\DashboardController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\ClientController;
@@ -13,6 +15,8 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\SellerRequestController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
+
+
 
 
 // Public routes
@@ -74,7 +78,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/properties/{property}', [PropertyController::class, 'update'])->name('properties.update');
         
         // Client management
+        // Change this line (around line 81):
         Route::get('/clients', [ClientController::class, 'brokerIndex'])->name('clients.index');
+        
+        // To this:
+        Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
         Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
         
         // Analytics and reports
@@ -88,10 +96,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
         
         // User Management Routes (NEW)
-        Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
-        Route::post('users/{user}/suspend', [\App\Http\Controllers\Admin\UserController::class, 'suspend'])->name('users.suspend');
-        Route::post('users/{user}/reactivate', [\App\Http\Controllers\Admin\UserController::class, 'reactivate'])->name('users.reactivate');
-        Route::post('users/bulk-actions', [\App\Http\Controllers\Admin\UserController::class, 'bulkActions'])->name('users.bulk-actions');
+        Route::resource('users', UserController::class);
+        Route::post('users/{user}/suspend', [UserController::class, 'suspend'])->name('users.suspend');
+        Route::post('users/{user}/reactivate', [UserController::class, 'reactivate'])->name('users.reactivate');
+        Route::post('users/bulk-actions', [UserController::class, 'bulkActions'])->name('users.bulk-actions');
         
         // Add admin properties routes
         Route::resource('properties', PropertyController::class);
@@ -164,3 +172,12 @@ Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leade
 Route::get('/leaderboard/broker/{broker}', [LeaderboardController::class, 'show'])->name('leaderboard.broker');
 
 require __DIR__.'/auth.php';
+
+// Add these routes in the admin group section
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Existing routes...
+    
+    // Approved Broker Management
+    Route::get('/approved-brokers', [ApprovedBrokerController::class, 'index'])->name('approved-brokers.index');
+    Route::get('/approved-brokers/{broker}', [ApprovedBrokerController::class, 'show'])->name('approved-brokers.show');
+});

@@ -99,6 +99,51 @@ class DatabaseSchemaSeeder extends Seeder
             'documents' => ['title_beachfront.pdf'],
             'is_featured' => true,
             'broker_id' => $broker1->id,
+            // Virtual Tour Data
+            'has_virtual_tour' => true,
+            'virtual_tour_images' => [
+                'beachfront_360_entrance.jpg',
+                'beachfront_360_beach_view.jpg',
+                'beachfront_360_property_center.jpg',
+                'beachfront_360_sunset_view.jpg'
+            ],
+            'gis_data' => [
+                'elevation' => 2.5,
+                'soil_type' => 'sandy_loam',
+                'flood_zone' => 'none',
+                'environmental_clearance' => 'approved',
+                'coastal_setback' => 20,
+                'tide_level' => 'high_tide_safe'
+            ],
+            'tour_hotspots' => [
+                [
+                    'id' => 1,
+                    'image_index' => 0,
+                    'x_position' => 45.2,
+                    'y_position' => 30.8,
+                    'title' => 'Beach Access Point',
+                    'description' => 'Direct access to pristine white sand beach',
+                    'icon' => 'beach'
+                ],
+                [
+                    'id' => 2,
+                    'image_index' => 1,
+                    'x_position' => 60.5,
+                    'y_position' => 25.3,
+                    'title' => 'Sunset Viewing Area',
+                    'description' => 'Perfect spot for watching spectacular sunsets',
+                    'icon' => 'sunset'
+                ],
+                [
+                    'id' => 3,
+                    'image_index' => 2,
+                    'x_position' => 35.7,
+                    'y_position' => 40.1,
+                    'title' => 'Utility Connection Point',
+                    'description' => 'Water and electricity connections available',
+                    'icon' => 'utilities'
+                ]
+            ]
         ]);
 
         $property2 = Property::create([
@@ -157,6 +202,41 @@ class DatabaseSchemaSeeder extends Seeder
             'documents' => ['title_commercial.pdf', 'zoning_cert.pdf'],
             'is_featured' => true,
             'broker_id' => $broker1->id,
+            // Virtual Tour Data
+            'has_virtual_tour' => true,
+            'virtual_tour_images' => [
+                'commercial_360_street_view.jpg',
+                'commercial_360_lot_center.jpg',
+                'commercial_360_city_view.jpg'
+            ],
+            'gis_data' => [
+                'elevation' => 15.2,
+                'soil_type' => 'clay_loam',
+                'flood_zone' => 'low_risk',
+                'zoning_compliance' => 'commercial_approved',
+                'building_height_limit' => 25,
+                'parking_requirement' => '1_per_30sqm'
+            ],
+            'tour_hotspots' => [
+                [
+                    'id' => 1,
+                    'image_index' => 0,
+                    'x_position' => 50.0,
+                    'y_position' => 35.0,
+                    'title' => 'Main Street Frontage',
+                    'description' => '20-meter frontage on busy CPG Avenue',
+                    'icon' => 'road'
+                ],
+                [
+                    'id' => 2,
+                    'image_index' => 1,
+                    'x_position' => 40.3,
+                    'y_position' => 45.8,
+                    'title' => 'Development Area',
+                    'description' => 'Optimal space for commercial building construction',
+                    'icon' => 'building'
+                ]
+            ]
         ]);
 
         $property4 = Property::create([

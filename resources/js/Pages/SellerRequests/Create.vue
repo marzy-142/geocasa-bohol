@@ -798,7 +798,6 @@ const formatFieldName = (field) => {
                                         v-model="form.state"
                                         type="text"
                                         class="form-input"
-                                        value="Bohol"
                                         readonly
                                     />
                                 </div>

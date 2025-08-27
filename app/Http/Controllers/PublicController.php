@@ -82,6 +82,9 @@ class PublicController extends Controller
                 $query->where('electricity_available', true)
                       ->where('water_source', true);
             })
+            ->when($request->virtual_tour, function ($query) {
+                $query->where('has_virtual_tour', true);
+            })
             ->when($request->sort, function ($query, $sort) {
                 switch ($sort) {
                     case 'price_low':
@@ -110,7 +113,7 @@ class PublicController extends Controller
             'properties' => $properties,
             'filters' => $request->only([
                 'search', 'type', 'municipality', 'min_price', 'max_price', 
-                'min_area', 'max_area', 'utilities', 'sort'
+                'min_area', 'max_area', 'utilities', 'virtual_tour', 'sort'
             ]),
             'types' => Property::TYPES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
@@ -120,15 +123,18 @@ class PublicController extends Controller
     /**
      * Display a single property for public viewing
      */
-    public function showProperty(Property $property)
+    public function showProperty($slug)
     {
-        // Only show available properties to public
-        if ($property->status !== 'available') {
-            abort(404);
+        $property = Property::with(['broker', 'client'])
+            ->where('slug', $slug)
+            ->where('status', 'available')
+            ->firstOrFail();
+        
+        // Ensure broker relationship is loaded with fallback
+        if (!$property->relationLoaded('broker') || !$property->broker) {
+            $property->load('broker');
         }
-
-        $property->load(['broker', 'client']);
-
+        
         // Get similar properties (same type and municipality, excluding current)
         $similarProperties = Property::with(['broker'])
             ->where('status', 'available')
@@ -139,7 +145,7 @@ class PublicController extends Controller
             })
             ->limit(4)
             ->get();
-
+    
         return Inertia::render('Public/PropertyDetail', [
             'property' => $property,
             'similarProperties' => $similarProperties

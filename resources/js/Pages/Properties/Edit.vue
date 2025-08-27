@@ -509,7 +509,10 @@
                         @change="handleImageUpload"
                         class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                     />
-                    <InputError class="mt-2" :message="form.errors.new_images" />
+                    <InputError
+                        class="mt-2"
+                        :message="form.errors.new_images"
+                    />
                     <p class="mt-1 text-sm text-gray-500">
                         Select additional images to add to your property.
                         Supported formats: JPG, PNG, GIF
@@ -535,10 +538,239 @@
                         @change="handleDocumentUpload"
                         class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                     />
-                    <InputError class="mt-2" :message="form.errors.new_documents" />
+                    <InputError
+                        class="mt-2"
+                        :message="form.errors.new_documents"
+                    />
                     <p class="mt-1 text-sm text-gray-500">
                         Upload additional legal documents (PDF format only)
                     </p>
+                </div>
+            </div>
+
+            <!-- Virtual Tour Section -->
+            <div
+                class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6"
+            >
+                <h3
+                    class="text-xl font-semibold text-gray-900 mb-6 flex items-center"
+                >
+                    <svg
+                        class="w-6 h-6 mr-2 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                    </svg>
+                    Virtual Tour (Optional)
+                </h3>
+
+                <div class="mb-6">
+                    <label class="flex items-center space-x-3">
+                        <input
+                            id="has_virtual_tour"
+                            v-model="form.has_virtual_tour"
+                            type="checkbox"
+                            class="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span class="text-sm font-medium text-gray-700">
+                            🌟 Enable Virtual Tour for this property
+                        </span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1 ml-6">
+                        Virtual tours help potential buyers explore your
+                        property in 360°
+                    </p>
+                </div>
+
+                <!-- Current Virtual Tour Images -->
+                <div
+                    v-if="
+                        property.virtual_tour_images &&
+                        property.virtual_tour_images.length > 0
+                    "
+                    class="mb-6"
+                >
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">
+                        Current Virtual Tour Images:
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div
+                            v-for="(
+                                image, index
+                            ) in property.virtual_tour_images"
+                            :key="index"
+                            class="relative"
+                        >
+                            <img
+                                :src="asset('storage/' + image)"
+                                :alt="`Virtual Tour ${index + 1}`"
+                                class="w-full h-32 object-cover rounded border"
+                            />
+                            <button
+                                type="button"
+                                @click="removeVirtualTourImage(index)"
+                                class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="form.has_virtual_tour" class="space-y-6">
+                    <!-- Virtual Tour Images -->
+                    <div>
+                        <InputLabel
+                            for="virtual_tour_images"
+                            value="Add New 360° Images"
+                        />
+                        <input
+                            id="virtual_tour_images"
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            class="mt-1 block w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm"
+                            :class="{
+                                'border-red-500 ring-red-500':
+                                    form.errors.virtual_tour_images,
+                            }"
+                            @change="handleVirtualTourImageUpload"
+                        />
+                        <p class="text-xs text-gray-500 mt-1">
+                            Upload 360-degree panoramic images. Recommended:
+                            Equirectangular format, minimum 2048x1024 resolution
+                        </p>
+                        <InputError
+                            class="mt-2"
+                            :message="form.errors.virtual_tour_images"
+                        />
+                    </div>
+
+                    <!-- Virtual Tour Image Preview -->
+                    <div v-if="virtualTourImagePreview.length > 0" class="mt-4">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">
+                            New Virtual Tour Images Preview:
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div
+                                v-for="(
+                                    image, index
+                                ) in virtualTourImagePreview"
+                                :key="index"
+                                class="relative"
+                            >
+                                <img
+                                    :src="image"
+                                    :alt="`Virtual Tour ${index + 1}`"
+                                    class="w-full h-32 object-cover rounded border"
+                                />
+                                <button
+                                    type="button"
+                                    @click="removeNewVirtualTourImage(index)"
+                                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GIS Data -->
+                    <div>
+                        <InputLabel
+                            for="gis_data"
+                            value="GIS Data (Optional)"
+                        />
+                        <textarea
+                            id="gis_data"
+                            v-model="form.gis_data"
+                            rows="3"
+                            class="mt-1 block w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm"
+                            placeholder="Enter GIS coordinates, elevation data, or other geographic information..."
+                        ></textarea>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Geographic Information System data for enhanced
+                            property mapping
+                        </p>
+                        <InputError
+                            class="mt-2"
+                            :message="form.errors.gis_data"
+                        />
+                    </div>
+
+                    <!-- Tour Hotspots -->
+                    <div>
+                        <InputLabel
+                            for="tour_hotspots"
+                            value="Tour Hotspots (Optional)"
+                        />
+                        <textarea
+                            id="tour_hotspots"
+                            v-model="form.tour_hotspots"
+                            rows="4"
+                            class="mt-1 block w-full border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-md shadow-sm"
+                            placeholder='[{"x": 50, "y": 30, "title": "Beautiful View", "description": "Stunning ocean view from this angle"}]'
+                        ></textarea>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Add interactive hotspots to highlight key features.
+                            Format: JSON array with position and description
+                            data
+                        </p>
+                        <InputError
+                            class="mt-2"
+                            :message="form.errors.tour_hotspots"
+                        />
+                    </div>
+
+                    <!-- Virtual Tour Help -->
+                    <div
+                        class="bg-purple-50 border border-purple-200 rounded-lg p-4"
+                    >
+                        <div class="flex items-start space-x-3">
+                            <div class="w-5 h-5 text-purple-600 mt-0.5">
+                                <svg fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        fill-rule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                        clip-rule="evenodd"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p
+                                    class="text-sm text-purple-800 font-medium mb-1"
+                                >
+                                    Virtual Tour Tips:
+                                </p>
+                                <ul class="text-sm text-purple-700 space-y-1">
+                                    <li>
+                                        • Use 360-degree cameras or smartphone
+                                        apps to capture panoramic images
+                                    </li>
+                                    <li>
+                                        • Ensure good lighting and stable
+                                        positioning for best results
+                                    </li>
+                                    <li>
+                                        • Capture multiple viewpoints to give a
+                                        comprehensive tour
+                                    </li>
+                                    <li>
+                                        • Hotspots can highlight important
+                                        features like views, amenities, or
+                                        boundaries
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -554,7 +786,6 @@
                     <PrimaryButton
                         :class="{ 'opacity-25': form.processing }"
                         :disabled="form.processing"
-                        class="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
                     >
                         Update Property
                     </PrimaryButton>
@@ -562,20 +793,16 @@
             </div>
         </form>
 
-        <!-- Bohol Inspiration Section -->
-        <div
-            class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border border-green-100"
-        >
-            <div class="text-center">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                    🏝️ Showcase Bohol's Paradise
-                </h3>
-                <p class="text-gray-600 text-sm">
-                    Update your property listing to highlight the unique beauty
-                    and investment potential of Bohol. Help buyers discover
-                    their perfect piece of paradise.
-                </p>
-            </div>
+        <!-- Footer Message -->
+        <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                🏝️ Showcase Bohol's Paradise
+            </h3>
+            <p class="text-gray-600 text-sm">
+                Update your property listing to highlight the unique beauty and
+                investment potential of Bohol. Help buyers discover their
+                perfect piece of paradise.
+            </p>
         </div>
     </ModernDashboardLayout>
 </template>
@@ -647,6 +874,7 @@ const municipalities = [
 ];
 
 const nearbyLandmarksText = ref("");
+const virtualTourImagePreview = ref([]);
 
 const form = useForm({
     title: props.property.title,
@@ -672,10 +900,16 @@ const form = useForm({
     google_maps_link: props.property.google_maps_link,
     status: props.property.status,
     is_featured: props.property.is_featured,
-    new_images: [], // Changed from 'images'
-    new_documents: [], // Changed from 'documents'
+    new_images: [],
+    new_documents: [],
     remove_images: [],
-    remove_documents: [], // Add this field for document removal
+    remove_documents: [],
+    // Virtual Tour fields
+    has_virtual_tour: props.property.has_virtual_tour || false,
+    virtual_tour_images: [],
+    gis_data: props.property.gis_data || "",
+    tour_hotspots: props.property.tour_hotspots || "",
+    remove_virtual_tour_images: [],
 });
 
 onMounted(() => {
@@ -694,11 +928,27 @@ const calculateTotalPrice = () => {
 };
 
 const handleImageUpload = (event) => {
-    form.new_images = Array.from(event.target.files); // Changed from 'images'
+    form.new_images = Array.from(event.target.files);
 };
 
 const handleDocumentUpload = (event) => {
-    form.new_documents = Array.from(event.target.files); // Changed from 'documents'
+    form.new_documents = Array.from(event.target.files);
+};
+
+// Virtual Tour Image Upload Handler
+const handleVirtualTourImageUpload = (event) => {
+    const files = Array.from(event.target.files);
+    form.virtual_tour_images = files;
+
+    // Create preview URLs
+    virtualTourImagePreview.value = [];
+    files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            virtualTourImagePreview.value.push(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    });
 };
 
 const removeImage = (index) => {
@@ -706,6 +956,22 @@ const removeImage = (index) => {
         form.remove_images.push(props.property.images[index]);
         props.property.images.splice(index, 1);
     }
+};
+
+const removeVirtualTourImage = (index) => {
+    if (confirm("Are you sure you want to remove this virtual tour image?")) {
+        form.remove_virtual_tour_images.push(
+            props.property.virtual_tour_images[index]
+        );
+        props.property.virtual_tour_images.splice(index, 1);
+    }
+};
+
+const removeNewVirtualTourImage = (index) => {
+    const newImages = Array.from(form.virtual_tour_images);
+    newImages.splice(index, 1);
+    form.virtual_tour_images = newImages;
+    virtualTourImagePreview.value.splice(index, 1);
 };
 
 const asset = (path) => {

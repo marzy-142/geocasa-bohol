@@ -32,15 +32,20 @@ class Property extends Model
         'Sikatuna', 'Talibon', 'Trinidad', 'Tubigon', 'Ubay', 'Valencia', 'Well'
     ];
 
+    // Add these fields to the fillable array and casts
+    // Add these to the existing fillable array
     protected $fillable = [
         'title', 'slug', 'description', 'type', 'status', 'price_per_sqm', 'total_price',
         'address', 'municipality', 'barangay', 'lot_area_sqm', 'lot_area_hectares',
         'title_type', 'title_number', 'tax_declaration_number', 'coordinates_lat',
         'coordinates_lng', 'road_access', 'water_source', 'electricity_available',
         'internet_available', 'nearby_landmarks', 'zoning_classification',
-        'images', 'documents', 'is_featured', 'broker_id', 'client_id'
+        'images', 'documents', 'is_featured', 'broker_id', 'client_id',
+        // Add these to the existing fillable array
+        'virtual_tour_images', 'has_virtual_tour', 'gis_data', 'tour_hotspots',
     ];
-
+    
+    // Add these to the existing casts array
     protected $casts = [
         'price_per_sqm' => 'decimal:2',
         'total_price' => 'decimal:2',
@@ -56,6 +61,10 @@ class Property extends Model
         'documents' => 'array',
         'nearby_landmarks' => 'array',
         'is_featured' => 'boolean',
+        'gis_data' => 'array',
+        'virtual_tour_images' => 'array',
+        'has_virtual_tour' => 'boolean',
+        'tour_hotspots' => 'array'
     ];
 
     // Relationships
@@ -127,11 +136,6 @@ class Property extends Model
         return '₱' . number_format($this->total_price, 2);
     }
 
-    public function getFormattedPricePerSqmAttribute()
-    {
-        return '₱' . number_format($this->price_per_sqm, 2);
-    }
-
     public function getFormattedAreaAttribute()
     {
         if ($this->lot_area_hectares >= 1) {
@@ -140,18 +144,16 @@ class Property extends Model
         return number_format($this->lot_area_sqm, 0) . ' sqm';
     }
 
+    public function getFormattedPricePerSqmAttribute()
+    {
+        return '₱' . number_format($this->price_per_sqm, 2);
+    }
+
     public function getMainImageAttribute()
     {
         return $this->images && count($this->images) > 0 
             ? asset('storage/' . $this->images[0])
-            : 'data:image/svg+xml;base64,' . base64_encode('
-                <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="400" height="300" fill="#f3f4f6"/>
-                    <text x="200" y="150" text-anchor="middle" fill="#9ca3af" font-family="Arial" font-size="16">
-                        No Image Available
-                    </text>
-                </svg>
-            ');
+            : 'data:image/svg+xml;base64,' . base64_encode(/* SVG placeholder */);
     }
 
     public function getGoogleMapsLinkAttribute()
@@ -172,7 +174,3 @@ class Property extends Model
         return 'slug';
     }
 }
-
-## Completing STEP 4: GeoCasa Bohol Property Management System
-
-### 1. Update Property Model for GeoCasa Bohol

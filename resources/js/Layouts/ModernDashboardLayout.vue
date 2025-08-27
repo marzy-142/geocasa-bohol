@@ -107,6 +107,12 @@ const navigation = computed(() => {
                 current: false,
             },
             {
+                name: "Approved Brokers",
+                href: route("admin.approved-brokers.index"),
+                icon: UsersIcon, // You can switch to UserIcon if you prefer
+                current: route().current("admin.approved-brokers.*"),
+            },
+            {
                 name: "All Properties",
                 href: "/admin/properties",
                 icon: BuildingOfficeIcon,
