@@ -78,12 +78,16 @@ class PublicController extends Controller
             ->when($request->max_area, function ($query, $maxArea) {
                 $query->where('lot_area_sqm', '<=', $maxArea);
             })
-            ->when($request->utilities, function ($query) {
+            ->when($request->boolean('utilities'), function ($query) {
                 $query->where('electricity_available', true)
                       ->where('water_source', true);
             })
-            ->when($request->virtual_tour, function ($query) {
+            ->when($request->boolean('virtual_tour'), function ($query) {
                 $query->where('has_virtual_tour', true);
+            })
+            // NEW: support featured filter from UI
+            ->when($request->boolean('featured'), function ($query) {
+                $query->where('is_featured', true);
             })
             ->when($request->sort, function ($query, $sort) {
                 switch ($sort) {
@@ -113,7 +117,7 @@ class PublicController extends Controller
             'properties' => $properties,
             'filters' => $request->only([
                 'search', 'type', 'municipality', 'min_price', 'max_price', 
-                'min_area', 'max_area', 'utilities', 'virtual_tour', 'sort'
+                'min_area', 'max_area', 'utilities', 'virtual_tour', 'sort', 'featured' // include featured
             ]),
             'types' => Property::TYPES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
@@ -183,8 +187,11 @@ class PublicController extends Controller
         $inquiry = Inquiry::create([
             'property_id' => $property->id,
             'client_id' => $client->id,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
             'message' => $validated['message'],
-            'status' => 'pending'
+            'status' => 'new'
         ]);
 
         // Load relationships for notification

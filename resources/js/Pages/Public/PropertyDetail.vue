@@ -4,20 +4,37 @@
         <PublicNavigation :auth="$page.props.auth" />
 
         <!-- Enhanced Breadcrumb -->
-        <div class="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40">
+        <div
+            class="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-40"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <nav class="flex items-center justify-between" aria-label="Breadcrumb">
+                <nav
+                    class="flex items-center justify-between"
+                    aria-label="Breadcrumb"
+                >
                     <ol class="flex items-center space-x-2 text-sm">
                         <li>
-                            <Link :href="route('home')" class="text-gray-500 hover:text-blue-600 transition-colors">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                            <Link
+                                :href="route('home')"
+                                class="text-gray-500 hover:text-blue-600 transition-colors"
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path
+                                        d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
+                                    />
                                 </svg>
                             </Link>
                         </li>
                         <li><span class="text-gray-400">/</span></li>
                         <li>
-                            <Link :href="route('public.properties')" class="text-gray-500 hover:text-blue-600 transition-colors">
+                            <Link
+                                :href="route('public.properties')"
+                                class="text-gray-500 hover:text-blue-600 transition-colors"
+                            >
                                 Properties
                             </Link>
                         </li>
@@ -26,11 +43,24 @@
                             {{ property.title }}
                         </li>
                     </ol>
-                    
+
                     <!-- Back Button -->
-                    <button @click="$router.go(-1)" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    <button
+                        @click="$router.go(-1)"
+                        class="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                            />
                         </svg>
                         Back
                     </button>
@@ -46,7 +76,9 @@
                     <!-- Enhanced Property Images Gallery -->
                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
                         <!-- Main Image Display -->
-                        <div class="relative aspect-video lg:aspect-[4/3] group">
+                        <div
+                            class="relative aspect-video lg:aspect-[4/3] group"
+                        >
                             <img
                                 :src="currentImage"
                                 :alt="property.title"
@@ -55,50 +87,116 @@
                                 @load="imageLoading = false"
                                 @error="handleImageError"
                             />
-                            
+
                             <!-- Loading Overlay -->
-                            <div v-if="imageLoading" class="absolute inset-0 flex items-center justify-center bg-gray-100">
-                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <div
+                                v-if="imageLoading"
+                                class="absolute inset-0 flex items-center justify-center bg-gray-100"
+                            >
+                                <div
+                                    class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+                                ></div>
                             </div>
-                            
+
                             <!-- Image Navigation Arrows -->
-                            <div v-if="property.images && property.images.length > 1" class="absolute inset-y-0 left-0 right-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button @click="previousImage" class="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            <div
+                                v-if="
+                                    property.images &&
+                                    property.images.length > 1
+                                "
+                                class="absolute inset-y-0 left-0 right-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <button
+                                    @click="previousImage"
+                                    class="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                >
+                                    <svg
+                                        class="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M15 19l-7-7 7-7"
+                                        />
                                     </svg>
                                 </button>
-                                <button @click="nextImage" class="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                <button
+                                    @click="nextImage"
+                                    class="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                >
+                                    <svg
+                                        class="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 5l7 7-7 7"
+                                        />
                                     </svg>
                                 </button>
                             </div>
-                            
+
                             <!-- Image Counter -->
-                            <div v-if="property.images && property.images.length > 1" class="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                                {{ currentImageIndex + 1 }} / {{ property.images.length }}
+                            <div
+                                v-if="
+                                    property.images &&
+                                    property.images.length > 1
+                                "
+                                class="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm"
+                            >
+                                {{ currentImageIndex + 1 }} /
+                                {{ property.images.length }}
                             </div>
-                            
+
                             <!-- Fullscreen Button -->
-                            <button @click="openImageModal" class="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                            <button
+                                @click="openImageModal"
+                                class="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                            >
+                                <svg
+                                    class="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                                    />
                                 </svg>
                             </button>
                         </div>
 
                         <!-- Enhanced Image Thumbnails -->
-                        <div v-if="property.images && property.images.length > 1" class="p-4 lg:p-6">
-                            <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                        <div
+                            v-if="property.images && property.images.length > 1"
+                            class="p-4 lg:p-6"
+                        >
+                            <div class="flex gap-2 overflow-x-auto pb-2">
                                 <button
-                                    v-for="(image, index) in property.images"
+                                    v-for="(image, index) in safeImages"
                                     :key="index"
                                     @click="selectImage(index)"
                                     class="flex-shrink-0 relative group"
                                 >
-                                    <div class="w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all duration-200"
-                                         :class="currentImageIndex === index ? 'border-blue-500 shadow-lg' : 'border-gray-200 hover:border-gray-300'">
+                                    <div
+                                        class="w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all duration-200"
+                                        :class="
+                                            currentImageIndex === index
+                                                ? 'border-blue-500 shadow-lg'
+                                                : 'border-gray-200 hover:border-gray-300'
+                                        "
+                                    >
                                         <img
                                             :src="getImageUrl(image)"
                                             :alt="`Image ${index + 1}`"
@@ -106,40 +204,63 @@
                                             loading="lazy"
                                         />
                                     </div>
-                                    <div v-if="currentImageIndex === index" class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <div
+                                        v-if="currentImageIndex === index"
+                                        class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full"
+                                    ></div>
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Virtual Tour Section -->
-                    <div v-if="property.has_virtual_tour && hasVirtualTourData" class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div
+                        v-if="property.has_virtual_tour && hasVirtualTourData"
+                        class="bg-white rounded-2xl shadow-lg overflow-hidden"
+                    >
                         <div class="p-4 lg:p-6 border-b border-gray-100">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
-                                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    <div
+                                        class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center"
+                                    >
+                                        <svg
+                                            class="w-6 h-6 text-white"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                            />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 class="text-xl font-bold text-gray-900">Virtual Tour</h3>
-                                        <p class="text-gray-600">Explore this property in 360°</p>
+                                        <h3
+                                            class="text-xl font-bold text-gray-900"
+                                        >
+                                            Virtual Tour
+                                        </h3>
+                                        <p class="text-gray-600">
+                                            Explore this property in 360°
+                                        </p>
                                     </div>
                                 </div>
-                                <div class="bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 px-4 py-2 rounded-full text-sm font-semibold">
+                                <div
+                                    class="bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 px-4 py-2 rounded-full text-sm font-semibold"
+                                >
                                     🌟 Interactive Experience
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="p-4 lg:p-6">
                             <VirtualTourViewer
-                                :tour-images="virtualTourImages"
+                                :tourImages="virtualTourImages"
                                 :hotspots="virtualTourHotspots"
-                                :auto-rotate="false"
-                                :rotation-speed="0.3"
-                                class="rounded-xl overflow-hidden"
                             />
                         </div>
                     </div>
@@ -195,8 +316,18 @@
                                 v-if="property.has_virtual_tour"
                                 class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                <svg
+                                    class="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                    />
                                 </svg>
                                 <span>Virtual Tour</span>
                             </span>
@@ -451,11 +582,13 @@
                             <div
                                 class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-lg"
                             >
-                                {{ property.broker?.name?.charAt(0) || 'G' }}
+                                {{ property.broker?.name?.charAt(0) || "G" }}
                             </div>
                             <div class="ml-3">
                                 <div class="font-medium text-gray-900">
-                                    {{ property.broker?.name || 'GeoCasa Bohol' }}
+                                    {{
+                                        property.broker?.name || "GeoCasa Bohol"
+                                    }}
                                 </div>
                                 <div class="text-sm text-gray-600">
                                     Licensed Broker
@@ -476,7 +609,10 @@
                                         d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
                                     />
                                 </svg>
-                                {{ property.broker?.email || 'info@geocasabohol.com' }}
+                                {{
+                                    property.broker?.email ||
+                                    "info@geocasabohol.com"
+                                }}
                             </div>
                         </div>
                     </div>
@@ -593,26 +729,197 @@
             </div>
         </div>
 
-        <!-- Enhanced Image Modal -->
-        <div v-if="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90" @click="closeImageModal">
-            <div class="relative max-w-7xl max-h-full p-4" @click.stop>
-                <img :src="currentImage" :alt="property.title" class="max-w-full max-h-full object-contain rounded-lg" />
-                <button @click="closeImageModal" class="absolute top-2 right-2 p-2 text-white hover:bg-white/20 rounded-full transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-                
-                <!-- Modal Navigation -->
-                <div v-if="property.images && property.images.length > 1" class="absolute inset-y-0 left-0 right-0 flex items-center justify-between p-4">
-                    <button @click="previousImage" class="p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        <!-- Authentication Required Notification Modal -->
+        <div
+            v-if="showAuthNotification"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            @click="closeAuthNotification"
+        >
+            <div
+                class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+                @click.stop
+            >
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg
+                                class="w-8 h-8 text-blue-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                ></path>
+                            </svg>
+                        </div>
+                        <h3 class="ml-3 text-lg font-semibold text-gray-900">
+                            Authentication Required
+                        </h3>
+                    </div>
+                    <button
+                        @click="closeAuthNotification"
+                        class="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            ></path>
                         </svg>
                     </button>
-                    <button @click="nextImage" class="p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </div>
+
+                <div class="mb-6">
+                    <p class="text-gray-600 mb-4">
+                        To submit an inquiry for this property, you need to be
+                        logged in to your account. This helps us connect you
+                        directly with the property broker and manage your
+                        inquiries effectively.
+                    </p>
+                    <div
+                        class="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                    >
+                        <div class="flex items-start">
+                            <svg
+                                class="w-5 h-5 text-blue-600 mt-0.5 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                ></path>
+                            </svg>
+                            <div class="text-sm text-blue-800">
+                                <strong
+                                    >Benefits of creating an account:</strong
+                                >
+                                <ul
+                                    class="mt-1 list-disc list-inside space-y-1"
+                                >
+                                    <li>Track all your property inquiries</li>
+                                    <li>Save favorite properties</li>
+                                    <li>
+                                        Get personalized property
+                                        recommendations
+                                    </li>
+                                    <li>Direct communication with brokers</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <Link
+                        :href="route('login')"
+                        class="flex-1 bg-blue-600 text-white text-center py-3 px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                    >
+                        Login to Your Account
+                    </Link>
+                    <Link
+                        :href="route('register')"
+                        class="flex-1 bg-white text-blue-600 border-2 border-blue-600 text-center py-3 px-4 rounded-lg hover:bg-blue-50 font-medium transition-colors"
+                    >
+                        Create New Account
+                    </Link>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <button
+                        @click="closeAuthNotification"
+                        class="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                        Maybe later
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Image Modal -->
+        <div
+            v-if="showImageModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+            @click="closeImageModal"
+        >
+            <div class="relative max-w-7xl max-h-full p-4" @click.stop>
+                <img
+                    :src="currentImage"
+                    :alt="property.title"
+                    class="max-w-full max-h-full object-contain rounded-lg"
+                />
+                <button
+                    @click="closeImageModal"
+                    class="absolute top-2 right-2 p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+                >
+                    <svg
+                        class="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        />
+                    </svg>
+                </button>
+
+                <!-- Modal Navigation -->
+                <div
+                    v-if="property.images && property.images.length > 1"
+                    class="absolute inset-y-0 left-0 right-0 flex items-center justify-between p-4"
+                >
+                    <button
+                        @click="previousImage"
+                        class="p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 19l-7-7 7-7"
+                            />
+                        </svg>
+                    </button>
+                    <button
+                        @click="nextImage"
+                        class="p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"
+                            />
                         </svg>
                     </button>
                 </div>
@@ -626,7 +933,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { Link, useForm } from "@inertiajs/vue3";
+import { Link, useForm, usePage } from "@inertiajs/vue3";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
 import PublicFooter from "@/Components/PublicFooter.vue";
 import VirtualTourViewer from "@/Components/VirtualTourViewer.vue";
@@ -636,60 +943,115 @@ const props = defineProps({
     errors: Object,
 });
 
+// Get page props for authentication state
+const page = usePage();
+const isAuthenticated = computed(() => page.props.auth?.user);
+
+// Authentication notification state
+const showAuthNotification = ref(false);
+
 // Initialize the inquiry form
 const inquiryForm = useForm({
-    name: '',
-    email: '',
-    phone: '',
-    message: `I'm interested in learning more about this property. Please provide additional details.`
+    name: "",
+    email: "",
+    phone: "",
+    message: `I'm interested in learning more about this property. Please provide additional details.`,
 });
+
+// Add processing state for the inquiry form
+const processing = computed(() => inquiryForm.processing);
 
 // Enhanced image gallery state
 const currentImageIndex = ref(0);
 const imageLoading = ref(false);
 const showImageModal = ref(false);
 
+// Safe images computed property to handle arrays
+const safeImages = computed(() => {
+    if (!props.property.images || !Array.isArray(props.property.images)) {
+        return [];
+    }
+
+    return props.property.images
+        .map((image) => {
+            // If image is an array, take the first valid string
+            if (Array.isArray(image)) {
+                const firstValid = image.find(
+                    (img) => img && typeof img === "string"
+                );
+                return firstValid || "";
+            }
+            return image || "";
+        })
+        .filter((image) => image.trim() !== "");
+});
+
 // Computed properties
 const currentImage = computed(() => {
-    if (props.property.images && props.property.images.length > 0) {
-        return getImageUrl(props.property.images[currentImageIndex.value]);
+    if (safeImages.value && safeImages.value.length > 0) {
+        const imageAtIndex = safeImages.value[currentImageIndex.value];
+        return getImageUrl(imageAtIndex);
     }
-    return props.property.main_image;
+    return getImageUrl(props.property.main_image);
 });
 
 // Virtual Tour computed properties
 const hasVirtualTourData = computed(() => {
-    return props.property.virtual_tour_images && 
-           props.property.virtual_tour_images.length > 0;
+    return (
+        props.property.virtual_tour_images &&
+        props.property.virtual_tour_images.length > 0
+    );
 });
 
 const virtualTourImages = computed(() => {
     if (!props.property.virtual_tour_images) return [];
-    
-    return props.property.virtual_tour_images.map((image, index) => ({
-        url: getImageUrl(image),
-        thumbnail: getImageUrl(image), // You can add separate thumbnails later
-        title: `View ${index + 1}`,
-        description: `360° view of ${props.property.title}`
-    }));
+
+    // Ensure we have a flat array of strings
+    let images = props.property.virtual_tour_images;
+
+    // Handle case where virtual_tour_images might be a nested array
+    if (
+        Array.isArray(images) &&
+        images.length > 0 &&
+        Array.isArray(images[0])
+    ) {
+        images = images.flat();
+    }
+
+    // Filter out any non-string values and map to image objects
+    return images
+        .filter((image) => image && typeof image === "string")
+        .map((image, index) => ({
+            url: getImageUrl(image, true), // Pass true for virtual tour images
+            thumbnail: getImageUrl(image, true),
+            title: `View ${index + 1}`,
+            description: `360° view of ${props.property.title}`,
+        }));
 });
 
 const virtualTourHotspots = computed(() => {
     if (!props.property.tour_hotspots) return [];
-    
+
     try {
-        const hotspots = typeof props.property.tour_hotspots === 'string' 
-            ? JSON.parse(props.property.tour_hotspots) 
-            : props.property.tour_hotspots;
-            
+        const hotspots =
+            typeof props.property.tour_hotspots === "string"
+                ? JSON.parse(props.property.tour_hotspots)
+                : props.property.tour_hotspots;
+
         return Array.isArray(hotspots) ? hotspots : [];
     } catch (error) {
-        console.warn('Failed to parse tour hotspots:', error);
+        console.warn("Failed to parse tour hotspots:", error);
         return [];
     }
 });
 
 const submitInquiry = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated.value) {
+        showAuthNotification.value = true;
+        return;
+    }
+
     inquiryForm.post(route("public.inquiries.store", props.property.slug), {
         preserveScroll: true,
         onSuccess: () => {
@@ -699,8 +1061,80 @@ const submitInquiry = () => {
     });
 };
 
-const getImageUrl = (image) => {
-    return image.startsWith("http") ? image : `/storage/${image}`;
+// Close authentication notification
+const closeAuthNotification = () => {
+    showAuthNotification.value = false;
+};
+
+// Enhanced getImageUrl function with proper path detection
+const getImageUrl = (image, isVirtualTour = false) => {
+    // Handle null, undefined, or empty values
+    if (!image) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+    }
+
+    // Handle arrays - flatten and find first valid string
+    if (Array.isArray(image)) {
+        console.warn("Array passed to getImageUrl:", image);
+        const flatArray = image.flat(2); // Flatten up to 2 levels deep
+        const firstValidImage = flatArray.find(
+            (img) => img && typeof img === "string" && img.trim() !== ""
+        );
+
+        if (!firstValidImage) {
+            console.error("No valid image found in array:", image);
+            return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+        }
+
+        return getImageUrl(firstValidImage, isVirtualTour); // Recursive call with string
+    }
+
+    // Ensure we have a string
+    if (typeof image !== "string") {
+        console.error("Invalid image type:", typeof image, image);
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+    }
+
+    // Clean the image string
+    let cleanImage = image.trim();
+
+    if (!cleanImage) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+    }
+
+    // If already a full URL, return as-is
+    if (cleanImage.startsWith("http://") || cleanImage.startsWith("https://")) {
+        return cleanImage;
+    }
+
+    // If already starts with /storage/, return as-is to prevent duplication
+    if (cleanImage.startsWith("/storage/")) {
+        return cleanImage;
+    }
+
+    // Remove any leading slashes to prevent double slashes
+    cleanImage = cleanImage.replace(/^\/+/, "");
+
+    // Detect the correct path based on the image path or context
+    if (cleanImage.includes("properties/virtual-tours/")) {
+        // If it already contains the virtual tours path structure, just add /storage/ prefix
+        return `/storage/${cleanImage}`;
+    } else if (cleanImage.includes("properties/images/")) {
+        // If it already contains the images path structure, just add /storage/ prefix
+        return `/storage/${cleanImage}`;
+    }
+
+    // Determine the correct path based on context or image path patterns
+    if (
+        isVirtualTour ||
+        cleanImage.includes("virtual") ||
+        cleanImage.includes("tour")
+    ) {
+        return `/storage/properties/virtual-tours/${cleanImage}`;
+    } else {
+        // Default to regular property images path
+        return `/storage/properties/images/${cleanImage}`;
+    }
 };
 
 const formatPropertyType = (type) => {
@@ -709,54 +1143,56 @@ const formatPropertyType = (type) => {
 
 // Enhanced image gallery methods
 const selectImage = (index) => {
-    if (index >= 0 && index < props.property.images.length) {
+    if (index >= 0 && index < safeImages.value.length) {
         imageLoading.value = true;
         currentImageIndex.value = index;
     }
 };
 
 const nextImage = () => {
-    if (props.property.images && props.property.images.length > 1) {
-        const nextIndex = (currentImageIndex.value + 1) % props.property.images.length;
+    if (safeImages.value && safeImages.value.length > 1) {
+        const nextIndex =
+            (currentImageIndex.value + 1) % safeImages.value.length;
         selectImage(nextIndex);
     }
 };
 
 const previousImage = () => {
-    if (props.property.images && props.property.images.length > 1) {
-        const prevIndex = currentImageIndex.value === 0 
-            ? props.property.images.length - 1 
-            : currentImageIndex.value - 1;
+    if (safeImages.value && safeImages.value.length > 1) {
+        const prevIndex =
+            currentImageIndex.value === 0
+                ? safeImages.value.length - 1
+                : currentImageIndex.value - 1;
         selectImage(prevIndex);
     }
 };
 
 const openImageModal = () => {
     showImageModal.value = true;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 };
 
 const closeImageModal = () => {
     showImageModal.value = false;
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
 };
 
 const handleImageError = () => {
     imageLoading.value = false;
-    console.warn('Failed to load image:', currentImage.value);
+    console.warn("Failed to load image:", currentImage.value);
 };
 
 // Keyboard navigation
 const handleKeydown = (event) => {
     if (showImageModal.value) {
         switch (event.key) {
-            case 'Escape':
+            case "Escape":
                 closeImageModal();
                 break;
-            case 'ArrowLeft':
+            case "ArrowLeft":
                 previousImage();
                 break;
-            case 'ArrowRight':
+            case "ArrowRight":
                 nextImage();
                 break;
         }
@@ -765,12 +1201,12 @@ const handleKeydown = (event) => {
 
 // Lifecycle hooks
 onMounted(() => {
-    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener("keydown", handleKeydown);
 });
 
 onUnmounted(() => {
-    document.removeEventListener('keydown', handleKeydown);
-    document.body.style.overflow = 'auto';
+    document.removeEventListener("keydown", handleKeydown);
+    document.body.style.overflow = "auto";
 });
 </script>
 

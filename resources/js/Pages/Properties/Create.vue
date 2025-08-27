@@ -1011,6 +1011,7 @@
                             Status *
                         </label>
                         <select
+                            v-if="isAdmin"
                             id="status"
                             v-model="form.status"
                             class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1028,6 +1029,21 @@
                             </option>
                             <option value="off_market">Off Market</option>
                         </select>
+                        <div
+                            v-else
+                            class="w-full rounded-md px-3 py-2 border border-gray-200 bg-gray-50"
+                        >
+                            <div class="text-sm text-gray-500">Status</div>
+                            <div class="font-medium text-gray-900">
+                                Available
+                            </div>
+                            <input
+                                type="hidden"
+                                v-model="form.status"
+                                id="property-status"
+                                name="status"
+                            />
+                        </div>
                         <div
                             v-if="errors.status"
                             class="text-red-500 text-sm mt-1"
@@ -1160,17 +1176,19 @@ const imagePreview = ref([]);
 const virtualTourImagePreview = ref([]);
 const nearbyLandmarksText = ref("");
 
-// Property types for Bohol land properties
+// Property types aligned with backend App\Models\Property::TYPES
 const propertyTypes = [
     "residential_lot",
-    "commercial_lot",
     "agricultural_land",
+    "commercial_lot",
+    "industrial_lot",
     "beachfront",
     "mountain_view",
     "rice_field",
     "coconut_plantation",
-    "industrial_lot",
-    "mixed_use",
+    "subdivision_lot",
+    "titled_land",
+    "tax_declared",
 ];
 
 // Bohol municipalities
@@ -1222,6 +1240,11 @@ const municipalities = [
 const canFeatureProperty = computed(() => {
     const user = page.props.auth.user;
     return user.role === "admin";
+});
+
+const isAdmin = computed(() => {
+    const user = page.props.auth.user;
+    return user && user.role === "admin";
 });
 
 const formatType = (type) => {

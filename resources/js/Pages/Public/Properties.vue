@@ -37,12 +37,90 @@ const form = reactive({
     virtual_tour: props.filters.virtual_tour || false,
 });
 
-const search = () => {
-    router.get(route("public.properties"), form, {
-        preserveState: true,
-        replace: true,
-    });
+const getImageUrl = (image, isVirtualTour = false) => {
+    // Handle null, undefined, or empty values
+    if (!image) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+    }
+
+    // Handle arrays - flatten and find first valid string
+    if (Array.isArray(image)) {
+        console.warn("Array passed to getImageUrl:", image);
+        const flatArray = image.flat(2);
+        const firstValidImage = flatArray.find(
+            (img) => img && typeof img === "string" && img.trim() !== ""
+        );
+
+        if (!firstValidImage) {
+            console.error("No valid image found in array:", image);
+            return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+        }
+
+        return getImageUrl(firstValidImage, isVirtualTour);
+    }
+
+    // Ensure we have a string
+    if (typeof image !== "string") {
+        console.error("Invalid image type:", typeof image, image);
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+    }
+
+    // Clean the image string
+    let cleanImage = image.trim();
+
+    if (!cleanImage) {
+        return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
+    }
+
+    // If already a full URL, return as-is
+    if (cleanImage.startsWith("http://") || cleanImage.startsWith("https://")) {
+        return cleanImage;
+    }
+
+    // If already starts with /storage/, return as-is to prevent duplication
+    if (cleanImage.startsWith("/storage/")) {
+        return cleanImage;
+    }
+
+    // Remove any leading slashes to prevent double slashes
+    cleanImage = cleanImage.replace(/^\/+/, "");
+
+    // Check for existing path segments to prevent duplication
+    if (cleanImage.includes("properties/virtual-tours/")) {
+        return `/storage/${cleanImage}`;
+    } else if (cleanImage.includes("properties/images/")) {
+        return `/storage/${cleanImage}`;
+    }
+
+    // Determine the correct path based on context
+    if (
+        isVirtualTour ||
+        cleanImage.includes("virtual") ||
+        cleanImage.includes("tour")
+    ) {
+        return `/storage/properties/virtual-tours/${cleanImage}`;
+    } else {
+        return `/storage/properties/images/${cleanImage}`;
+    }
 };
+
+function search() {
+    const payload = { ...form };
+
+    // Drop falsey filters except 0 numbers
+    Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (v === "" || v === null || v === false) {
+            delete payload[k];
+        }
+    });
+
+    router.get(route("public.properties"), payload, {
+        preserveScroll: true,
+        replace: true,
+        preserveState: true,
+    });
+}
 
 const formatPropertyType = (type) => {
     return type.charAt(0).toUpperCase() + type.slice(1);
@@ -130,18 +208,25 @@ watch(
                         <div
                             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
                         >
-                            <select v-model="form.type" class="modern-select">
+                            <select
+                                v-model="form.type"
+                                class="modern-select"
+                                id="property-type-filter"
+                                name="type"
+                            >
                                 <option value="">All Property Types</option>
                                 <option
                                     v-for="type in types"
                                     :key="type"
                                     :value="type"
                                 >
-                                    {{ formatPropertyType(type) }}
+                                    {{ type }}
                                 </option>
                             </select>
 
                             <select
+                                id="municipality"
+                                name="municipality"
                                 v-model="form.municipality"
                                 class="modern-select"
                             >
@@ -175,6 +260,8 @@ watch(
                                     class="flex items-center gap-2 cursor-pointer"
                                 >
                                     <input
+                                        id="utilities-filter"
+                                        name="utilities"
                                         v-model="form.utilities"
                                         type="checkbox"
                                         class="modern-checkbox"
@@ -188,6 +275,8 @@ watch(
                                     class="flex items-center gap-2 cursor-pointer"
                                 >
                                     <input
+                                        id="featured-filter"
+                                        name="featured"
                                         v-model="form.featured"
                                         type="checkbox"
                                         class="modern-checkbox"
@@ -201,6 +290,8 @@ watch(
                                     class="flex items-center gap-2 cursor-pointer"
                                 >
                                     <input
+                                        id="virtual-tour-filter"
+                                        name="virtual_tour"
                                         v-model="form.virtual_tour"
                                         type="checkbox"
                                         class="modern-checkbox"
@@ -243,7 +334,7 @@ watch(
                         <!-- Property Image -->
                         <div class="relative h-56 overflow-hidden">
                             <img
-                                :src="property.main_image"
+                                :src="getImageUrl(property.images && property.images.length > 0 ? property.images[0] : null)"
                                 :alt="property.title"
                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
@@ -322,7 +413,7 @@ watch(
                                     <BoltIcon class="w-4 h-4 text-accent-500" />
                                     <span class="text-xs text-neutral-600">
                                         {{
-                                            property.has_electricity
+                                            property.electricity_available
                                                 ? "Electricity"
                                                 : "No Power"
                                         }}
@@ -334,7 +425,7 @@ watch(
                                     />
                                     <span class="text-xs text-neutral-600">
                                         {{
-                                            property.has_water
+                                            property.water_source
                                                 ? "Water"
                                                 : "No Water"
                                         }}
@@ -426,6 +517,7 @@ watch(
                                 max_price: '',
                                 utilities: false,
                                 featured: false,
+                                virtual_tour: false,
                             }
                         "
                     >

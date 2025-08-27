@@ -38,10 +38,9 @@
                 <img
                     v-for="(image, index) in property.images"
                     :key="index"
-                    :src="asset('storage/' + image)"
-                    :alt="`${property.title} - Image ${index + 1}`"
-                    class="w-full h-64 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm"
-                    @click="openImageModal(image)"
+                    :src="property.images[0]"
+                    :alt="property.title"
+                    class="w-full h-48 object-cover"
                 />
             </div>
         </div>
@@ -272,7 +271,6 @@ const deleteProperty = () => {
 };
 
 const openImageModal = (image) => {
-    // Implement image modal functionality
-    window.open(asset("storage/" + image), "_blank");
+    window.open(image, '_blank');
 };
 </script>

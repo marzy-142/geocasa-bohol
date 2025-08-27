@@ -153,7 +153,7 @@ class Property extends Model
     {
         return $this->images && count($this->images) > 0 
             ? asset('storage/' . $this->images[0])
-            : 'data:image/svg+xml;base64,' . base64_encode(/* SVG placeholder */);
+            : 'data:image/svg+xml;base64,' . base64_encode('...');
     }
 
     public function getGoogleMapsLinkAttribute()

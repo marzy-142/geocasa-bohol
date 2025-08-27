@@ -165,7 +165,7 @@ class ClientController extends Controller
         return Inertia::render('Clients/Show', [
             'client' => $client,
             'matchingProperties' => $matchingProperties,
-            'recentActivity' => $recentActivity,
+            'activities' => $recentActivity,
             'can' => [
                 'edit' => $user->role === 'admin' || ($user->role === 'broker' && $client->broker_id === $user->id),
                 'delete' => $user->role === 'admin',

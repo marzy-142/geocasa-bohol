@@ -57,15 +57,12 @@
                             required
                         >
                             <option value="">Select Type</option>
-                            <option value="residential">Residential</option>
-                            <option value="commercial">Commercial</option>
-                            <option value="agricultural">Agricultural</option>
-                            <option value="industrial">Industrial</option>
-                            <option value="beachfront">Beachfront</option>
-                            <option value="mountain_view">Mountain View</option>
-                            <option value="rice_field">Rice Field</option>
-                            <option value="coconut_plantation">
-                                Coconut Plantation
+                            <option
+                                v-for="type in propertyTypes"
+                                :key="type"
+                                :value="type"
+                            >
+                                {{ formatType(type) }}
                             </option>
                         </select>
                         <InputError class="mt-2" :message="form.errors.type" />
@@ -476,7 +473,7 @@
                         class="relative"
                     >
                         <img
-                            :src="asset('storage/' + image)"
+                            :src="getImageUrl(image)"
                             :alt="`Property Image ${index + 1}`"
                             class="w-full h-32 object-cover rounded-lg"
                         />
@@ -609,7 +606,7 @@
                             class="relative"
                         >
                             <img
-                                :src="asset('storage/' + image)"
+                                :src="getImageUrl(image)"
                                 :alt="`Virtual Tour ${index + 1}`"
                                 class="w-full h-32 object-cover rounded border"
                             />
@@ -974,8 +971,10 @@ const removeNewVirtualTourImage = (index) => {
     virtualTourImagePreview.value.splice(index, 1);
 };
 
-const asset = (path) => {
-    return `/${path}`;
+const getImageUrl = (image) => {
+    // Since Property model already generates full URLs with asset('storage/...'),
+    // we should use the image directly without adding /storage/ prefix
+    return image;
 };
 
 watch(nearbyLandmarksText, (newValue) => {
@@ -985,9 +984,25 @@ watch(nearbyLandmarksText, (newValue) => {
         .filter((item) => item);
 });
 
+// Keep in sync with App\Models\Property::TYPES
+const propertyTypes = [
+    "residential_lot",
+    "agricultural_land",
+    "commercial_lot",
+    "industrial_lot",
+    "beachfront",
+    "mountain_view",
+    "rice_field",
+    "coconut_plantation",
+    "subdivision_lot",
+    "titled_land",
+    "tax_declared",
+];
+
+const formatType = (type) =>
+    type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
 const submit = () => {
-    form.post(route("properties.update", props.property.slug), {
-        _method: "put",
-    });
+    form.put(route("broker.properties.update", props.property.slug));
 };
 </script>

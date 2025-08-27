@@ -12,6 +12,85 @@ use Illuminate\Support\Str;
 class PropertyController extends Controller
 {
     /**
+     * Display all properties for admin dashboard
+     */
+    public function index(Request $request)
+    {
+        // Ensure only admins can access this method
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized access');
+        }
+        
+        $query = Property::with(['broker', 'client', 'inquiries', 'transactions']);
+    
+        // Apply search and filter conditions
+        $query = $query->when($request->search, function ($query, $search) {
+                $query->where('title', 'like', "%{$search}%")
+                      ->orWhere('address', 'like', "%{$search}%")
+                      ->orWhere('municipality', 'like', "%{$search}%")
+                      ->orWhere('barangay', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhereHas('broker', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+            })
+            ->when($request->type, function ($query, $type) {
+                $query->where('type', $type);
+            })
+            ->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($request->municipality, function ($query, $municipality) {
+                $query->where('municipality', $municipality);
+            })
+            ->when($request->broker_id, function ($query, $brokerId) {
+                $query->where('broker_id', $brokerId);
+            })
+            ->when($request->min_price, function ($query, $minPrice) {
+                $query->where('total_price', '>=', $minPrice);
+            })
+            ->when($request->max_price, function ($query, $maxPrice) {
+                $query->where('total_price', '<=', $maxPrice);
+            })
+            ->when($request->min_area, function ($query, $minArea) {
+                $query->where('lot_area_sqm', '>=', $minArea);
+            })
+            ->when($request->max_area, function ($query, $maxArea) {
+                $query->where('lot_area_sqm', '<=', $maxArea);
+            })
+            ->when($request->utilities, function ($query) {
+                $query->where('electricity_available', true)
+                      ->where('water_source', true);
+            })
+            ->when($request->featured, function ($query) {
+                $query->where('is_featured', true);
+            });
+    
+        $properties = $query->latest()->paginate(12)->withQueryString();
+        
+        // Get all brokers for filter dropdown
+        $brokers = \App\Models\User::where('role', 'broker')
+            ->where('application_status', 'approved')
+            ->get(['id', 'name']);
+    
+        return Inertia::render('Properties/Index', [
+            'properties' => $properties,
+            'filters' => $request->only(['search', 'type', 'status', 'municipality', 'broker_id', 'min_price', 'max_price', 'min_area', 'max_area', 'utilities', 'featured']),
+            'types' => Property::TYPES,
+            'statuses' => Property::STATUSES,
+            'municipalities' => Property::BOHOL_MUNICIPALITIES,
+            'brokers' => $brokers,
+            'stats' => [
+                'total' => $query->count(), // Use the filtered query for accurate count
+                'available' => Property::where('status', 'available')->count(),
+                'sold' => Property::where('status', 'sold')->count(),
+                'reserved' => Property::where('status', 'reserved')->count(),
+            ],
+            'isAdminView' => true
+        ]);
+    }
+
+    /**
      * Display properties for broker dashboard
      */
     public function brokerIndex(Request $request)
@@ -153,7 +232,7 @@ class PropertyController extends Controller
             'tour_hotspots' => 'nullable|json'
         ]);
     
-        // Enforce public visibility for broker-created listings
+        // Enforce 'available' for broker-created listings
         if (auth()->user()->role === 'broker') {
             $validated['status'] = 'available';
         }
@@ -170,10 +249,15 @@ class PropertyController extends Controller
         if ($request->hasFile('images')) {
             $imagePaths = [];
             foreach ($request->file('images') as $image) {
+                // Ensure proper storage
                 $path = $image->store('properties/images', 'public');
-                $imagePaths[] = $path;
+                
+                // Verify file was actually stored
+                if (Storage::disk('public')->exists($path)) {
+                    $imagePaths[] = $path;
+                }
             }
-            $validated['images'] = $imagePaths;
+            $validated['images'] = $imagePaths; // ✅ Add to validated array instead
         }
     
         // Handle document uploads
@@ -307,12 +391,14 @@ class PropertyController extends Controller
         if ($validated['title'] !== $property->title) {
             $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(6);
         }
-
-        // Calculate hectares if not provided
-        if (!$validated['lot_area_hectares']) {
-            $validated['lot_area_hectares'] = $validated['lot_area_sqm'] / 10000;
+    
+        // Calculate hectares if not provided (safe on missing key)
+        if (empty($validated['lot_area_hectares'])) {
+            $validated['lot_area_hectares'] = !empty($validated['lot_area_sqm'])
+                ? $validated['lot_area_sqm'] / 10000
+                : null;
         }
-
+    
         // Handle file removals and additions
         try {
             \Log::info('About to call handleFileUpdates');
@@ -334,37 +420,42 @@ class PropertyController extends Controller
             'validated_virtual_tour_images' => $validated['virtual_tour_images'] ?? 'not_set'
         ]);
 
+        // Keep brokers from hiding properties from public inadvertently
+        if (auth()->user()->role === 'broker') {
+            $validated['status'] = 'available';
+        }
+
         $property->update($validated);
 
-        // Add debugging after update
-        \Log::info('After property update:', [
-            'property_has_virtual_tour' => $property->fresh()->has_virtual_tour,
-            'property_virtual_tour_images' => $property->fresh()->virtual_tour_images
-        ]);
-
-        return redirect()->route('properties.show', $property)
-            ->with('success', 'Land property updated successfully.');
+        return redirect()->route('broker.properties.index')
+            ->with('success', 'Property updated successfully.');
     }
 
     public function destroy(Property $property)
     {
         $this->authorize('delete', $property);
-
+    
         // Delete associated files
         if ($property->images) {
-            foreach ($property->images as $image) {
-                Storage::disk('public')->delete($image);
+            $images = is_array($property->images) ? $property->images : json_decode($property->images, true);
+            if (is_array($images)) {
+                foreach ($images as $image) {
+                    Storage::disk('public')->delete($image);
+                }
             }
         }
-
+    
         if ($property->documents) {
-            foreach ($property->documents as $document) {
-                Storage::disk('public')->delete($document);
+            $documents = is_array($property->documents) ? $property->documents : json_decode($property->documents, true);
+            if (is_array($documents)) {
+                foreach ($documents as $document) {
+                    Storage::disk('public')->delete($document);
+                }
             }
         }
-
+    
         $property->delete();
-
+    
         return redirect()->route('properties.index')
             ->with('success', 'Land property deleted successfully.');
     }

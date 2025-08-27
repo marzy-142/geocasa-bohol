@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Events\InquiryStatusUpdated;
+use App\Events\NewInquiryReceived;
 
 class InquiryController extends Controller
 {
@@ -157,6 +159,9 @@ class InquiryController extends Controller
      */
     public function update(Request $request, Inquiry $inquiry)
     {
+        // Store previous status for event
+        $previousStatus = $inquiry->status;
+        
         $user = Auth::user();
         
         // Check access permissions
@@ -199,6 +204,16 @@ class InquiryController extends Controller
         
         $inquiry->update($validated);
         
+        // Broadcast status change if status was updated
+        if ($previousStatus !== $inquiry->status) {
+            broadcast(new InquiryStatusUpdated(
+                $inquiry->fresh(['property']), 
+                $previousStatus, 
+                $inquiry->status,
+                auth()->user()->name
+            ));
+        }
+        
         return redirect()->route('inquiries.show', $inquiry)
             ->with('success', 'Inquiry updated successfully.');
     }
@@ -223,6 +238,9 @@ class InquiryController extends Controller
      */
     public function respond(Request $request, Inquiry $inquiry)
     {
+        // Store previous status for event
+        $previousStatus = $inquiry->status;
+        
         $user = Auth::user();
         
         // Check access permissions
@@ -248,8 +266,15 @@ class InquiryController extends Controller
             $validated['contacted_at'] = now();
         }
         
-        $inquiry->update($validated);
+        // Broadcast status change
+        broadcast(new InquiryStatusUpdated(
+            $inquiry->fresh(['property']), 
+            $previousStatus, 
+            $inquiry->status,
+            auth()->user()->name
+        ));
         
-        return back()->with('success', 'Response sent successfully.');
+        return redirect()->route('inquiries.show', $inquiry)
+            ->with('success', 'Response sent successfully.');
     }
 }

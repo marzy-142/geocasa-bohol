@@ -95,7 +95,7 @@ class DatabaseSchemaSeeder extends Seeder
             'internet_available' => true,
             'nearby_landmarks' => ['Alona Beach', 'Panglao Airport', 'Bohol Bee Farm'],
             'zoning_classification' => 'Tourism Zone',
-            'images' => ['beachfront1.jpg', 'beachfront2.jpg', 'beachfront3.jpg'],
+            'images' => ['properties/images/beachfront1.jpg', 'properties/images/beachfront2.jpg', 'properties/images/beachfront3.jpg'],
             'documents' => ['title_beachfront.pdf'],
             'is_featured' => true,
             'broker_id' => $broker1->id,
@@ -169,7 +169,7 @@ class DatabaseSchemaSeeder extends Seeder
             'internet_available' => false,
             'nearby_landmarks' => ['Carmen Public Market', 'Chocolate Hills', 'Mahogany Forest'],
             'zoning_classification' => 'Agricultural',
-            'images' => ['ricefield1.jpg', 'ricefield2.jpg'],
+            'images' => ['properties/images/ricefield1.jpg', 'properties/images/ricefield2.jpg'],
             'documents' => ['tax_declaration.pdf'],
             'is_featured' => false,
             'broker_id' => $broker2->id,
@@ -198,16 +198,16 @@ class DatabaseSchemaSeeder extends Seeder
             'internet_available' => true,
             'nearby_landmarks' => ['Tagbilaran City Hall', 'Island City Mall', 'Bohol Quality Mall'],
             'zoning_classification' => 'Commercial',
-            'images' => ['commercial1.jpg'],
+            'images' => ['properties/images/commercial1.jpg'],
             'documents' => ['title_commercial.pdf', 'zoning_cert.pdf'],
             'is_featured' => true,
             'broker_id' => $broker1->id,
             // Virtual Tour Data
             'has_virtual_tour' => true,
             'virtual_tour_images' => [
-                'commercial_360_street_view.jpg',
-                'commercial_360_lot_center.jpg',
-                'commercial_360_city_view.jpg'
+                'properties/virtual-tours/commercial_360_street_view.jpg',
+                'properties/virtual-tours/commercial_360_lot_center.jpg',
+                'properties/virtual-tours/commercial_360_city_view.jpg'
             ],
             'gis_data' => [
                 'elevation' => 15.2,

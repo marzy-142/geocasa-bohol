@@ -402,7 +402,20 @@ const props = defineProps({
 });
 
 const page = usePage();
-const filters = ref({ ...props.filters });
+
+// Initialize filters with proper defaults
+const filters = ref({
+    search: props.filters.search || '',
+    type: props.filters.type || '',
+    municipality: props.filters.municipality || '',
+    status: props.filters.status || '',
+    min_price: props.filters.min_price || '',
+    max_price: props.filters.max_price || '',
+    min_area: props.filters.min_area || '',
+    max_area: props.filters.max_area || '',
+    utilities: props.filters.utilities || false,
+    featured: props.filters.featured || false
+});
 
 const canCreateProperty = computed(() => {
     const user = page.props.auth.user;
@@ -440,9 +453,22 @@ const formatStatus = (status) => {
 };
 
 const filterProperties = debounce(() => {
-    router.get(route("properties.index"), filters.value, {
+    // Clean up empty values to avoid sending unnecessary parameters
+    const cleanFilters = Object.fromEntries(
+        Object.entries(filters.value).filter(([key, value]) => {
+            // Keep boolean false values, but remove empty strings and null/undefined
+            return value !== '' && value !== null && value !== undefined;
+        })
+    );
+    
+    router.get(route("properties.index"), cleanFilters, {
         preserveState: true,
         replace: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            // Ensure filters stay in sync after successful request
+            console.log('Filters applied successfully:', cleanFilters);
+        }
     });
 }, 300);
 
