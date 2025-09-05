@@ -5,14 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\SellerRequest;
 use App\Models\Property;
 use App\Models\User;
+use App\Http\Requests\SellerRequestUploadRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Notifications\SellerRequestNotification;
+use App\Notifications\BrokerSellerAssignmentNotification;
+use App\Mail\SellerBrokerAssignedMail;
 
 class SellerRequestController extends Controller
 {
@@ -100,62 +104,32 @@ class SellerRequestController extends Controller
     /**
      * Store a newly created seller request with enhanced validation
      */
-    public function store(Request $request)
+    public function store(SellerRequestUploadRequest $request)
     {
         try {
             DB::beginTransaction();
 
-            // Enhanced validation rules
-            $validated = $request->validate([
-                'seller_name' => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/',
-                'seller_email' => 'required|email:rfc,dns|max:255',
-                'seller_phone' => 'required|string|max:20|regex:/^[\+]?[0-9\s\-\(\)]+$/',
-                'seller_address' => 'nullable|string|max:500',
-                'property_title' => 'required|string|max:255|min:10',
-                'property_description' => 'required|string|min:50|max:2000',
-                'asking_price' => 'required|numeric|min:100000|max:1000000000',
-                'property_area' => 'required|numeric|min:1|max:100000',
-                'area_unit' => 'required|in:sqm,acres,hectares',
-                'property_location' => 'required|string|max:255',
-                'property_address' => 'required|string|max:500',
-                'city' => 'required|string|max:100',
-                'state' => 'required|string|max:100',
-                'zip_code' => 'nullable|string|max:10|regex:/^[0-9]{4,10}$/',
-                'latitude' => 'nullable|numeric|between:-90,90',
-                'longitude' => 'nullable|numeric|between:-180,180',
-                'property_type' => 'required|in:residential,commercial,agricultural,industrial,recreational',
-                'features' => 'nullable|array|max:20',
-                'features.*' => 'string|max:100',
-                'uploaded_images' => 'nullable|array|max:10',
-                'uploaded_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120' // 5MB max
-            ], [
-                'seller_name.regex' => 'Name should only contain letters and spaces.',
-                'seller_email.email' => 'Please provide a valid email address.',
-                'seller_phone.required' => 'Phone number is required for contact purposes.',
-                'seller_phone.regex' => 'Please provide a valid phone number.',
-                'property_title.min' => 'Property title should be at least 10 characters.',
-                'property_description.min' => 'Property description should be at least 50 characters.',
-                'asking_price.min' => 'Minimum asking price should be ₱100,000.',
-                'uploaded_images.max' => 'You can upload maximum 10 images.',
-                'uploaded_images.*.max' => 'Each image should not exceed 5MB.'
-            ]);
+            $validated = $request->validated();
 
-            // Handle image uploads with better error handling
-            $imagePaths = [];
-            if ($request->hasFile('uploaded_images')) {
-                foreach ($request->file('uploaded_images') as $index => $image) {
-                    try {
-                        // Generate unique filename
-                        $filename = time() . '_' . $index . '.' . $image->getClientOriginalExtension();
-                        $path = $image->storeAs('seller-requests', $filename, 'public');
-                        $imagePaths[] = $path;
-                    } catch (\Exception $e) {
-                        Log::error('Image upload failed: ' . $e->getMessage());
-                        throw new \Exception('Failed to upload image. Please try again.');
-                    }
-                }
+            // Handle secure file uploads using the enhanced security service
+            $storedFiles = $request->storeFilesSecurely([
+                'uploaded_images',
+                'property_documents',
+                'ownership_documents'
+            ], 'seller-requests', 'public');
+            
+            // Add stored file paths to validated data
+            if (isset($storedFiles['uploaded_images'])) {
+                $validated['uploaded_images'] = $storedFiles['uploaded_images'];
             }
-            $validated['uploaded_images'] = $imagePaths;
+            
+            if (isset($storedFiles['property_documents'])) {
+                $validated['property_documents'] = $storedFiles['property_documents'];
+            }
+            
+            if (isset($storedFiles['ownership_documents'])) {
+                $validated['ownership_documents'] = $storedFiles['ownership_documents'];
+            }
 
             // Create seller request
             $sellerRequest = SellerRequest::create($validated);
@@ -341,17 +315,34 @@ class SellerRequestController extends Controller
         try {
             DB::beginTransaction();
 
+            $oldBrokerId = $sellerRequest->assigned_broker_id;
+            $newBrokerId = $validated['assigned_broker_id'] ?? $sellerRequest->assigned_broker_id;
+
             $sellerRequest->update([
                 'status' => $validated['status'],
                 'admin_notes' => $validated['admin_notes'],
                 'rejection_reason' => $validated['rejection_reason'] ?? null,
-                'assigned_broker_id' => $validated['assigned_broker_id'] ?? $sellerRequest->assigned_broker_id,
+                'assigned_broker_id' => $newBrokerId,
                 'reviewed_by' => $user->id,
                 'reviewed_at' => now()
             ]);
 
-            // Send status update notification to seller
-            // TODO: Implement seller notification
+            // Send notifications if broker assignment changed
+            if ($newBrokerId && $oldBrokerId !== $newBrokerId) {
+                $broker = User::find($newBrokerId);
+                if ($broker) {
+                    $action = $oldBrokerId ? 'reassigned' : 'assigned';
+                    
+                    // Send notification to the broker
+                    $broker->notify(new BrokerSellerAssignmentNotification($sellerRequest, $user, $action));
+                    
+                    // Send email to the seller
+                    if ($sellerRequest->seller_email) {
+                        Mail::to($sellerRequest->seller_email)
+                            ->send(new SellerBrokerAssignedMail($sellerRequest, $broker, $user));
+                    }
+                }
+            }
 
             DB::commit();
 

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Models\AdminActivityLog;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -222,13 +223,25 @@ class UserController extends Controller
      */
     private function logAdminActivity($action, $target = null, $details = [])
     {
-        // This will be implemented when we create the admin_activity_logs table
-        // For now, we can log to Laravel's default log
-        Log::info("Admin Activity: {$action}", [
-            'admin_id' => auth()->user()->id,
-            'target_type' => $target ? get_class($target) : null,
-            'target_id' => $target?->id,
-            'details' => $details,
-        ]);
+        try {
+            AdminActivityLog::create([
+                'admin_id' => auth()->user()->id,
+                'action' => $action,
+                'target_type' => $target ? get_class($target) : null,
+                'target_id' => $target?->id,
+                'details' => $details,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        } catch (\Exception $e) {
+            // Fallback to file logging if database logging fails
+            Log::error("Failed to log admin activity to database: {$e->getMessage()}");
+            Log::info("Admin Activity: {$action}", [
+                'admin_id' => auth()->user()->id,
+                'target_type' => $target ? get_class($target) : null,
+                'target_id' => $target?->id,
+                'details' => $details,
+            ]);
+        }
     }
 }

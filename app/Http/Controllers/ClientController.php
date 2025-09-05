@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Property;
 use App\Models\User;
+use App\Notifications\BrokerAssignmentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -67,6 +68,20 @@ class ClientController extends Controller
             'clients' => $clients,
             'brokers' => $brokers,
             'filters' => $request->only(['search', 'status', 'source', 'broker_id', 'budget_min', 'budget_max']),
+            'statuses' => ['active', 'inactive', 'converted'],
+            'sources' => ['website', 'referral', 'social_media', 'walk_in', 'phone_call'],
+            'municipalities' => [
+                'Tagbilaran City', 'Baclayon', 'Alburquerque', 'Loboc', 'Sevilla',
+                'Calape', 'Tubigon', 'Clarin', 'Inabanga', 'Sagbayan', 'Catigbian',
+                'Batuan', 'Balilihan', 'Carmen', 'Sierra Bullones', 'Pilar',
+                'Dagohoy', 'Danao', 'Trinidad', 'Talibon', 'Bien Unido',
+                'Ubay', 'San Miguel', 'Candijay', 'Mabini', 'Guindulman',
+                'Duero', 'Anda', 'Jagna', 'Garcia Hernandez', 'Valencia',
+                'Dimiao', 'Loon', 'Maribojoc', 'Antequera', 'Cortes',
+                'Corella', 'Sikatuna', 'Loay', 'Albur', 'Panglao',
+                'Dauis', 'President Carlos P. Garcia', 'Buenavista', 'Getafe',
+                'San Isidro', 'Chocolate Hills', 'Bilar'
+            ],
             'can' => [
                 'create' => $user->role === 'admin' || $user->role === 'broker',
                 'edit' => $user->role === 'admin' || $user->role === 'broker',
@@ -252,6 +267,120 @@ class ClientController extends Controller
         
         return redirect()->route('clients.index')
             ->with('success', 'Client deleted successfully.');
+    }
+
+    /**
+     * Assign or reassign a broker to a client (Admin only)
+     */
+    public function assignBroker(Request $request, Client $client)
+    {
+        $user = auth()->user();
+        
+        // Only admin can assign brokers
+        if ($user->role !== 'admin') {
+            return redirect()->back()->with('error', 'Unauthorized action.');
+        }
+        
+        $request->validate([
+            'broker_id' => 'nullable|exists:users,id'
+        ]);
+        
+        // If broker_id is provided, verify it's an approved broker
+        if ($request->broker_id) {
+            $broker = User::where('id', $request->broker_id)
+                         ->where('role', 'broker')
+                         ->where('is_approved', true)
+                         ->first();
+            
+            if (!$broker) {
+                return redirect()->back()->with('error', 'Invalid broker selected.');
+            }
+        }
+        
+        $previousBrokerId = $client->broker_id;
+        $newBrokerId = $request->broker_id;
+        
+        $client->broker_id = $newBrokerId;
+        $client->save();
+        
+        // Send notification to the new broker if assigned
+        if ($newBrokerId) {
+            $newBroker = User::find($newBrokerId);
+            $action = $previousBrokerId ? 'reassigned' : 'assigned';
+            
+            $newBroker->notify(new BrokerAssignmentNotification(
+                $client, 
+                auth()->user(), 
+                $action
+            ));
+        }
+        
+        $message = $newBrokerId 
+            ? "Client assigned to broker successfully."
+            : "Client unassigned from broker successfully.";
+            
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Bulk assign brokers to multiple clients (Admin only)
+     */
+    public function bulkAssignBroker(Request $request)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Only admins can bulk assign brokers to clients.');
+        }
+
+        $validated = $request->validate([
+            'client_ids' => 'required|array|min:1',
+            'client_ids.*' => 'exists:clients,id',
+            'broker_id' => 'required|exists:users,id',
+        ]);
+
+        // Verify the broker exists and has broker role
+        $broker = User::where('id', $validated['broker_id'])
+            ->where('role', 'broker')
+            ->where('is_approved', true)
+            ->firstOrFail();
+
+        $updatedCount = Client::whereIn('id', $validated['client_ids'])
+            ->update(['broker_id' => $validated['broker_id']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully assigned {$updatedCount} clients to {$broker->name}",
+            'updated_count' => $updatedCount,
+        ]);
+    }
+
+    /**
+     * Get unassigned clients (Admin only)
+     */
+    public function getUnassigned(Request $request)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Only admins can view unassigned clients.');
+        }
+
+        $query = Client::whereNull('broker_id')
+            ->with(['inquiries', 'transactions']);
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $clients = $query->orderBy('created_at', 'desc')->paginate(12);
+
+        return response()->json([
+            'success' => true,
+            'data' => $clients,
+        ]);
     }
 
     /**

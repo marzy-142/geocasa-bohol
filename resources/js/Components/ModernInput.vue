@@ -18,7 +18,7 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    icon: Object,
+    icon: [Object, Function], // Accept both Object and Function
     helper: String,
     size: {
         type: String,

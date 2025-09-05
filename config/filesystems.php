@@ -60,6 +60,14 @@ return [
             'report' => false,
         ],
 
+        'backup' => [
+            'driver' => 'local',
+            'root' => storage_path('backups'),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

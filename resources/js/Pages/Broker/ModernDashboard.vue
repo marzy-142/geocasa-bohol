@@ -6,6 +6,7 @@ import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import DashboardCard from "@/Components/DashboardCard.vue";
 import ModernTable from "@/Components/ModernTable.vue";
 import ModernButton from "@/Components/ModernButton.vue";
+import ReminderWidget from "@/Components/ReminderWidget.vue";
 import {
     BuildingOfficeIcon,
     UserGroupIcon,
@@ -20,6 +21,7 @@ import {
 const props = defineProps({
     stats: Object,
     recentInquiries: Array,
+    reminders: Object,
 });
 
 const page = usePage();
@@ -134,6 +136,11 @@ const getStatusColor = (status) => {
                         : null
                 "
             />
+        </div>
+
+        <!-- Reminders Widget -->
+        <div v-if="props.reminders && props.reminders.summary.total_reminders > 0" class="mb-8">
+            <ReminderWidget :show-details="true" :max-items="3" />
         </div>
 
         <!-- Quick Actions -->

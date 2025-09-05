@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useForm } from "@inertiajs/vue3";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 
 const props = defineProps({
     transaction: Object,
@@ -63,7 +63,7 @@ const canUpdateStatus = () => {
 </script>
 
 <template>
-    <AppLayout>
+    <ModernDashboardLayout>
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Header -->
@@ -577,5 +577,5 @@ const canUpdateStatus = () => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </ModernDashboardLayout>
 </template>

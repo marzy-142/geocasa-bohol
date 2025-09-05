@@ -16,6 +16,7 @@ class Transaction extends Model
         'broker_id',
         'inquiry_id',
         'transaction_number',
+        'transaction_type',
         'offered_price',
         'final_price',
         'commission_rate',
@@ -93,6 +94,11 @@ class Transaction extends Model
     public function inquiry()
     {
         return $this->belongsTo(Inquiry::class);
+    }
+
+    public function conversation()
+    {
+        return $this->hasOne(Conversation::class);
     }
 
     // Scopes

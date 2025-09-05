@@ -9,32 +9,50 @@ use App\Models\Property;
 use App\Models\Inquiry;
 use App\Models\Transaction;
 use App\Models\Client;
+use App\Services\DatabaseOptimizationService;
+use App\Services\ReminderService;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    protected $optimizationService;
+    protected $reminderService;
+
+    public function __construct(DatabaseOptimizationService $optimizationService, ReminderService $reminderService)
+    {
+        $this->optimizationService = $optimizationService;
+        $this->reminderService = $reminderService;
+    }
+
     public function index()
     {
         $user = auth()->user();
+        $brokerId = $user->id;
+        
+        // Get cached dashboard statistics
+        $cachedStats = $this->optimizationService->getBrokerDashboardStats($brokerId);
 
         // Enhanced statistics with trends
         $stats = [
-            'totalProperties' => $user->properties()->count(),
-            'activeProperties' => $user->properties()->where('status', 'available')->count(),
-            'totalClients' => $user->clients()->count(),
-            'activeInquiries' => Inquiry::whereHas('property', function($query) use ($user) {
-                $query->where('broker_id', $user->id);
-            })->where('status', 'pending')->count(),
-            'completedTransactions' => $user->transactions()->where('status', 'completed')->count(),
-            'totalCommission' => $user->transactions()->where('status', 'completed')->sum('commission_amount'),
+            'totalProperties' => $cachedStats['totalProperties'],
+            'activeProperties' => $cachedStats['activeProperties'],
+            'totalClients' => $cachedStats['totalClients'],
+            'activeInquiries' => $cachedStats['activeInquiries'],
+            'completedTransactions' => $cachedStats['completedTransactions'],
+            'totalCommission' => $cachedStats['totalCommission'],
             'monthlyStats' => $this->getMonthlyStats($user),
             'recentActivity' => $this->getRecentActivity($user),
         ];
 
+        // Optimized recent inquiries with specific columns
         $recentInquiries = Inquiry::whereHas('property', function($query) use ($user) {
             $query->where('broker_id', $user->id);
         })
-        ->with(['property', 'client'])
+        ->with([
+            'property:id,title,price,broker_id',
+            'client:id,name'
+        ])
+        ->select('id', 'property_id', 'client_id', 'status', 'created_at')
         ->latest()
         ->take(10)
         ->get()
@@ -49,9 +67,13 @@ class DashboardController extends Controller
             ];
         });
 
+        // Get reminders for the broker
+        $reminders = $this->reminderService->getBrokerReminders($user->id);
+
         return Inertia::render('Broker/ModernDashboard', [
             'stats' => $stats,
             'recentInquiries' => $recentInquiries,
+            'reminders' => $reminders,
         ]);
     }
 
@@ -181,10 +203,12 @@ class DashboardController extends Controller
         // Combine recent inquiries, transactions, and property updates
         $activities = collect();
 
-        // Recent inquiries
+        // Optimized recent inquiries
         $inquiries = Inquiry::whereHas('property', function($query) use ($user) {
             $query->where('broker_id', $user->id);
-        })->with('property')->latest()->take(5)->get();
+        })->with('property:id,title,broker_id')
+        ->select('id', 'property_id', 'created_at')
+        ->latest()->take(5)->get();
 
         foreach ($inquiries as $inquiry) {
             $activities->push([
@@ -194,8 +218,11 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Recent transactions
-        $transactions = $user->transactions()->with('property')->latest()->take(3)->get();
+        // Optimized recent transactions
+        $transactions = $user->transactions()
+            ->with('property:id,title,broker_id')
+            ->select('id', 'property_id', 'status', 'created_at')
+            ->latest()->take(3)->get();
         foreach ($transactions as $transaction) {
             $activities->push([
                 'type' => 'transaction',

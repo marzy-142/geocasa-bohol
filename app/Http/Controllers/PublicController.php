@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Inquiry;
 use App\Models\Transaction;
 use App\Notifications\NewInquiryNotification;
+use App\Events\NewInquiryReceived;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -199,6 +200,9 @@ class PublicController extends Controller
 
         // Send notification to the property broker
         $property->broker->notify(new NewInquiryNotification($inquiry));
+        
+        // Broadcast real-time event for immediate dashboard updates
+        broadcast(new NewInquiryReceived($inquiry));
 
         return back()->with('success', 'Your inquiry has been sent successfully! The broker will contact you soon.');
     }

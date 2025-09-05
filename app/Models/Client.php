@@ -29,6 +29,23 @@ class Client extends Model
         'status',
     ];
 
+    /**
+     * Scope for full-text search
+     */
+    public function scopeSearch($query, $search)
+    {
+        if (empty($search)) {
+            return $query;
+        }
+
+        return $query->whereRaw(
+            "MATCH(name, email) AGAINST(? IN BOOLEAN MODE)",
+            [$search]
+        )->orWhere('name', 'like', "%{$search}%")
+          ->orWhere('email', 'like', "%{$search}%")
+          ->orWhere('phone', 'like', "%{$search}%");
+    }
+
     protected $casts = [
         'budget_min' => 'decimal:2',
         'budget_max' => 'decimal:2',
@@ -36,6 +53,22 @@ class Client extends Model
         'preferred_area_max' => 'decimal:2',
         'preferred_features' => 'array',
     ];
+
+    /**
+     * Scope for active clients
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope for clients by broker
+     */
+    public function scopeByBroker($query, $brokerId)
+    {
+        return $query->where('broker_id', $brokerId);
+    }
 
     // Constants for GeoCasa Bohol
     const SOURCES = ['inquiry', 'manual', 'referral', 'website'];
@@ -75,17 +108,7 @@ class Client extends Model
         return $this->hasMany(Transaction::class);
     }
 
-    // Scopes
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'active');
-    }
-
-    public function scopeByBroker($query, $brokerId)
-    {
-        return $query->where('broker_id', $brokerId);
-    }
-
+    // Scopes - removed duplicate scopeActive() and scopeByBroker() methods
     public function scopeFromInquiries($query)
     {
         return $query->where('source', 'inquiry');
@@ -189,5 +212,32 @@ class Client extends Model
         return $lastInquiry->updated_at->gt($lastTransaction->updated_at) 
             ? $lastInquiry->updated_at 
             : $lastTransaction->updated_at;
+    }
+
+    public function assignmentHistory()
+    {
+        return $this->hasMany(ClientAssignmentHistory::class)->orderBy('created_at', 'desc');
+    }
+
+    public function getLastAssignmentAttribute()
+    {
+        return $this->assignmentHistory()->first();
+    }
+
+    public function getAssignmentTimelineAttribute()
+    {
+        return $this->assignmentHistory()
+            ->with(['broker:id,name', 'assignedBy:id,name'])
+            ->get()
+            ->map(function ($history) {
+                return [
+                    'date' => $history->created_at->format('M d, Y H:i'),
+                    'action' => $history->action,
+                    'broker' => $history->broker ? $history->broker->name : 'Unassigned',
+                    'assigned_by' => $history->assignedBy->name,
+                    'notes' => $history->notes,
+                    'reason' => $history->assignment_reason
+                ];
+            });
     }
 }

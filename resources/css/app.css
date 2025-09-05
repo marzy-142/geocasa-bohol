@@ -232,6 +232,74 @@
         @apply text-primary-700 bg-primary-50 border-r-2 border-primary-500;
     }
 
+    /* Sidebar Section Styles */
+    .sidebar-section {
+        @apply mb-6;
+    }
+
+    .sidebar-section-title {
+        @apply text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3 px-4;
+        @apply transition-all duration-200;
+    }
+
+    .sidebar-section-divider {
+        @apply h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent mx-4 mb-4;
+    }
+
+    /* Enhanced Shadow Utilities */
+    .shadow-soft {
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    }
+
+    .shadow-soft-md {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    .shadow-soft-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Sidebar Animation Enhancements */
+    .sidebar-item-enter-active,
+    .sidebar-item-leave-active {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-item-enter-from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    .sidebar-item-leave-to {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    /* Responsive Sidebar Improvements */
+    @media (max-width: 1024px) {
+        .sidebar-section-title {
+            @apply text-center;
+        }
+    }
+
+    /* Focus and Accessibility Improvements */
+    .sidebar-link:focus-visible {
+        @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+    }
+
+    .sidebar-toggle:focus-visible {
+        @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+    }
+
+    /* Gradient Background Utilities */
+    .bg-gradient-sidebar {
+        background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+    }
+
+    .bg-gradient-section {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(249, 250, 251, 0.9) 100%);
+    }
+
     /* Dashboard Grid */
     .dashboard-grid {
         @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;

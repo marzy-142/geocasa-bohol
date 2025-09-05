@@ -22,6 +22,7 @@ return new class extends Migration
             
             // Transaction details
             $table->string('transaction_number')->unique();
+            $table->enum('transaction_type', ['sale', 'rent', 'lease'])->default('sale');
             $table->decimal('offered_price', 15, 2);
             $table->decimal('final_price', 15, 2)->nullable();
             $table->decimal('commission_rate', 5, 4)->default(0.06); // 6% default

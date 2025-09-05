@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Professional credentials
-            $table->string('prc_id')->nullable()->after('role');
+            $table->string('prc_id')->after('role'); // Remove nullable() since it's required
             $table->string('prc_id_file')->nullable()->after('prc_id');
             $table->string('business_permit')->nullable()->after('prc_id_file');
             $table->string('business_permit_file')->nullable()->after('business_permit');

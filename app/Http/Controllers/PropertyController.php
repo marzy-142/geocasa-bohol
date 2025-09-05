@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Property;
 use App\Models\User;
+use App\Http\Requests\PropertyFileUploadRequest;
+use App\Services\DatabaseOptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -11,8 +13,15 @@ use Illuminate\Support\Str;
 
 class PropertyController extends Controller
 {
+    protected $optimizationService;
+
+    public function __construct(DatabaseOptimizationService $optimizationService)
+    {
+        $this->optimizationService = $optimizationService;
+    }
+
     /**
-     * Display all properties for admin dashboard
+     * Display a listing of properties for admin dashboard.
      */
     public function index(Request $request)
     {
@@ -21,18 +30,15 @@ class PropertyController extends Controller
             abort(403, 'Unauthorized access');
         }
         
-        $query = Property::with(['broker', 'client', 'inquiries', 'transactions']);
+        // Optimized eager loading with specific columns and counts
+        $query = Property::with([
+            'broker:id,name,email',
+            'client:id,name,email,phone'
+        ])->withCount(['inquiries', 'transactions']);
     
-        // Apply search and filter conditions
+        // Apply search and filter conditions using full-text search
         $query = $query->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                      ->orWhere('address', 'like', "%{$search}%")
-                      ->orWhere('municipality', 'like', "%{$search}%")
-                      ->orWhere('barangay', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhereHas('broker', function($q) use ($search) {
-                          $q->where('name', 'like', "%{$search}%");
-                      });
+                $query->search($search);
             })
             ->when($request->type, function ($query, $type) {
                 $query->where('type', $type);
@@ -46,18 +52,12 @@ class PropertyController extends Controller
             ->when($request->broker_id, function ($query, $brokerId) {
                 $query->where('broker_id', $brokerId);
             })
-            ->when($request->min_price, function ($query, $minPrice) {
-                $query->where('total_price', '>=', $minPrice);
-            })
-            ->when($request->max_price, function ($query, $maxPrice) {
-                $query->where('total_price', '<=', $maxPrice);
-            })
-            ->when($request->min_area, function ($query, $minArea) {
-                $query->where('lot_area_sqm', '>=', $minArea);
-            })
-            ->when($request->max_area, function ($query, $maxArea) {
-                $query->where('lot_area_sqm', '<=', $maxArea);
-            })
+            ->when($request->min_price || $request->max_price, function ($query) use ($request) {
+                 $query->priceRange($request->min_price, $request->max_price);
+             })
+             ->when($request->min_area || $request->max_area, function ($query) use ($request) {
+                 $query->areaRange($request->min_area, $request->max_area);
+             })
             ->when($request->utilities, function ($query) {
                 $query->where('electricity_available', true)
                       ->where('water_source', true);
@@ -68,10 +68,11 @@ class PropertyController extends Controller
     
         $properties = $query->latest()->paginate(12)->withQueryString();
         
-        // Get all brokers for filter dropdown
-        $brokers = \App\Models\User::where('role', 'broker')
-            ->where('application_status', 'approved')
-            ->get(['id', 'name']);
+        // Get cached filter options and statistics
+        $filterOptions = $this->optimizationService->getPropertyFilterOptions();
+        $stats = $this->optimizationService->getPropertyStats();
+        
+        $brokers = $filterOptions['brokers'];
     
         return Inertia::render('Properties/Index', [
             'properties' => $properties,
@@ -80,12 +81,7 @@ class PropertyController extends Controller
             'statuses' => Property::STATUSES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
             'brokers' => $brokers,
-            'stats' => [
-                'total' => $query->count(), // Use the filtered query for accurate count
-                'available' => Property::where('status', 'available')->count(),
-                'sold' => Property::where('status', 'sold')->count(),
-                'reserved' => Property::where('status', 'reserved')->count(),
-            ],
+            'stats' => $stats,
             'isAdminView' => true
         ]);
     }
@@ -98,16 +94,16 @@ class PropertyController extends Controller
         // Ensure only brokers can access this method
         $this->authorize('viewAny', Property::class);
         
-        $query = Property::with(['broker', 'client', 'inquiries', 'transactions'])
-            ->where('broker_id', auth()->id());
+        // Optimized eager loading for broker properties
+        $query = Property::with([
+            'broker:id,name,email',
+            'client:id,name,email,phone'
+        ])->withCount(['inquiries', 'transactions'])
+        ->where('broker_id', auth()->id());
     
-        // Apply search and filter conditions
+        // Apply search and filter conditions using full-text search
         $query = $query->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                      ->orWhere('address', 'like', "%{$search}%")
-                      ->orWhere('municipality', 'like', "%{$search}%")
-                      ->orWhere('barangay', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                $query->search($search);
             })
             ->when($request->type, function ($query, $type) {
                 $query->where('type', $type);
@@ -118,18 +114,12 @@ class PropertyController extends Controller
             ->when($request->municipality, function ($query, $municipality) {
                 $query->where('municipality', $municipality);
             })
-            ->when($request->min_price, function ($query, $minPrice) {
-                $query->where('total_price', '>=', $minPrice);
-            })
-            ->when($request->max_price, function ($query, $maxPrice) {
-                $query->where('total_price', '<=', $maxPrice);
-            })
-            ->when($request->min_area, function ($query, $minArea) {
-                $query->where('lot_area_sqm', '>=', $minArea);
-            })
-            ->when($request->max_area, function ($query, $maxArea) {
-                $query->where('lot_area_sqm', '<=', $maxArea);
-            })
+            ->when($request->min_price || $request->max_price, function ($query) use ($request) {
+                 $query->priceRange($request->min_price, $request->max_price);
+             })
+             ->when($request->min_area || $request->max_area, function ($query) use ($request) {
+                 $query->areaRange($request->min_area, $request->max_area);
+             })
             ->when($request->utilities, function ($query) {
                 $query->where('electricity_available', true)
                       ->where('water_source', true);
@@ -192,45 +182,11 @@ class PropertyController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(PropertyFileUploadRequest $request)
     {
         $this->authorize('create', Property::class);
     
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'type' => 'required|in:' . implode(',', Property::TYPES),
-            'status' => 'required|in:' . implode(',', Property::STATUSES),
-            'price_per_sqm' => 'required|numeric|min:0',
-            'total_price' => 'required|numeric|min:0',
-            'address' => 'required|string|max:500',
-            'municipality' => 'required|in:' . implode(',', Property::BOHOL_MUNICIPALITIES),
-            'barangay' => 'required|string|max:100',
-            'lot_area_sqm' => 'required|numeric|min:1',
-            'lot_area_hectares' => 'nullable|numeric|min:0',
-            'title_type' => 'nullable|in:titled,tax_declared,mother_title,cct',
-            'title_number' => 'nullable|string|max:100',
-            'tax_declaration_number' => 'nullable|string|max:100',
-            'coordinates_lat' => 'nullable|numeric|between:-90,90',
-            'coordinates_lng' => 'nullable|numeric|between:-180,180',
-            'road_access' => 'boolean',
-            'water_source' => 'boolean',
-            'electricity_available' => 'boolean',
-            'internet_available' => 'boolean',
-            'nearby_landmarks' => 'nullable|array',
-            'zoning_classification' => 'nullable|string|max:100',
-            'client_id' => 'nullable|exists:clients,id',
-            'images' => 'nullable|array|max:10',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'documents' => 'nullable|array|max:5',
-            'documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
-            // GIS and 360-degree view fields
-            'gis_data' => 'nullable|json',
-            'virtual_tour_images' => 'nullable|array|max:20',
-            'virtual_tour_images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
-            'has_virtual_tour' => 'boolean',
-            'tour_hotspots' => 'nullable|json'
-        ]);
+        $validated = $request->validated();
     
         // Enforce 'available' for broker-created listings
         if (auth()->user()->role === 'broker') {
@@ -245,43 +201,26 @@ class PropertyController extends Controller
             $validated['lot_area_hectares'] = $validated['lot_area_sqm'] / 10000;
         }
     
-        // Handle image uploads
-        if ($request->hasFile('images')) {
-            $imagePaths = [];
-            foreach ($request->file('images') as $image) {
-                // Ensure proper storage
-                $path = $image->store('properties/images', 'public');
-                
-                // Verify file was actually stored
-                if (Storage::disk('public')->exists($path)) {
-                    $imagePaths[] = $path;
-                }
-            }
-            $validated['images'] = $imagePaths; // ✅ Add to validated array instead
+        // Handle secure file uploads using the enhanced security service
+        $storedFiles = $request->storeFilesSecurely([
+            'images',
+            'documents', 
+            'virtual_tour_images'
+        ], 'properties', 'public');
+        
+        // Add stored file paths to validated data
+        if (isset($storedFiles['images'])) {
+            $validated['images'] = $storedFiles['images'];
         }
-    
-        // Handle document uploads
-        if ($request->hasFile('documents')) {
-            $documentPaths = [];
-            foreach ($request->file('documents') as $document) {
-                $path = $document->store('properties/documents', 'public');
-                $documentPaths[] = $path;
-            }
-            $validated['documents'] = $documentPaths;
+        
+        if (isset($storedFiles['documents'])) {
+            $validated['documents'] = $storedFiles['documents'];
         }
-    
-        // Handle virtual tour images
-        if ($request->hasFile('virtual_tour_images')) {
-            $tourImagePaths = [];
-            foreach ($request->file('virtual_tour_images') as $image) {
-                $path = $image->store('properties/virtual-tours', 'public');
-                $tourImagePaths[] = $path;
-            }
-            $validated['virtual_tour_images'] = $tourImagePaths;
-            // Automatically set has_virtual_tour to true when images are uploaded
+        
+        if (isset($storedFiles['virtual_tour_images'])) {
+            $validated['virtual_tour_images'] = $storedFiles['virtual_tour_images'];
             $validated['has_virtual_tour'] = true;
         } else {
-            // Set to false if no virtual tour images are uploaded
             $validated['has_virtual_tour'] = false;
         }
     

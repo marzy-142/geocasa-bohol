@@ -5,10 +5,14 @@ namespace App\Notifications;
 use App\Models\Transaction;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Twilio\TwilioChannel;
+use NotificationChannels\Twilio\TwilioSmsMessage;
 
-class TransactionStatusNotification extends Notification implements ShouldQueue
+class TransactionStatusNotification extends Notification implements ShouldQueue, ShouldBroadcast
 {
     use Queueable;
 
@@ -29,7 +33,26 @@ class TransactionStatusNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        $channels = ['database', 'broadcast'];
+        
+        $preferences = $notifiable->getNotificationPreferences();
+        
+        // Check if it's within quiet hours
+        if (!$preferences->isWithinQuietHours()) {
+            if ($preferences->shouldSendEmail('transaction_updates')) {
+                $channels[] = 'mail';
+            }
+            
+            // Send SMS for milestone statuses
+            $milestoneStatuses = ['offer_accepted', 'contract_signed', 'finalized', 'cancelled'];
+            if ($preferences->shouldSendSms('transaction_milestones') && 
+                in_array($this->transaction->status, $milestoneStatuses) && 
+                $preferences->phone_number) {
+                $channels[] = TwilioChannel::class;
+            }
+        }
+        
+        return $channels;
     }
 
     /**
@@ -73,6 +96,42 @@ class TransactionStatusNotification extends Notification implements ShouldQueue
 
         return $message->action('View Transaction', route('transactions.show', $this->transaction))
             ->line('Thank you for using our platform!');
+    }
+
+    /**
+     * Get the SMS representation of the notification.
+     */
+    public function toTwilio(object $notifiable): TwilioSmsMessage
+    {
+        $statusLabels = [
+            'offer_accepted' => 'Offer Accepted',
+            'contract_signed' => 'Contract Signed',
+            'finalized' => 'Transaction Finalized',
+            'cancelled' => 'Transaction Cancelled'
+        ];
+        
+        $currentStatus = $statusLabels[$this->transaction->status] ?? $this->transaction->status;
+        
+        return TwilioSmsMessage::create()
+            ->content('Transaction Update: ' . $currentStatus . ' for ' . $this->transaction->property->title . '. Check your dashboard for details.');
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     */
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'id' => $this->id,
+            'type' => 'App\\Notifications\\TransactionStatusNotification',
+            'transaction_id' => $this->transaction->id,
+            'property_title' => $this->transaction->property->title,
+            'client_name' => $this->transaction->client->name,
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->transaction->status,
+            'message' => 'Transaction status updated to ' . ucfirst(str_replace('_', ' ', $this->transaction->status)),
+            'created_at' => now()->toISOString()
+        ]);
     }
 
     /**

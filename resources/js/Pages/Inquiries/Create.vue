@@ -1,5 +1,5 @@
 <template>
-    <AppLayout title="Create Inquiry">
+    <ModernDashboardLayout title="Create Inquiry">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Create New Inquiry
@@ -256,13 +256,13 @@
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </ModernDashboardLayout>
 </template>
 
 <script setup>
 import { useForm } from "@inertiajs/vue3";
 import { Link } from "@inertiajs/vue3";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 
 const props = defineProps({
     properties: Array,

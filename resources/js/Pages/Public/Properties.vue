@@ -153,42 +153,42 @@ watch(
         <PublicNavigation :auth="auth" />
 
         <!-- Hero Section -->
-        <section class="relative py-20 overflow-hidden">
+        <section class="relative py-16 lg:py-20 overflow-hidden">
             <div
                 class="absolute inset-0 bg-gradient-to-r from-primary-600/10 to-accent-600/10"
             ></div>
             <div
                 class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
             >
-                <div class="max-w-4xl mx-auto">
+                <div class="max-w-4xl mx-auto mb-12">
                     <h1
-                        class="text-4xl md:text-6xl font-bold text-neutral-900 mb-6"
+                        class="text-3xl md:text-5xl lg:text-6xl font-bold text-neutral-900 mb-6"
                     >
                         Discover Your
                         <span
-                            class="text-gradient bg-gradient-to-r from-primary-600 to-accent-600"
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600"
                         >
                             Dream Property
                         </span>
                         in Bohol
                     </h1>
-                    <p class="text-xl text-neutral-600 max-w-3xl mx-auto">
-                        Browse through {{ properties.total }} premium properties
-                        across Bohol's most desirable locations
+                    <p class="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto">
+                        Browse through {{ properties.total }} available properties
+                        across Bohol's diverse locations
                     </p>
                 </div>
 
                 <!-- Search & Filters -->
-                <div class="card p-8 max-w-6xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-soft-xl p-6 lg:p-8 max-w-6xl mx-auto">
                     <form @submit.prevent="search" class="space-y-6">
                         <!-- Main Search -->
-                        <div class="flex gap-4">
+                        <div class="flex flex-col sm:flex-row gap-4">
                             <div class="flex-1">
                                 <ModernInput
                                     v-model="form.search"
                                     type="text"
                                     placeholder="Search by title, location, or description..."
-                                    class="text-lg"
+                                    class="text-base lg:text-lg"
                                 >
                                     <template #icon>
                                         <MagnifyingGlassIcon class="w-5 h-5" />
@@ -197,7 +197,7 @@ watch(
                             </div>
                             <ModernButton
                                 type="submit"
-                                class="px-8 py-4 text-lg"
+                                class="px-6 lg:px-8 py-3 lg:py-4 text-base lg:text-lg whitespace-nowrap"
                             >
                                 <MagnifyingGlassIcon class="w-5 h-5" />
                                 Search
@@ -205,59 +205,60 @@ watch(
                         </div>
 
                         <!-- Advanced Filters -->
-                        <div
-                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-                        >
-                            <select
-                                v-model="form.type"
-                                class="modern-select"
-                                id="property-type-filter"
-                                name="type"
-                            >
-                                <option value="">All Property Types</option>
-                                <option
-                                    v-for="type in types"
-                                    :key="type"
-                                    :value="type"
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <select
+                                    v-model="form.type"
+                                    class="modern-select"
+                                    id="property-type-filter"
+                                    name="type"
                                 >
-                                    {{ type }}
-                                </option>
-                            </select>
+                                    <option value="">All Property Types</option>
+                                    <option
+                                        v-for="type in types"
+                                        :key="type"
+                                        :value="type"
+                                    >
+                                        {{ type }}
+                                    </option>
+                                </select>
 
-                            <select
-                                id="municipality"
-                                name="municipality"
-                                v-model="form.municipality"
-                                class="modern-select"
-                            >
-                                <option value="">All Municipalities</option>
-                                <option
-                                    v-for="municipality in municipalities"
-                                    :key="municipality"
-                                    :value="municipality"
+                                <select
+                                    id="municipality"
+                                    name="municipality"
+                                    v-model="form.municipality"
+                                    class="modern-select"
                                 >
-                                    {{ municipality }}
-                                </option>
-                            </select>
+                                    <option value="">All Municipalities</option>
+                                    <option
+                                        v-for="municipality in municipalities"
+                                        :key="municipality"
+                                        :value="municipality"
+                                    >
+                                        {{ municipality }}
+                                    </option>
+                                </select>
 
-                            <div class="flex gap-2">
-                                <ModernInput
-                                    v-model="form.min_price"
-                                    type="number"
-                                    placeholder="Min Price"
-                                    class="flex-1"
-                                />
-                                <ModernInput
-                                    v-model="form.max_price"
-                                    type="number"
-                                    placeholder="Max Price"
-                                    class="flex-1"
-                                />
+                                <div class="flex gap-2">
+                                    <ModernInput
+                                        v-model="form.min_price"
+                                        type="number"
+                                        placeholder="Min Price"
+                                        class="flex-1"
+                                    />
+                                    <ModernInput
+                                        v-model="form.max_price"
+                                        type="number"
+                                        placeholder="Max Price"
+                                        class="flex-1"
+                                    />
+                                </div>
                             </div>
 
-                            <div class="flex items-center justify-center gap-4">
+                            <!-- Filter Checkboxes -->
+                            <div class="flex flex-wrap items-center justify-center gap-6 pt-2">
                                 <label
-                                    class="flex items-center gap-2 cursor-pointer"
+                                    class="flex items-center gap-2 cursor-pointer hover:text-primary-600 transition-colors"
                                 >
                                     <input
                                         id="utilities-filter"
@@ -266,13 +267,12 @@ watch(
                                         type="checkbox"
                                         class="modern-checkbox"
                                     />
-                                    <span
-                                        class="text-sm font-medium text-neutral-700"
-                                        >Utilities</span
-                                    >
+                                    <span class="text-sm font-medium text-neutral-700">
+                                        With Utilities
+                                    </span>
                                 </label>
                                 <label
-                                    class="flex items-center gap-2 cursor-pointer"
+                                    class="flex items-center gap-2 cursor-pointer hover:text-accent-600 transition-colors"
                                 >
                                     <input
                                         id="featured-filter"
@@ -281,13 +281,13 @@ watch(
                                         type="checkbox"
                                         class="modern-checkbox"
                                     />
-                                    <span
-                                        class="text-sm font-medium text-neutral-700"
-                                        >Featured</span
-                                    >
+                                    <span class="text-sm font-medium text-neutral-700 flex items-center gap-1">
+                                        <StarIcon class="w-4 h-4" />
+                                        Featured Only
+                                    </span>
                                 </label>
                                 <label
-                                    class="flex items-center gap-2 cursor-pointer"
+                                    class="flex items-center gap-2 cursor-pointer hover:text-purple-600 transition-colors"
                                 >
                                     <input
                                         id="virtual-tour-filter"
@@ -296,9 +296,7 @@ watch(
                                         type="checkbox"
                                         class="modern-checkbox"
                                     />
-                                    <span
-                                        class="text-sm font-medium text-neutral-700 flex items-center gap-1"
-                                    >
+                                    <span class="text-sm font-medium text-neutral-700 flex items-center gap-1">
                                         <VideoCameraIcon class="w-4 h-4" />
                                         Virtual Tour
                                     </span>
@@ -367,7 +365,7 @@ watch(
                         <!-- Property Details -->
                         <div class="p-6">
                             <h3
-                                class="text-xl font-bold text-neutral-900 mb-2 line-clamp-2"
+                                class="text-xl font-bold text-neutral-900 mb-3 line-clamp-2 leading-tight"
                             >
                                 {{ property.title }}
                             </h3>
@@ -375,55 +373,47 @@ watch(
                             <div
                                 class="flex items-center gap-2 text-neutral-600 mb-4"
                             >
-                                <MapPinIcon class="w-4 h-4 flex-shrink-0" />
+                                <MapPinIcon class="w-4 h-4 flex-shrink-0 text-neutral-400" />
                                 <span class="text-sm line-clamp-1">{{
                                     property.full_address
                                 }}</span>
                             </div>
 
-                            <div class="flex justify-between items-center mb-4">
-                                <div
-                                    class="text-3xl font-bold text-primary-600"
-                                >
-                                    {{ property.formatted_total_price }}
+                            <div class="space-y-3 mb-4">
+                                <div class="flex justify-between items-center">
+                                    <div class="text-2xl lg:text-3xl font-bold text-primary-600">
+                                        {{ property.formatted_total_price }}
+                                    </div>
+                                    <div class="text-sm text-neutral-500 bg-neutral-100 px-3 py-1 rounded-full font-medium">
+                                        {{ property.formatted_area }}
+                                    </div>
                                 </div>
-                                <div
-                                    class="text-sm text-neutral-500 bg-neutral-100 px-3 py-1 rounded-full"
-                                >
-                                    {{ property.formatted_area }}
-                                </div>
-                            </div>
 
-                            <div class="flex justify-between items-center mb-4">
-                                <div
-                                    class="text-lg font-semibold text-accent-600"
-                                >
-                                    {{ property.formatted_price_per_sqm }}/sqm
-                                </div>
-                                <div
-                                    class="text-sm text-neutral-600 font-medium"
-                                >
-                                    {{ property.municipality }}
+                                <div class="flex justify-between items-center">
+                                    <div class="text-base lg:text-lg font-semibold text-accent-600">
+                                        {{ property.formatted_price_per_sqm }}/sqm
+                                    </div>
+                                    <div class="text-sm text-neutral-600 font-medium bg-neutral-50 px-2 py-1 rounded">
+                                        {{ property.municipality }}
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Utilities & Features -->
-                            <div class="flex items-center gap-4 mb-6">
-                                <div class="flex items-center gap-1">
-                                    <BoltIcon class="w-4 h-4 text-accent-500" />
-                                    <span class="text-xs text-neutral-600">
+                            <div class="flex flex-wrap items-center gap-3 mb-6">
+                                <div class="flex items-center gap-1.5 bg-green-50 px-2 py-1 rounded-md">
+                                    <BoltIcon class="w-4 h-4 text-green-600" />
+                                    <span class="text-xs font-medium text-green-700">
                                         {{
                                             property.electricity_available
-                                                ? "Electricity"
+                                                ? "Power"
                                                 : "No Power"
                                         }}
                                     </span>
                                 </div>
-                                <div class="flex items-center gap-1">
-                                    <BeakerIcon
-                                        class="w-4 h-4 text-primary-500"
-                                    />
-                                    <span class="text-xs text-neutral-600">
+                                <div class="flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded-md">
+                                    <BeakerIcon class="w-4 h-4 text-blue-600" />
+                                    <span class="text-xs font-medium text-blue-700">
                                         {{
                                             property.water_source
                                                 ? "Water"
@@ -433,14 +423,10 @@ watch(
                                 </div>
                                 <div
                                     v-if="hasVirtualTour(property)"
-                                    class="flex items-center gap-1"
+                                    class="flex items-center gap-1.5 bg-purple-50 px-2 py-1 rounded-md"
                                 >
-                                    <VideoCameraIcon
-                                        class="w-4 h-4 text-purple-500"
-                                    />
-                                    <span
-                                        class="text-xs text-purple-600 font-medium"
-                                    >
+                                    <VideoCameraIcon class="w-4 h-4 text-purple-600" />
+                                    <span class="text-xs font-medium text-purple-700">
                                         360° Tour
                                     </span>
                                 </div>

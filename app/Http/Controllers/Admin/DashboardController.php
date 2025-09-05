@@ -8,6 +8,8 @@ use App\Models\Property;
 use App\Models\Transaction;
 use App\Models\Inquiry;
 use App\Models\SellerRequest;
+use App\Services\ReminderService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -15,6 +17,13 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    protected $reminderService;
+
+    public function __construct(ReminderService $reminderService)
+    {
+        $this->reminderService = $reminderService;
+    }
+
     /**
      * Display admin dashboard with real system statistics
      */
@@ -68,11 +77,34 @@ class DashboardController extends Controller
             'cache' => $this->checkCacheHealth(),
         ];
 
+        // Get system-wide reminders for admin
+        $reminders = $this->reminderService->getBrokerReminders(null);
+
+        // Seller request assignment statistics
+        $unassignedSellerRequests = SellerRequest::whereNull('assigned_broker_id')
+            ->whereIn('status', ['pending', 'under_review'])
+            ->count();
+        
+        $assignedSellerRequests = SellerRequest::whereNotNull('assigned_broker_id')
+            ->whereIn('status', ['under_review', 'approved', 'listed'])
+            ->count();
+        
+        $activeBrokers = User::where('role', 'broker')
+            ->where('is_approved', true)
+            ->whereHas('assignedSellerRequests', function($query) {
+                $query->whereIn('status', ['under_review', 'approved', 'listed']);
+            })
+            ->count();
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'topBroker' => $topBroker,
             'pendingBrokers' => $pendingBrokers,
             'systemHealth' => $systemHealth,
+            'reminders' => $reminders,
+            'unassignedSellerRequests' => $unassignedSellerRequests,
+            'assignedSellerRequests' => $assignedSellerRequests,
+            'activeBrokers' => $activeBrokers,
         ]);
     }
 

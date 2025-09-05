@@ -83,6 +83,11 @@ class Property extends Model
         return $this->hasMany(Inquiry::class);
     }
 
+    public function complianceReports()
+    {
+        return $this->morphMany(ComplianceReport::class, 'reportable');
+    }
+
     public function transactions()
     {
         return $this->hasMany(Transaction::class);

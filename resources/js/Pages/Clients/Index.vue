@@ -96,6 +96,22 @@
                             {{ municipality }}
                         </option>
                     </select>
+                    <select
+                        v-if="isAdmin"
+                        v-model="filters.broker_id"
+                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                        @change="filterClients"
+                    >
+                        <option value="">All Brokers</option>
+                        <option value="unassigned">Unassigned</option>
+                        <option
+                            v-for="broker in brokers"
+                            :key="broker.id"
+                            :value="broker.id"
+                        >
+                            {{ broker.name }}
+                        </option>
+                    </select>
                     <input
                         v-model="filters.min_budget"
                         type="number"
@@ -321,7 +337,17 @@
                                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                                         ></path>
                                     </svg>
-                                    {{ client.broker?.name || "Unassigned" }}
+                                    <span :class="client.broker ? 'text-green-600' : 'text-orange-600'">
+                                        {{ client.broker?.name || "Unassigned" }}
+                                    </span>
+                                    <button
+                                        v-if="isAdmin"
+                                        @click="showAssignBrokerModal(client)"
+                                        class="ml-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                        title="Assign/Reassign Broker"
+                                    >
+                                        {{ client.broker ? 'Reassign' : 'Assign' }}
+                                    </button>
                                 </span>
                             </div>
 
@@ -419,6 +445,68 @@
                 </div>
             </div>
         </div>
+
+        <!-- Assign Broker Modal -->
+        <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeModal">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            {{ selectedClient?.broker ? 'Reassign' : 'Assign' }} Broker
+                        </h3>
+                        <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">
+                            Client: <span class="font-medium">{{ selectedClient?.name }}</span>
+                        </p>
+                        <p v-if="selectedClient?.broker" class="text-sm text-gray-600 mb-4">
+                            Current Broker: <span class="font-medium text-green-600">{{ selectedClient.broker.name }}</span>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Select Broker
+                        </label>
+                        <select
+                            v-model="selectedBroker"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        >
+                            <option value="">Unassign (No Broker)</option>
+                            <option
+                                v-for="broker in brokers"
+                                :key="broker.id"
+                                :value="broker.id"
+                            >
+                                {{ broker.name }}
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button
+                            @click="closeModal"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            @click="assignBroker"
+                            :disabled="isAssigning"
+                            class="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                        >
+                            {{ isAssigning ? 'Assigning...' : (selectedClient?.broker ? 'Reassign' : 'Assign') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </ModernDashboardLayout>
 </template>
 
@@ -435,14 +523,25 @@ const props = defineProps({
     statuses: Array,
     sources: Array,
     municipalities: Array,
+    brokers: Array,
+    can: Object,
 });
 
 const page = usePage();
 const filters = ref({ ...props.filters });
+const showModal = ref(false);
+const selectedClient = ref(null);
+const selectedBroker = ref('');
+const isAssigning = ref(false);
 
 const canCreateClient = computed(() => {
     const user = page.props.auth.user;
     return ["admin", "broker"].includes(user.role) && user.is_approved;
+});
+
+const isAdmin = computed(() => {
+    const user = page.props.auth.user;
+    return user.role === 'admin';
 });
 
 const canEditClient = (client) => {
@@ -483,5 +582,38 @@ const deleteClient = (client) => {
     if (confirm("Are you sure you want to delete this client?")) {
         router.delete(route("clients.destroy", client.id));
     }
+};
+
+const showAssignBrokerModal = (client) => {
+    selectedClient.value = client;
+    selectedBroker.value = client.broker_id || '';
+    showModal.value = true;
+};
+
+const assignBroker = () => {
+    if (!selectedClient.value) return;
+    
+    isAssigning.value = true;
+    
+    const data = {
+        broker_id: selectedBroker.value || null
+    };
+    
+    router.patch(route('admin.clients.assign-broker', selectedClient.value.id), data, {
+        onSuccess: () => {
+            showModal.value = false;
+            selectedClient.value = null;
+            selectedBroker.value = '';
+        },
+        onFinish: () => {
+            isAssigning.value = false;
+        }
+    });
+};
+
+const closeModal = () => {
+    showModal.value = false;
+    selectedClient.value = null;
+    selectedBroker.value = '';
 };
 </script>

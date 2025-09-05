@@ -96,7 +96,7 @@ const formatPropertyType = (type) => {
                             class="w-2 h-2 bg-accent-500 rounded-full animate-pulse"
                         ></div>
                         <span class="text-sm font-medium text-neutral-700"
-                            >Trusted by 500+ Land Owners</span
+                            >Your Trusted Real Estate Partner</span
                         >
                     </div>
 
@@ -104,21 +104,21 @@ const formatPropertyType = (type) => {
                     <h1
                         class="text-5xl md:text-7xl font-bold text-white mb-8 text-balance drop-shadow-lg"
                     >
-                        Find Your Perfect
+                        Discover
                         <span
                             class="text-transparent bg-clip-text bg-gradient-to-r from-accent-300 to-coconut-300"
                         >
                             Land
                         </span>
-                        in Bohol
+                        Opportunities in Bohol
                     </h1>
 
                     <p
                         class="text-xl md:text-2xl text-white/90 mb-12 max-w-4xl mx-auto text-balance drop-shadow-md"
                     >
-                        Discover prime land opportunities and property
-                        developments across Bohol's strategic locations with our
-                        licensed brokers and cutting-edge technology.
+                        Explore available properties across Bohol's diverse
+                        locations. From coastal areas to inland developments, we
+                        help connect buyers with land opportunities.
                     </p>
 
                     <!-- CTA Buttons -->
@@ -169,10 +169,10 @@ const formatPropertyType = (type) => {
                     <h2
                         class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4"
                     >
-                        Trusted by Thousands
+                        Platform Overview
                     </h2>
                     <p class="text-xl text-neutral-600">
-                        Our numbers speak for themselves
+                        Current activity on our platform
                     </p>
                 </div>
 
@@ -191,7 +191,7 @@ const formatPropertyType = (type) => {
                             {{ stats.totalProperties }}+
                         </div>
                         <div class="text-neutral-600 font-medium">
-                            Available Properties
+                            Properties Listed
                         </div>
                     </div>
 
@@ -207,7 +207,7 @@ const formatPropertyType = (type) => {
                             {{ stats.totalBrokers }}+
                         </div>
                         <div class="text-neutral-600 font-medium">
-                            Licensed Brokers
+                            Registered Brokers
                         </div>
                     </div>
 
@@ -223,7 +223,7 @@ const formatPropertyType = (type) => {
                             {{ stats.totalClients }}+
                         </div>
                         <div class="text-neutral-600 font-medium">
-                            Happy Clients
+                            Registered Users
                         </div>
                     </div>
 
@@ -239,7 +239,7 @@ const formatPropertyType = (type) => {
                             {{ stats.successRate }}%
                         </div>
                         <div class="text-neutral-600 font-medium">
-                            Success Rate
+                            Platform Activity
                         </div>
                     </div>
                 </div>
@@ -253,10 +253,10 @@ const formatPropertyType = (type) => {
                     <h2
                         class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4"
                     >
-                        Top Performing Broker
+                        Active Broker
                     </h2>
                     <p class="text-xl text-neutral-600">
-                        Meet our highest-achieving real estate professional
+                        Connect with real estate professionals on our platform
                     </p>
                 </div>
 
@@ -355,7 +355,7 @@ const formatPropertyType = (type) => {
                         Featured Properties
                     </h2>
                     <p class="text-xl text-neutral-600">
-                        Handpicked premium properties across Bohol
+                        Selected property listings from across Bohol
                     </p>
                 </div>
 
@@ -475,7 +475,8 @@ const formatPropertyType = (type) => {
                         Why Choose GeoCasa Bohol?
                     </h2>
                     <p class="text-xl text-neutral-600">
-                        Your trusted partner in Bohol real estate
+                        Connecting buyers and sellers in Bohol's real estate
+                        market
                     </p>
                 </div>
 
@@ -492,8 +493,8 @@ const formatPropertyType = (type) => {
                             Licensed Brokers
                         </h3>
                         <p class="text-neutral-600">
-                            Work with certified and experienced real estate
-                            brokers who understand the Bohol market.
+                            Connect with registered real estate professionals
+                            familiar with the local Bohol market.
                         </p>
                     </div>
 
@@ -507,8 +508,8 @@ const formatPropertyType = (type) => {
                             Verified Properties
                         </h3>
                         <p class="text-neutral-600">
-                            Every listing is thoroughly verified to ensure
-                            authenticity and legal compliance.
+                            Property listings undergo verification processes to
+                            help ensure accuracy and legitimacy.
                         </p>
                     </div>
 
@@ -570,8 +571,8 @@ const formatPropertyType = (type) => {
                         Ready to Find Your Paradise?
                     </h2>
                     <p class="text-xl mb-8 opacity-90">
-                        Join thousands of satisfied clients who found their
-                        perfect property in Bohol through GeoCasa.
+                        Start your property search journey in Bohol with our
+                        platform's assistance.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link

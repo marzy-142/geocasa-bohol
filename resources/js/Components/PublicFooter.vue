@@ -124,18 +124,35 @@
                     </div>
                     
                     <div class="flex items-center gap-6 text-xs text-neutral-400">
-                        <a href="#" class="hover:text-primary-400 transition-colors">Privacy Policy</a>
-                        <a href="#" class="hover:text-primary-400 transition-colors">Terms of Service</a>
+                        <button
+                            @click="openPrivacyModal"
+                            class="hover:text-primary-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                            Privacy Policy
+                        </button>
+                        <button
+                            @click="openTermsModal"
+                            class="hover:text-primary-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                            Terms of Service
+                        </button>
                         <a href="#" class="hover:text-primary-400 transition-colors">Cookie Policy</a>
                     </div>
                 </div>
             </div>
         </div>
     </footer>
+    
+    <!-- Modals -->
+    <TermsOfServiceModal :show="showTermsModal" @close="closeTermsModal" />
+    <PrivacyPolicyModal :show="showPrivacyModal" @close="closePrivacyModal" />
 </template>
 
 <script setup>
+import { ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import TermsOfServiceModal from './TermsOfServiceModal.vue';
+import PrivacyPolicyModal from './PrivacyPolicyModal.vue';
 import { 
     MapPinIcon, 
     BuildingOfficeIcon, 
@@ -151,7 +168,25 @@ import {
     ShieldCheckIcon,
     CheckBadgeIcon
 } from '@heroicons/vue/24/outline';
-import { computed } from 'vue';
 
 const currentYear = computed(() => new Date().getFullYear());
+
+const showTermsModal = ref(false);
+const showPrivacyModal = ref(false);
+
+const openTermsModal = () => {
+    showTermsModal.value = true;
+};
+
+const closeTermsModal = () => {
+    showTermsModal.value = false;
+};
+
+const openPrivacyModal = () => {
+    showPrivacyModal.value = true;
+};
+
+const closePrivacyModal = () => {
+    showPrivacyModal.value = false;
+};
 </script>

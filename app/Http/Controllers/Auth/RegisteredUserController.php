@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Http\Requests\BrokerRegistrationRequest;
+use App\Services\FileSecurityService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,25 +25,23 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validationRules = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => 'required|in:client,broker',
-        ];
-
-        // Add validation for broker credentials
+        // Use secure validation for broker registration
         if ($request->role === 'broker') {
-            $validationRules = array_merge($validationRules, [
-                'prc_id' => 'required|string|max:255',
-                'prc_id_file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
-                'business_permit' => 'nullable|string|max:255',
-                'business_permit_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-                'additional_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // Create a proper BrokerRegistrationRequest instance
+            $brokerRequest = app(BrokerRegistrationRequest::class);
+            $brokerRequest->replace($request->all());
+            $brokerRequest->files->replace($request->allFiles());
+            $brokerRequest->validateResolved();
+            $request = $brokerRequest;
+        } else {
+            // Standard validation for client registration
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+                'role' => 'required|in:client,broker',
             ]);
         }
-
-        $request->validate($validationRules);
 
         $userData = [
             'name' => $request->name,
@@ -53,29 +53,45 @@ class RegisteredUserController extends Controller
         // Handle broker-specific data
         if ($request->role === 'broker') {
             $userData['prc_id'] = $request->prc_id;
-            $userData['business_permit'] = $request->business_permit;
-            $userData['is_approved'] = false;
-            $userData['application_status'] = 'under_review';
+            $userData['prc_license_expiration'] = $request->prc_license_expiration; // New field
+            $userData['phone'] = $request->phone; // Now required for brokers
+            $userData['company_address'] = $request->company_address;
+            $userData['brokerage_firm_name'] = $request->brokerage_firm_name; // New field
+            $userData['office_address'] = $request->office_address; // New field
+            $userData['office_contact_number'] = $request->office_contact_number; // New field
+            $userData['years_experience'] = $request->years_experience;
+            $userData['specialization'] = $request->specialization ? json_encode($request->specialization) : null;
+            $userData['city'] = $request->city;
+            $userData['province'] = $request->province;
+            $userData['address'] = $request->address;
+            $userData['postal_code'] = $request->postal_code;
+            $userData['terms_accepted'] = $request->terms_accepted;
+            $userData['privacy_policy_accepted'] = $request->privacy_policy_accepted;
+            $userData['information_certified'] = $request->information_certified; // New field
+            $userData['prc_verification_consent'] = $request->prc_verification_consent; // New field
             $userData['submitted_at'] = now();
 
-            // Store uploaded files using 'local' disk instead of 'private'
-            if ($request->hasFile('prc_id_file')) {
-                $userData['prc_id_file'] = $request->file('prc_id_file')
-                    ->store('credentials/prc', 'local');
+            // Explicitly set broker approval fields to override database defaults
+            $userData['is_approved'] = false;
+            $userData['application_status'] = 'pending';
+
+            // Store uploaded files securely using the enhanced security service
+            $storedFiles = $request->storeFilesSecurely([
+                'prc_id_file',
+                'business_permit_file',
+                'additional_documents'
+            ], 'credentials', 'local');
+
+            if (isset($storedFiles['prc_id_file'])) {
+                $userData['prc_id_file'] = $storedFiles['prc_id_file'];
             }
 
-            if ($request->hasFile('business_permit_file')) {
-                $userData['business_permit_file'] = $request->file('business_permit_file')
-                    ->store('credentials/permits', 'local');
+            if (isset($storedFiles['business_permit_file'])) {
+                $userData['business_permit_file'] = $storedFiles['business_permit_file'];
             }
 
-            // Handle additional documents
-            $additionalDocs = [];
-            if ($request->hasFile('additional_documents')) {
-                foreach ($request->file('additional_documents') as $file) {
-                    $additionalDocs[] = $file->store('credentials/additional', 'local');
-                }
-                $userData['additional_documents'] = json_encode($additionalDocs);
+            if (isset($storedFiles['additional_documents'])) {
+                $userData['additional_documents'] = json_encode($storedFiles['additional_documents']);
             }
         } else {
             // Regular users are auto-approved

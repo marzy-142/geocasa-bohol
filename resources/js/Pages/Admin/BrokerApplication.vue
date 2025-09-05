@@ -1,10 +1,12 @@
 <script setup>
 import { Head, Link, useForm } from "@inertiajs/vue3";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import { ref } from "vue";
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 
-defineProps({
+const props = defineProps({
     broker: Object,
     credentials: Object,
+    verification_status: Object,
 });
 
 // Add form handling for approve and reject
@@ -16,6 +18,15 @@ const rejectForm = useForm({
     reason: "",
     admin_notes: "",
 });
+
+const verificationForm = useForm({
+    credential_type: "",
+    verified: false,
+    notes: "",
+});
+
+const showVerificationModal = ref(false);
+const currentCredential = ref(null);
 
 const showApprovalModal = ref(false);
 const showRejectionModal = ref(false);
@@ -30,20 +41,47 @@ const openRejectionModal = () => {
     rejectForm.reset();
 };
 
+const openVerificationModal = (credentialType, currentStatus) => {
+    currentCredential.value = credentialType;
+    verificationForm.credential_type = credentialType;
+    verificationForm.verified = currentStatus;
+    verificationForm.notes =
+        props.verification_status[credentialType + "_verification_notes"] || "";
+    showVerificationModal.value = true;
+};
+
 const approveBroker = () => {
-    approveForm.post(route("admin.brokers.approve", broker.id), {
+    approveForm.post(route("admin.broker-approvals.approve", broker.id), {
         onSuccess: () => {
             showApprovalModal.value = false;
+        },
+        onError: (errors) => {
+            console.error("Approval failed:", errors);
+            // The form will automatically show validation errors
         },
     });
 };
 
 const rejectBroker = () => {
-    rejectForm.delete(route("admin.brokers.reject", broker.id), {
+    rejectForm.delete(route("admin.broker-approvals.reject", props.broker.id), {
         onSuccess: () => {
             showRejectionModal.value = false;
         },
+        onError: (errors) => {
+            console.error("Rejection failed:", errors);
+        },
     });
+};
+
+const updateVerification = () => {
+    verificationForm.post(
+        route("admin.broker-approvals.verify", props.broker.id),
+        {
+            onSuccess: () => {
+                showVerificationModal.value = false;
+            },
+        }
+    );
 };
 
 const formatDate = (dateString) => {
@@ -71,7 +109,7 @@ const getStatusBadge = (status) => {
 <template>
     <Head title="Broker Application Details" />
 
-    <AppLayout>
+    <ModernDashboardLayout>
         <div class="py-12">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <!-- Header -->
@@ -87,7 +125,7 @@ const getStatusBadge = (status) => {
                             </p>
                         </div>
                         <Link
-                            :href="route('admin.brokers.index')"
+                            :href="route('admin.broker-approvals.index')"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                         >
                             ← Back to Applications
@@ -211,6 +249,48 @@ const getStatusBadge = (status) => {
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Additional Documents -->
+                            <div
+                                v-if="
+                                    credentials.additional_documents &&
+                                    credentials.additional_documents.length > 0
+                                "
+                                class="border rounded-lg p-4"
+                            >
+                                <h4
+                                    class="text-sm font-medium text-gray-900 mb-3"
+                                >
+                                    Additional Documents
+                                </h4>
+                                <div class="space-y-2">
+                                    <div
+                                        v-for="(
+                                            doc, index
+                                        ) in credentials.additional_documents"
+                                        :key="index"
+                                    >
+                                        <a
+                                            :href="doc"
+                                            target="_blank"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                        >
+                                            <svg
+                                                class="h-4 w-4 mr-2"
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path
+                                                    fill-rule="evenodd"
+                                                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd"
+                                                />
+                                            </svg>
+                                            Additional Document {{ index + 1 }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -283,50 +363,107 @@ const getStatusBadge = (status) => {
                                     >
                                         PRC License
                                     </h4>
-                                    <span
-                                        v-if="broker.prc_id"
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                                    >
-                                        Provided
-                                    </span>
-                                    <span
-                                        v-else
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-                                    >
-                                        Missing
-                                    </span>
+                                    <div class="flex items-center space-x-2">
+                                        <span
+                                            v-if="broker.prc_id"
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                                        >
+                                            Provided
+                                        </span>
+                                        <span
+                                            v-else
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                                        >
+                                            Missing
+                                        </span>
+                                        <span
+                                            v-if="
+                                                verification_status.prc_verified
+                                            "
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                        >
+                                            ✓ Verified
+                                        </span>
+                                        <span
+                                            v-else-if="broker.prc_id"
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                                        >
+                                            Pending Verification
+                                        </span>
+                                    </div>
                                 </div>
                                 <p class="text-sm text-gray-600 mb-3">
                                     <strong>PRC ID:</strong>
                                     {{ broker.prc_id || "Not provided" }}
                                 </p>
                                 <div
-                                    v-if="credentials.prc_id_file"
-                                    class="mt-3"
+                                    v-if="
+                                        verification_status.prc_verification_notes
+                                    "
+                                    class="mt-2 p-2 bg-gray-50 rounded text-sm text-gray-600"
                                 >
-                                    <a
-                                        :href="credentials.prc_id_file"
-                                        target="_blank"
-                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                    >
-                                        <svg
-                                            class="h-4 w-4 mr-2"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
+                                    <strong>Verification Notes:</strong>
+                                    {{
+                                        verification_status.prc_verification_notes
+                                    }}
+                                </div>
+                                <div
+                                    class="flex items-center justify-between mt-3"
+                                >
+                                    <div>
+                                        <a
+                                            v-if="credentials.prc_id_file"
+                                            :href="credentials.prc_id_file"
+                                            target="_blank"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                         >
-                                            <path
-                                                fill-rule="evenodd"
-                                                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                                                clip-rule="evenodd"
-                                            />
-                                        </svg>
-                                        View PRC Document
-                                    </a>
+                                            <svg
+                                                class="h-4 w-4 mr-2"
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path
+                                                    fill-rule="evenodd"
+                                                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd"
+                                                />
+                                            </svg>
+                                            View PRC Document
+                                        </a>
+                                    </div>
+                                    <div
+                                        v-if="
+                                            broker.prc_id &&
+                                            (broker.application_status ===
+                                                'under_review' ||
+                                                broker.application_status ===
+                                                    'pending')
+                                        "
+                                    >
+                                        <button
+                                            @click="
+                                                openVerificationModal(
+                                                    'prc_id',
+                                                    verification_status.prc_verified
+                                                )
+                                            "
+                                            class="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50"
+                                        >
+                                            {{
+                                                verification_status.prc_verified
+                                                    ? "Update Verification"
+                                                    : "Verify Document"
+                                            }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Business Permit -->
-                            <div class="border rounded-lg p-4">
+                            <div
+                                v-if="credentials.prc_id_file"
+                                class="border rounded-lg p-4"
+                            >
                                 <div
                                     class="flex items-center justify-between mb-3"
                                 >
@@ -335,18 +472,34 @@ const getStatusBadge = (status) => {
                                     >
                                         Business Permit
                                     </h4>
-                                    <span
-                                        v-if="broker.business_permit"
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                                    >
-                                        Provided
-                                    </span>
-                                    <span
-                                        v-else
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
-                                    >
-                                        Missing
-                                    </span>
+                                    <div class="flex items-center space-x-2">
+                                        <span
+                                            v-if="broker.business_permit"
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                                        >
+                                            Provided
+                                        </span>
+                                        <span
+                                            v-else
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                                        >
+                                            Missing
+                                        </span>
+                                        <span
+                                            v-if="
+                                                verification_status.business_permit_verified
+                                            "
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                        >
+                                            ✓ Verified
+                                        </span>
+                                        <span
+                                            v-else-if="broker.business_permit"
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                                        >
+                                            Pending Verification
+                                        </span>
+                                    </div>
                                 </div>
                                 <p class="text-sm text-gray-600 mb-3">
                                     <strong>Permit Number:</strong>
@@ -355,27 +508,67 @@ const getStatusBadge = (status) => {
                                     }}
                                 </p>
                                 <div
-                                    v-if="credentials.business_permit_file"
-                                    class="mt-3"
+                                    v-if="
+                                        verification_status.business_permit_verification_notes
+                                    "
+                                    class="mt-2 p-2 bg-gray-50 rounded text-sm text-gray-600"
                                 >
-                                    <a
-                                        :href="credentials.business_permit_file"
-                                        target="_blank"
-                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                    >
-                                        <svg
-                                            class="h-4 w-4 mr-2"
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
+                                    <strong>Verification Notes:</strong>
+                                    {{
+                                        verification_status.business_permit_verification_notes
+                                    }}
+                                </div>
+                                <div
+                                    class="flex items-center justify-between mt-3"
+                                >
+                                    <div>
+                                        <a
+                                            v-if="
+                                                credentials.business_permit_file
+                                            "
+                                            :href="`/admin/documents/view/${encodeURIComponent(
+                                                credentials.business_permit_file
+                                            )}`"
+                                            target="_blank"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                         >
-                                            <path
-                                                fill-rule="evenodd"
-                                                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                                                clip-rule="evenodd"
-                                            />
-                                        </svg>
-                                        View Business Permit
-                                    </a>
+                                            <svg
+                                                class="h-4 w-4 mr-2"
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path
+                                                    fill-rule="evenodd"
+                                                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd"
+                                                />
+                                            </svg>
+                                            View Business Permit
+                                        </a>
+                                    </div>
+                                    <div
+                                        v-if="
+                                            broker.business_permit &&
+                                            broker.application_status ===
+                                                'under_review'
+                                        "
+                                    >
+                                        <button
+                                            @click="
+                                                openVerificationModal(
+                                                    'business_permit',
+                                                    verification_status.business_permit_verified
+                                                )
+                                            "
+                                            class="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50"
+                                        >
+                                            {{
+                                                verification_status.business_permit_verified
+                                                    ? "Update Verification"
+                                                    : "Verify Document"
+                                            }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -496,11 +689,33 @@ const getStatusBadge = (status) => {
                         Approve Broker Application
                     </h3>
                     <div class="mt-2 px-7 py-3">
-                        <p class="text-sm text-gray-500">
+                        <p class="text-sm text-gray-500 mb-4">
                             Are you sure you want to approve {{ broker.name }}'s
                             broker application? This will grant them full access
                             to the broker dashboard.
                         </p>
+                        <div class="mb-4">
+                            <label
+                                for="admin_notes"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Admin Notes (Optional)
+                            </label>
+                            <textarea
+                                id="admin_notes"
+                                v-model="approveForm.admin_notes"
+                                rows="3"
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                placeholder="Add any notes about this approval..."
+                            ></textarea>
+                            <!-- Add this after the textarea in the approval modal -->
+                            <div
+                                v-if="approveForm.errors.verification"
+                                class="mt-2 text-sm text-red-600"
+                            >
+                                {{ approveForm.errors.verification }}
+                            </div>
+                        </div>
                     </div>
                     <div class="items-center px-4 py-3">
                         <button
@@ -558,25 +773,42 @@ const getStatusBadge = (status) => {
                         Reject Broker Application
                     </h3>
                     <div class="mt-4">
-                        <label
-                            for="rejection_reason"
-                            class="block text-sm font-medium text-gray-700"
-                        >
-                            Rejection Reason *
-                        </label>
-                        <textarea
-                            id="rejection_reason"
-                            v-model="rejectForm.reason"
-                            rows="4"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
-                            placeholder="Please provide a detailed reason for rejection..."
-                            required
-                        ></textarea>
-                        <div
-                            v-if="rejectForm.errors.reason"
-                            class="mt-1 text-sm text-red-600"
-                        >
-                            {{ rejectForm.errors.reason }}
+                        <div class="mb-4">
+                            <label
+                                for="rejection_reason"
+                                class="block text-sm font-medium text-gray-700"
+                            >
+                                Rejection Reason *
+                            </label>
+                            <textarea
+                                id="rejection_reason"
+                                v-model="rejectForm.reason"
+                                rows="4"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                                placeholder="Please provide a detailed reason for rejection..."
+                                required
+                            ></textarea>
+                            <div
+                                v-if="rejectForm.errors.reason"
+                                class="mt-1 text-sm text-red-600"
+                            >
+                                {{ rejectForm.errors.reason }}
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label
+                                for="admin_notes_reject"
+                                class="block text-sm font-medium text-gray-700"
+                            >
+                                Admin Notes (Optional)
+                            </label>
+                            <textarea
+                                id="admin_notes_reject"
+                                v-model="rejectForm.admin_notes"
+                                rows="3"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                                placeholder="Add any internal notes about this rejection..."
+                            ></textarea>
                         </div>
                     </div>
                     <div class="items-center px-4 py-3 mt-4">
@@ -602,5 +834,90 @@ const getStatusBadge = (status) => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+
+        <!-- Verification Modal -->
+        <div
+            v-if="showVerificationModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        Verify
+                        {{
+                            currentCredential === "prc_id"
+                                ? "PRC ID"
+                                : "Business Permit"
+                        }}
+                    </h3>
+                    <div class="mt-4 text-left">
+                        <div class="mb-4">
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Verification Status
+                            </label>
+                            <div class="flex space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input
+                                        type="radio"
+                                        v-model="verificationForm.verified"
+                                        :value="true"
+                                        class="form-radio text-green-600"
+                                    />
+                                    <span class="ml-2 text-sm text-green-600"
+                                        >Verified</span
+                                    >
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input
+                                        type="radio"
+                                        v-model="verificationForm.verified"
+                                        :value="false"
+                                        class="form-radio text-red-600"
+                                    />
+                                    <span class="ml-2 text-sm text-red-600"
+                                        >Not Verified</span
+                                    >
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Verification Notes
+                            </label>
+                            <textarea
+                                v-model="verificationForm.notes"
+                                rows="3"
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="Add notes about the verification..."
+                            ></textarea>
+                        </div>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button
+                            @click="updateVerification"
+                            :disabled="verificationForm.processing"
+                            class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50 mb-2"
+                        >
+                            <span v-if="verificationForm.processing">
+                                Updating...
+                            </span>
+                            <span v-else>Update Verification</span>
+                        </button>
+                        <button
+                            @click="showVerificationModal = false"
+                            class="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ModernDashboardLayout>
 </template>

@@ -47,9 +47,19 @@ class Inquiry extends Model
         return $this->hasOneThrough(User::class, Property::class, 'id', 'id', 'property_id', 'broker_id');
     }
 
+    public function complianceReports()
+    {
+        return $this->morphMany(ComplianceReport::class, 'reportable');
+    }
+
     public function transaction()
     {
         return $this->hasOne(Transaction::class);
+    }
+
+    public function conversation()
+    {
+        return $this->hasOne(Conversation::class);
     }
 
     // Scopes

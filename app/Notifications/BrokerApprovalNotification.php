@@ -4,10 +4,12 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class BrokerApprovalNotification extends Notification implements ShouldQueue
+class BrokerApprovalNotification extends Notification implements ShouldQueue, ShouldBroadcast
 {
     use Queueable;
 
@@ -26,7 +28,7 @@ class BrokerApprovalNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     /**
@@ -57,6 +59,22 @@ class BrokerApprovalNotification extends Notification implements ShouldQueue
                 ->line('You are welcome to reapply in the future.')
                 ->line('If you have any questions, please contact our support team.');
         }
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     */
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'id' => $this->id,
+            'type' => 'App\\Notifications\\BrokerApprovalNotification',
+            'approved' => $this->approved,
+            'message' => $this->approved 
+                ? 'Your broker application has been approved!' 
+                : 'Your broker application was not approved at this time.',
+            'created_at' => now()->toISOString()
+        ]);
     }
 
     /**

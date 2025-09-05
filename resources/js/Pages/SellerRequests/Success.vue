@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 
 const props = defineProps({
     sellerRequest: {
@@ -44,7 +44,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <AppLayout>
+    <ModernDashboardLayout>
         <div class="py-12">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                 <!-- Success Header -->
@@ -583,7 +583,7 @@ onMounted(() => {
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </ModernDashboardLayout>
 </template>
 
 <style scoped>

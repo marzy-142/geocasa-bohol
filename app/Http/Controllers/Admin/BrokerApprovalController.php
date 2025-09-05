@@ -8,6 +8,7 @@ use App\Notifications\BrokerApprovalNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class BrokerApprovalController extends Controller
 {
@@ -42,18 +43,67 @@ class BrokerApprovalController extends Controller
                 'business_permit_file' => $user->business_permit_file ? Storage::url($user->business_permit_file) : null,
                 'additional_documents' => $user->additional_documents ? 
                     collect($user->additional_documents)->map(fn($doc) => Storage::url($doc)) : []
+            ],
+            'verification_status' => [
+                'prc_verified' => $user->prc_verified ?? false,
+                'business_permit_verified' => $user->business_permit_verified ?? false,
+                'prc_verification_notes' => $user->prc_verification_notes,
+                'business_permit_verification_notes' => $user->business_permit_verification_notes,
             ]
         ]);
     }
     
+    /**
+     * Update verification status for credentials
+     */
+    public function updateVerification(Request $request, User $user)
+    {
+        $request->validate([
+            'credential_type' => ['required', Rule::in(['prc_id', 'business_permit'])],
+            'verified' => 'required|boolean',
+            'notes' => 'nullable|string|max:500'
+        ]);
+    
+        $credentialType = $request->credential_type;
+        
+        // Fix field name mapping
+        if ($credentialType === 'prc_id') {
+            $verifiedField = 'prc_verified';
+            $notesField = 'prc_verification_notes';
+        } else {
+            $verifiedField = 'business_permit_verified';
+            $notesField = 'business_permit_verification_notes';
+        }
+    
+        $user->update([
+            $verifiedField => $request->verified,
+            $notesField => $request->notes,
+            'reviewed_at' => now(),
+        ]);
+    
+        return back()->with('success', ucfirst(str_replace('_', ' ', $credentialType)) . ' verification updated successfully.');
+    }
+
     public function approve(Request $request, User $user)
     {
+        $request->validate([
+            'admin_notes' => 'nullable|string|max:1000'
+        ]);
+
+        // Check if PRC credentials are verified (removed business permit requirement)
+        if (!$user->prc_verified) {
+            return back()->withErrors([
+                'verification' => 'PRC ID must be verified before approval.'
+            ]);
+        }
+
         $user->update([
             'is_approved' => true,
             'application_status' => 'approved',
             'approved_at' => now(),
             'approved_by' => auth()->id(),
             'reviewed_at' => now(),
+            'admin_notes' => $request->admin_notes,
         ]);
     
         // Send approval notification
@@ -65,7 +115,8 @@ class BrokerApprovalController extends Controller
     public function reject(Request $request, User $user)
     {
         $request->validate([
-            'reason' => 'required|string|max:1000'
+            'reason' => 'required|string|max:1000',
+            'admin_notes' => 'nullable|string|max:1000'
         ]);
     
         $user->update([
@@ -73,6 +124,7 @@ class BrokerApprovalController extends Controller
             'application_status' => 'rejected',
             'rejection_reason' => $request->reason,
             'reviewed_at' => now(),
+            'admin_notes' => $request->admin_notes,
         ]);
     
         // Send rejection notification

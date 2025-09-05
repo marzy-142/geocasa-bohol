@@ -127,6 +127,30 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'database' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/database.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'slow-queries' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/slow-queries.log'),
+            'level' => 'warning',
+            'days' => env('LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        'alerts' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/alerts.log'),
+            'level' => 'critical',
+            'days' => env('LOG_DAILY_DAYS', 90),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];
