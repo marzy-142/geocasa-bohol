@@ -20,6 +20,7 @@ class AdminUserSeeder extends Seeder
             'role' => 'admin',
             'is_approved' => true,
             'email_verified_at' => now(),
+            'prc_id' => 'ADMIN-00000001',
         ]);
 
         // Create a test broker for demonstration
@@ -30,6 +31,7 @@ class AdminUserSeeder extends Seeder
             'role' => 'broker',
             'is_approved' => true,
             'email_verified_at' => now(),
+            'prc_id' => 'PRC-12345678',
         ]);
 
         // Create a pending broker for testing approval process
@@ -40,6 +42,7 @@ class AdminUserSeeder extends Seeder
             'role' => 'broker',
             'is_approved' => false,
             'email_verified_at' => now(),
+            'prc_id' => 'PRC-87654321',
         ]);
     }
 }

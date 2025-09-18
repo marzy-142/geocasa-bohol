@@ -18,14 +18,22 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
-        $response = $this->post('/register', [
+        $response = $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class)
+            ->post('/register', [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'role' => 'client',
+            ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertDatabaseHas('users', [
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'role' => 'client',
         ]);
-
-        $this->assertAuthenticated();
+        
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 }

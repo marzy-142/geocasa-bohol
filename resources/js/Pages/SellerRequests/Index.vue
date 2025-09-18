@@ -1,9 +1,10 @@
 <script setup>
 import { ref, computed } from "vue";
-import { useForm } from "@inertiajs/vue3";
+import { useForm, router } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import { Link } from "@inertiajs/vue3";
 import Pagination from "@/Components/Pagination.vue";
+import { debounce } from "lodash";
 
 const props = defineProps({
     sellerRequests: Object,
@@ -11,26 +12,124 @@ const props = defineProps({
     filters: Object,
     canManage: Boolean,
     canCreate: Boolean,
+    stats: Object,
 });
 
-const searchForm = useForm({
-    search: props.filters.search || "",
-    status: props.filters.status || "",
-    date_from: props.filters.date_from || "",
-    date_to: props.filters.date_to || "",
-    property_type: props.filters.property_type || "",
+// Assignment functionality
+const selectedSellerRequests = ref([]);
+const showAssignModal = ref(false);
+const showBulkAssignModal = ref(false);
+const selectedSellerRequest = ref(null);
+
+const assignForm = ref({
+    broker_id: "",
+    processing: false,
 });
 
-const search = () => {
-    searchForm.get(route("seller-requests.index"), {
+const bulkAssignForm = ref({
+    broker_id: "",
+    processing: false,
+});
+
+const allSellerRequestsSelected = computed(() => {
+    return (
+        props.sellerRequests.data.length > 0 &&
+        selectedSellerRequests.value.length === props.sellerRequests.data.length
+    );
+});
+
+const filters = ref({ ...props.filters });
+
+const filterSellerRequests = debounce(() => {
+    router.get(route("seller-requests.index"), filters.value, {
         preserveState: true,
-        replace: true,
+        preserveScroll: true,
     });
+}, 300);
+
+const toggleAllSellerRequests = () => {
+    if (allSellerRequestsSelected.value) {
+        selectedSellerRequests.value = [];
+    } else {
+        selectedSellerRequests.value = props.sellerRequests.data.map(
+            (sellerRequest) => sellerRequest.id
+        );
+    }
+};
+
+const openAssignModal = (sellerRequest) => {
+    selectedSellerRequest.value = sellerRequest;
+    assignForm.value.broker_id = sellerRequest.assigned_broker?.id || "";
+    showAssignModal.value = true;
+};
+
+const closeAssignModal = () => {
+    showAssignModal.value = false;
+    selectedSellerRequest.value = null;
+    assignForm.value.broker_id = "";
+};
+
+const assignBroker = () => {
+    if (!assignForm.value.broker_id) return;
+
+    assignForm.value.processing = true;
+
+    router.post(
+        route("seller-requests.assign"),
+        {
+            seller_request_id: selectedSellerRequest.value.id,
+            broker_id: assignForm.value.broker_id,
+        },
+        {
+            onSuccess: () => {
+                closeAssignModal();
+            },
+            onFinish: () => {
+                assignForm.value.processing = false;
+            },
+        }
+    );
+};
+
+const bulkAssignBroker = () => {
+    if (
+        !bulkAssignForm.value.broker_id ||
+        selectedSellerRequests.value.length === 0
+    )
+        return;
+
+    bulkAssignForm.value.processing = true;
+
+    router.post(
+        route("seller-requests.bulk-assign"),
+        {
+            seller_request_ids: selectedSellerRequests.value,
+            broker_id: bulkAssignForm.value.broker_id,
+        },
+        {
+            onSuccess: () => {
+                showBulkAssignModal.value = false;
+                selectedSellerRequests.value = [];
+                bulkAssignForm.value.broker_id = "";
+            },
+            onFinish: () => {
+                bulkAssignForm.value.processing = false;
+            },
+        }
+    );
+};
+
+const getInitials = (name) => {
+    return name
+        .split(" ")
+        .map((word) => word.charAt(0))
+        .join("")
+        .toUpperCase();
 };
 
 const clearFilters = () => {
-    searchForm.reset();
-    searchForm.get(route("seller-requests.index"));
+    filters.value = {};
+    router.get(route("seller-requests.index"));
 };
 
 const formatPrice = (price) => {
@@ -84,14 +183,70 @@ const deleteRequest = (request) => {
                             }})
                         </p>
                     </div>
-                    <Link
-                        v-if="canCreate"
-                        :href="route('seller-requests.create')"
-                        class="bg-white text-orange-600 hover:bg-orange-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
-                    >
-                        <span class="flex items-center">
+                    <div class="flex space-x-3">
+                        <button
+                            v-if="$page.props.auth.user.role === 'admin'"
+                            @click="showBulkAssignModal = true"
+                            :disabled="selectedSellerRequests.length === 0"
+                            class="bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
+                        >
+                            <span class="flex items-center">
+                                <svg
+                                    class="w-5 h-5 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 4v16m8-8H4"
+                                    ></path>
+                                </svg>
+                                Bulk Assign ({{
+                                    selectedSellerRequests.length
+                                }})
+                            </span>
+                        </button>
+                        <Link
+                            v-if="canCreate"
+                            :href="route('seller-requests.create')"
+                            class="bg-white text-orange-600 hover:bg-orange-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
+                        >
+                            <span class="flex items-center">
+                                <svg
+                                    class="w-5 h-5 mr-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 4v16m8-8H4"
+                                    ></path>
+                                </svg>
+                                New Seller Request
+                            </span>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards (Admin Only) -->
+            <div
+                v-if="$page.props.auth.user.role === 'admin' && stats"
+                class="grid grid-cols-1 md:grid-cols-4 gap-6"
+            >
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                >
+                    <div class="flex items-center">
+                        <div class="p-3 bg-red-100 rounded-lg">
                             <svg
-                                class="w-5 h-5 mr-2"
+                                class="w-6 h-6 text-red-600"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -100,12 +255,106 @@ const deleteRequest = (request) => {
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M12 4v16m8-8H4"
+                                    d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
                                 ></path>
                             </svg>
-                            New Seller Request
-                        </span>
-                    </Link>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">
+                                Unassigned Sellers
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900">
+                                {{ stats.unassigned }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                >
+                    <div class="flex items-center">
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <svg
+                                class="w-6 h-6 text-green-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                ></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">
+                                Assigned Sellers
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900">
+                                {{ stats.assigned }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                >
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <svg
+                                class="w-6 h-6 text-blue-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                ></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">
+                                Active Brokers
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900">
+                                {{ stats.activeBrokers }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                >
+                    <div class="flex items-center">
+                        <div class="p-3 bg-purple-100 rounded-lg">
+                            <svg
+                                class="w-6 h-6 text-purple-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                ></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">
+                                Avg per Broker
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900">
+                                {{ stats.avgSellerRequestsPerBroker }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -117,19 +366,19 @@ const deleteRequest = (request) => {
 
                 <!-- Primary Filters -->
                 <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4"
                 >
                     <input
-                        v-model="searchForm.search"
+                        v-model="filters.search"
                         type="text"
                         placeholder="Search seller requests..."
                         class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @input="search"
+                        @input="filterSellerRequests"
                     />
                     <select
-                        v-model="searchForm.status"
+                        v-model="filters.status"
                         class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @change="search"
+                        @change="filterSellerRequests"
                     >
                         <option value="">All Statuses</option>
                         <option value="pending">Pending</option>
@@ -138,9 +387,34 @@ const deleteRequest = (request) => {
                         <option value="rejected">Rejected</option>
                     </select>
                     <select
-                        v-model="searchForm.property_type"
+                        v-if="$page.props.auth.user.role === 'admin'"
+                        v-model="filters.assignment_status"
                         class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @change="search"
+                        @change="filterSellerRequests"
+                    >
+                        <option value="">All Assignments</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="unassigned">Unassigned</option>
+                    </select>
+                    <select
+                        v-if="$page.props.auth.user.role === 'admin'"
+                        v-model="filters.broker_id"
+                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        @change="filterSellerRequests"
+                    >
+                        <option value="">All Brokers</option>
+                        <option
+                            v-for="broker in brokers"
+                            :key="broker.id"
+                            :value="broker.id"
+                        >
+                            {{ broker.name }}
+                        </option>
+                    </select>
+                    <select
+                        v-model="filters.property_type"
+                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        @change="filterSellerRequests"
                     >
                         <option value="">All Property Types</option>
                         <option value="residential">Residential</option>
@@ -149,11 +423,11 @@ const deleteRequest = (request) => {
                         <option value="beachfront">Beachfront</option>
                     </select>
                     <input
-                        v-model="searchForm.date_from"
+                        v-model="filters.date_from"
                         type="date"
                         placeholder="Date From"
                         class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @change="search"
+                        @change="filterSellerRequests"
                     />
                 </div>
 
@@ -171,9 +445,45 @@ const deleteRequest = (request) => {
             <!-- Seller Requests Grid -->
             <div class="bg-white rounded-lg shadow-sm p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        Seller Requests ({{ sellerRequests.total || 0 }})
-                    </h3>
+                    <div class="flex items-center space-x-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            Seller Requests ({{ sellerRequests.total || 0 }})
+                        </h3>
+                        <div
+                            v-if="
+                                $page.props.auth.user.role === 'admin' &&
+                                sellerRequests.data.length > 0
+                            "
+                            class="flex items-center space-x-2"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="allSellerRequestsSelected"
+                                @change="toggleAllSellerRequests"
+                                class="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                            />
+                            <span class="text-sm text-gray-600"
+                                >Select All</span
+                            >
+                        </div>
+                    </div>
+                    <div
+                        v-if="
+                            $page.props.auth.user.role === 'admin' &&
+                            selectedSellerRequests.length > 0
+                        "
+                        class="flex items-center space-x-2"
+                    >
+                        <span class="text-sm text-gray-600"
+                            >{{ selectedSellerRequests.length }} selected</span
+                        >
+                        <button
+                            @click="showBulkAssignModal = true"
+                            class="bg-blue-600 text-white hover:bg-blue-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                        >
+                            Assign to Broker
+                        </button>
+                    </div>
                 </div>
 
                 <div
@@ -184,8 +494,24 @@ const deleteRequest = (request) => {
                         v-for="request in sellerRequests.data"
                         :key="request.id"
                         class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                        :class="{
+                            'ring-2 ring-orange-500':
+                                selectedSellerRequests.includes(request.id),
+                        }"
                     >
                         <div class="p-6">
+                            <!-- Selection Checkbox (Admin Only) -->
+                            <div
+                                v-if="$page.props.auth.user.role === 'admin'"
+                                class="flex justify-end mb-2"
+                            >
+                                <input
+                                    type="checkbox"
+                                    :value="request.id"
+                                    v-model="selectedSellerRequests"
+                                    class="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                />
+                            </div>
                             <!-- Header -->
                             <div class="flex justify-between items-start mb-4">
                                 <div>
@@ -342,6 +668,20 @@ const deleteRequest = (request) => {
                                     View Details
                                 </Link>
                                 <div class="flex space-x-2">
+                                    <button
+                                        v-if="
+                                            $page.props.auth.user.role ===
+                                            'admin'
+                                        "
+                                        @click="openAssignModal(request)"
+                                        class="text-green-600 hover:text-green-800 text-sm font-medium"
+                                    >
+                                        {{
+                                            request.assigned_broker
+                                                ? "Reassign"
+                                                : "Assign"
+                                        }}
+                                    </button>
                                     <Link
                                         :href="
                                             route(
@@ -384,6 +724,126 @@ const deleteRequest = (request) => {
                 <!-- Pagination -->
                 <div v-if="sellerRequests.data.length > 0" class="mt-6">
                     <Pagination :links="sellerRequests.links" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignment Modal -->
+        <div
+            v-if="showAssignModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Assign Broker to
+                        {{ selectedSellerRequest?.seller_name }}
+                    </h3>
+                    <div class="mb-4">
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                            Select Broker
+                        </label>
+                        <select
+                            v-model="assignForm.broker_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                            <option value="">Select a broker...</option>
+                            <option
+                                v-for="broker in brokers"
+                                :key="broker.id"
+                                :value="broker.id"
+                            >
+                                {{ broker.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button
+                            @click="closeAssignModal"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            @click="assignBroker"
+                            :disabled="
+                                !assignForm.broker_id || assignForm.processing
+                            "
+                            class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+                        >
+                            {{
+                                assignForm.processing
+                                    ? "Assigning..."
+                                    : "Assign Broker"
+                            }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Assignment Modal -->
+        <div
+            v-if="showBulkAssignModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Bulk Assign {{ selectedSellerRequests.length }} Seller
+                        Requests
+                    </h3>
+                    <div class="mb-4">
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                            Select Broker
+                        </label>
+                        <select
+                            v-model="bulkAssignForm.broker_id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                            <option value="">Select a broker...</option>
+                            <option
+                                v-for="broker in brokers"
+                                :key="broker.id"
+                                :value="broker.id"
+                            >
+                                {{ broker.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button
+                            @click="
+                                showBulkAssignModal = false;
+                                bulkAssignForm.broker_id = '';
+                            "
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            @click="bulkAssignBroker"
+                            :disabled="
+                                !bulkAssignForm.broker_id ||
+                                bulkAssignForm.processing
+                            "
+                            class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+                        >
+                            {{
+                                bulkAssignForm.processing
+                                    ? "Assigning..."
+                                    : "Assign to All"
+                            }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

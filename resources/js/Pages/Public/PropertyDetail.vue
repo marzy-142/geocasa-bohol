@@ -542,8 +542,99 @@
                             </div>
                         </div>
 
-                        <!-- Map -->
-                        <div v-if="property.google_maps_link" class="mb-6">
+                        <!-- GIS Mapping Section -->
+                        <div
+                            v-if="
+                                property.coordinates_lat &&
+                                property.coordinates_lng
+                            "
+                            class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6"
+                        >
+                            <div class="p-4 lg:p-6">
+                                <h3
+                                    class="text-lg font-semibold text-gray-900 mb-3 flex items-center"
+                                >
+                                    <svg
+                                        class="w-5 h-5 mr-2 text-blue-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                        ></path>
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                        ></path>
+                                    </svg>
+                                    Property Location
+                                </h3>
+
+                                <!-- Interactive Map -->
+                                <div class="mb-4">
+                                    <div
+                                        ref="publicMapContainer"
+                                        class="w-full h-80 rounded-lg border border-gray-200 overflow-hidden shadow-inner"
+                                    ></div>
+                                </div>
+
+                                <!-- Coordinate Information -->
+                                <div
+                                    class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg"
+                                >
+                                    <div class="text-center">
+                                        <div class="text-sm text-gray-600 mb-1">
+                                            GPS Coordinates
+                                        </div>
+                                        <div
+                                            class="font-semibold text-gray-900"
+                                        >
+                                            {{
+                                                parseFloat(
+                                                    property.coordinates_lat
+                                                ).toFixed(6)
+                                            }},
+                                            {{
+                                                parseFloat(
+                                                    property.coordinates_lng
+                                                ).toFixed(6)
+                                            }}
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <a
+                                            :href="`https://www.google.com/maps?q=${property.coordinates_lat},${property.coordinates_lng}`"
+                                            target="_blank"
+                                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
+                                        >
+                                            <svg
+                                                class="w-5 h-5 mr-2"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                                ></path>
+                                            </svg>
+                                            Open in Google Maps
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Legacy Map Link -->
+                        <div v-else-if="property.google_maps_link" class="mb-6">
                             <h3
                                 class="text-lg font-semibold text-gray-900 mb-3"
                             >
@@ -825,18 +916,18 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <Link
-                        :href="route('login')"
+                    <button
+                        @click="redirectToLogin"
                         class="flex-1 bg-blue-600 text-white text-center py-3 px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors"
                     >
                         Login to Your Account
-                    </Link>
-                    <Link
-                        :href="route('register')"
+                    </button>
+                    <button
+                        @click="redirectToRegister"
                         class="flex-1 bg-white text-blue-600 border-2 border-blue-600 text-center py-3 px-4 rounded-lg hover:bg-blue-50 font-medium transition-colors"
                     >
                         Create New Account
-                    </Link>
+                    </button>
                 </div>
 
                 <div class="mt-4 text-center">
@@ -937,6 +1028,19 @@ import { Link, useForm, usePage } from "@inertiajs/vue3";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
 import PublicFooter from "@/Components/PublicFooter.vue";
 import VirtualTourViewer from "@/Components/VirtualTourViewer.vue";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix for default markers in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+    iconUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+    shadowUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
 const props = defineProps({
     property: Object,
@@ -988,6 +1092,13 @@ const safeImages = computed(() => {
 
 // Computed properties
 const currentImage = computed(() => {
+    // Always use main_image first, then fall back to safeImages if needed
+    if (
+        props.property.main_image &&
+        !props.property.main_image.includes("data:image/svg+xml")
+    ) {
+        return getImageUrl(props.property.main_image);
+    }
     if (safeImages.value && safeImages.value.length > 0) {
         const imageAtIndex = safeImages.value[currentImageIndex.value];
         return getImageUrl(imageAtIndex);
@@ -1046,12 +1157,6 @@ const virtualTourHotspots = computed(() => {
 });
 
 const submitInquiry = () => {
-    // Check if user is authenticated
-    if (!isAuthenticated.value) {
-        showAuthNotification.value = true;
-        return;
-    }
-
     inquiryForm.post(route("public.inquiries.store", props.property.slug), {
         preserveScroll: true,
         onSuccess: () => {
@@ -1059,6 +1164,58 @@ const submitInquiry = () => {
             inquiryForm.message = `I'm interested in ${props.property.title}. Please provide more information about this property.`;
         },
     });
+};
+
+// Store inquiry data and redirect to login
+const redirectToLogin = () => {
+    // Store inquiry form data in session before redirecting
+    const inquiryData = {
+        name: inquiryForm.name,
+        email: inquiryForm.email,
+        phone: inquiryForm.phone,
+        message: inquiryForm.message,
+        property_id: props.property.id,
+        property_title: props.property.title,
+    };
+
+    // Use Inertia to make a POST request to store data in session, then redirect
+    inquiryForm
+        .transform((data) => inquiryData)
+        .post(route("public.store-inquiry-session"), {
+            onSuccess: () => {
+                window.location.href = route("login");
+            },
+            onError: () => {
+                // If storing fails, still redirect to login
+                window.location.href = route("login");
+            },
+        });
+};
+
+// Store inquiry data and redirect to register
+const redirectToRegister = () => {
+    // Store inquiry form data in session before redirecting
+    const inquiryData = {
+        name: inquiryForm.name,
+        email: inquiryForm.email,
+        phone: inquiryForm.phone,
+        message: inquiryForm.message,
+        property_id: props.property.id,
+        property_title: props.property.title,
+    };
+
+    // Use Inertia to make a POST request to store data in session, then redirect
+    inquiryForm
+        .transform((data) => inquiryData)
+        .post(route("public.store-inquiry-session"), {
+            onSuccess: () => {
+                window.location.href = route("register");
+            },
+            onError: () => {
+                // If storing fails, still redirect to register
+                window.location.href = route("register");
+            },
+        });
 };
 
 // Close authentication notification
@@ -1199,14 +1356,54 @@ const handleKeydown = (event) => {
     }
 };
 
+// Map reference
+const publicMapContainer = ref(null);
+const publicMap = ref(null);
+
+// Initialize public map
+const initPublicMap = () => {
+    if (
+        props.property.coordinates_lat &&
+        props.property.coordinates_lng &&
+        publicMapContainer.value
+    ) {
+        const lat = parseFloat(props.property.coordinates_lat);
+        const lng = parseFloat(props.property.coordinates_lng);
+
+        publicMap.value = L.map(publicMapContainer.value).setView(
+            [lat, lng],
+            15
+        );
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors",
+        }).addTo(publicMap.value);
+
+        L.marker([lat, lng])
+            .addTo(publicMap.value)
+            .bindPopup(
+                `<b>${props.property.title}</b><br>${props.property.full_address}`
+            )
+            .openPopup();
+    }
+};
+
 // Lifecycle hooks
 onMounted(() => {
     document.addEventListener("keydown", handleKeydown);
+
+    // Initialize map after component is mounted
+    initPublicMap();
 });
 
 onUnmounted(() => {
     document.removeEventListener("keydown", handleKeydown);
     document.body.style.overflow = "auto";
+
+    // Clean up map instance
+    if (publicMap.value) {
+        publicMap.value.remove();
+    }
 });
 </script>
 

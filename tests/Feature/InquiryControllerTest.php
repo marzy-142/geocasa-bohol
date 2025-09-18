@@ -16,7 +16,6 @@ class InquiryControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->artisan('migrate:fresh');
     }
 
     public function test_authenticated_user_can_create_inquiry(): void
@@ -33,22 +32,21 @@ class InquiryControllerTest extends TestCase
         ]);
 
         $inquiryData = [
-            'property_id' => $property->id,
-            'message' => 'I am interested in this property. Can we schedule a viewing?',
-            'preferred_contact_method' => 'email',
-            'budget_range' => '5000000-7000000'
+            'name' => $client->name,
+            'email' => $client->email,
+            'phone' => '09123456789',
+            'message' => 'I am interested in this property. Can we schedule a viewing?'
         ];
 
-        $response = $this->actingAs($client)->post('/inquiries', $inquiryData);
+        $response = $this->post("/browse-properties/{$property->slug}/inquire", $inquiryData);
 
         $response->assertRedirect()
                  ->assertSessionHas('success');
 
         $this->assertDatabaseHas('inquiries', [
-            'client_id' => $client->id,
             'property_id' => $property->id,
             'message' => 'I am interested in this property. Can we schedule a viewing?',
-            'status' => 'pending'
+            'status' => 'new'
         ]);
     }
 
@@ -206,14 +204,22 @@ class InquiryControllerTest extends TestCase
 
     public function test_inquiry_validation_fails_for_missing_fields(): void
     {
-        $client = User::factory()->create(['role' => 'client']);
+        $broker = User::factory()->create([
+            'role' => 'broker',
+            'is_approved' => true,
+            'application_status' => 'approved'
+        ]);
+        $property = Property::factory()->create([
+            'broker_id' => $broker->id,
+            'status' => 'available'
+        ]);
 
-        $response = $this->actingAs($client)->post('/inquiries', []);
+        $response = $this->post("/browse-properties/{$property->slug}/inquire", []);
 
         $response->assertSessionHasErrors([
-            'property_id',
-            'message',
-            'preferred_contact_method'
+            'name',
+            'email',
+            'message'
         ]);
     }
 
@@ -296,11 +302,16 @@ class InquiryControllerTest extends TestCase
         ]);
         $client = User::factory()->create(['role' => 'client']);
         $property = Property::factory()->create(['broker_id' => $broker->id]);
+        
+        // Create inquiry without assigned_broker_id first, then update it
         $inquiry = Inquiry::factory()->create([
             'client_id' => $client->id,
             'property_id' => $property->id,
             'status' => 'pending'
         ]);
+        
+        // Assign the broker to the inquiry
+        $inquiry->update(['assigned_broker_id' => $broker->id]);
 
         $updateData = [
             'status' => 'closed',

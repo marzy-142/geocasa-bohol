@@ -73,23 +73,29 @@ return new class extends Migration
         });
 
         // Add indexes to conversations table
-        Schema::table('conversations', function (Blueprint $table) {
-            $table->index(['type', 'is_archived']); // For conversation filtering
-            $table->index(['is_archived', 'last_message_at']); // For active conversations by activity
-            $table->index('created_at'); // For sorting
-        });
+        if (Schema::hasTable('conversations')) {
+            Schema::table('conversations', function (Blueprint $table) {
+                $table->index(['type', 'is_archived']); // For conversation filtering
+                $table->index(['is_archived', 'last_message_at']); // For active conversations by activity
+                $table->index('created_at'); // For sorting
+            });
+        }
 
         // Add indexes to messages table (additional to existing ones)
-        Schema::table('messages', function (Blueprint $table) {
-            $table->index(['type', 'created_at']); // For message type filtering
-            $table->index(['is_edited', 'created_at']); // For edited messages
-        });
+        if (Schema::hasTable('messages')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->index(['type', 'created_at']); // For message type filtering
+                $table->index(['is_edited', 'created_at']); // For edited messages
+            });
+        }
 
         // Add indexes to sessions table for better session management
-        Schema::table('sessions', function (Blueprint $table) {
-            $table->index('ip_address'); // For IP-based queries
-            $table->index(['user_id', 'last_activity']); // For user session tracking
-        });
+        if (Schema::hasTable('sessions')) {
+            Schema::table('sessions', function (Blueprint $table) {
+                $table->index('ip_address'); // For IP-based queries
+                $table->index(['user_id', 'last_activity']); // For user session tracking
+            });
+        }
     }
 
     /**
@@ -160,22 +166,28 @@ return new class extends Migration
         });
 
         // Drop indexes from conversations table
-        Schema::table('conversations', function (Blueprint $table) {
-            $table->dropIndex(['type', 'is_archived']);
-            $table->dropIndex(['is_archived', 'last_message_at']);
-            $table->dropIndex(['created_at']);
-        });
+        if (Schema::hasTable('conversations')) {
+            Schema::table('conversations', function (Blueprint $table) {
+                $table->dropIndex(['type', 'is_archived']);
+                $table->dropIndex(['is_archived', 'last_message_at']);
+                $table->dropIndex(['created_at']);
+            });
+        }
 
         // Drop indexes from messages table
-        Schema::table('messages', function (Blueprint $table) {
-            $table->dropIndex(['type', 'created_at']);
-            $table->dropIndex(['is_edited', 'created_at']);
-        });
+        if (Schema::hasTable('messages')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->dropIndex(['type', 'created_at']);
+                $table->dropIndex(['is_edited', 'created_at']);
+            });
+        }
 
         // Drop indexes from sessions table
-        Schema::table('sessions', function (Blueprint $table) {
-            $table->dropIndex(['ip_address']);
-            $table->dropIndex(['user_id', 'last_activity']);
-        });
+        if (Schema::hasTable('sessions')) {
+            Schema::table('sessions', function (Blueprint $table) {
+                $table->dropIndex(['ip_address']);
+                $table->dropIndex(['user_id', 'last_activity']);
+            });
+        }
     }
 };

@@ -108,12 +108,12 @@ class ClientController extends Controller
         $client->load([
             'broker:id,name,email,phone',
             'inquiries' => function ($query) {
-                $query->with('property:id,title,location')
+                $query->with('property:id,title,address,municipality')
                       ->orderBy('created_at', 'desc')
                       ->limit(10);
             },
             'transactions' => function ($query) {
-                $query->with('property:id,title,location')
+                $query->with('property:id,title,address,municipality')
                       ->orderBy('created_at', 'desc')
                       ->limit(10);
             }
@@ -611,11 +611,11 @@ class ClientController extends Controller
         $client->load([
             'broker:id,name,email,phone',
             'inquiries' => function ($query) {
-                $query->with('property:id,title,location,price')
+                $query->with('property:id,title,address,municipality,total_price')
                       ->orderBy('created_at', 'desc');
             },
             'transactions' => function ($query) {
-                $query->with('property:id,title,location,price')
+                $query->with('property:id,title,address,municipality,total_price')
                       ->orderBy('created_at', 'desc');
             }
         ]);

@@ -13,6 +13,13 @@
                 </div>
                 <div class="flex space-x-2">
                     <Link
+                        v-if="!inquiry.transaction"
+                        :href="route('transactions.create', { inquiry_id: inquiry.id })"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                    >
+                        Create Transaction
+                    </Link>
+                    <Link
                         v-if="can.edit"
                         :href="route('inquiries.edit', inquiry.id)"
                         class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-4 rounded-lg transition-colors"
@@ -185,8 +192,8 @@
                             <Link
                                 :href="
                                     route(
-                                        'properties.show',
-                                        inquiry.property.id
+                                        'broker.properties.show',
+                                        inquiry.property.slug
                                     )
                                 "
                                 class="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -426,9 +433,17 @@
                     class="bg-white overflow-hidden shadow-xl sm:rounded-lg"
                 >
                     <div class="p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">
-                            Related Transaction
-                        </h3>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                Related Transaction
+                            </h3>
+                            <Link
+                                :href="route('transactions.show', inquiry.transaction.id)"
+                                class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                            >
+                                View Transaction
+                            </Link>
+                        </div>
                         <div class="space-y-2 text-sm text-gray-600">
                             <p>
                                 <strong>Transaction ID:</strong>
@@ -436,7 +451,12 @@
                             </p>
                             <p>
                                 <strong>Status:</strong>
-                                {{ inquiry.transaction.status }}
+                                <span
+                                    :class="getTransactionStatusBadgeClass(inquiry.transaction.status)"
+                                    class="px-2 py-1 text-xs font-semibold rounded-full ml-2"
+                                >
+                                    {{ inquiry.transaction.status.charAt(0).toUpperCase() + inquiry.transaction.status.slice(1) }}
+                                </span>
                             </p>
                             <p>
                                 <strong>Amount:</strong> ${{
@@ -445,7 +465,35 @@
                                     ).toLocaleString()
                                 }}
                             </p>
+                            <p v-if="inquiry.transaction.created_at">
+                                <strong>Created:</strong>
+                                {{ formatDate(inquiry.transaction.created_at) }}
+                            </p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- No Transaction Section -->
+                <div
+                    v-if="!inquiry.transaction && inquiry.status !== 'new'"
+                    class="bg-yellow-50 border border-yellow-200 rounded-lg p-6"
+                >
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium text-yellow-800 mb-2">
+                                Ready to Create Transaction?
+                            </h3>
+                            <p class="text-yellow-700 text-sm">
+                                This inquiry has been processed but doesn't have a related transaction yet. 
+                                Create a transaction to track the sale process.
+                            </p>
+                        </div>
+                        <Link
+                            :href="route('transactions.create', { inquiry_id: inquiry.id })"
+                            class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+                        >
+                            Create Transaction
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -517,5 +565,16 @@ const getTypeBadgeClass = (type) => {
         information: "bg-yellow-100 text-yellow-800",
     };
     return classes[type] || "bg-gray-100 text-gray-800";
+};
+
+const getTransactionStatusBadgeClass = (status) => {
+    const classes = {
+        pending: "bg-yellow-100 text-yellow-800",
+        active: "bg-blue-100 text-blue-800",
+        completed: "bg-green-100 text-green-800",
+        cancelled: "bg-red-100 text-red-800",
+        on_hold: "bg-orange-100 text-orange-800",
+    };
+    return classes[status] || "bg-gray-100 text-gray-800";
 };
 </script>

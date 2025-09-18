@@ -12,7 +12,7 @@
                     </p>
                 </div>
                 <Link
-                    :href="route('properties.index')"
+                    :href="route('broker.properties.index')"
                     class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all duration-200 flex items-center space-x-2"
                 >
                     <svg
@@ -263,59 +263,62 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    <div>
-                        <label
-                            for="coordinates_lat"
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                            Latitude (GPS)
+                <!-- Interactive Map Location Picker -->
+                <div class="mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <label class="flex items-center space-x-3">
+                            <input
+                                v-model="enableGISMapping"
+                                type="checkbox"
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span class="text-sm font-medium text-gray-700">
+                                🗺️ Enable GIS Mapping (Optional)
+                            </span>
                         </label>
-                        <input
-                            id="coordinates_lat"
-                            v-model="form.coordinates_lat"
-                            type="number"
-                            step="any"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                            :class="{
-                                'border-red-500 ring-red-500':
-                                    errors.coordinates_lat,
-                            }"
-                            placeholder="e.g., 9.5330"
-                        />
-                        <div
-                            v-if="errors.coordinates_lat"
-                            class="text-red-500 text-sm mt-1"
-                        >
-                            {{ errors.coordinates_lat }}
+                        <div class="text-xs text-gray-500">
+                            Add precise GPS coordinates for better property
+                            visibility
                         </div>
                     </div>
 
-                    <div>
-                        <label
-                            for="coordinates_lng"
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                            Longitude (GPS)
-                        </label>
-                        <input
-                            id="coordinates_lng"
-                            v-model="form.coordinates_lng"
-                            type="number"
-                            step="any"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                            :class="{
-                                'border-red-500 ring-red-500':
-                                    errors.coordinates_lng,
-                            }"
-                            placeholder="e.g., 123.7794"
+                    <div
+                        v-if="enableGISMapping"
+                        class="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                    >
+                        <MapLocationPicker
+                            v-model="coordinates"
+                            label="Property Location (GPS Coordinates)"
+                            :error="
+                                errors.coordinates_lat || errors.coordinates_lng
+                            "
+                            @location-selected="onLocationSelected"
                         />
-                        <div
-                            v-if="errors.coordinates_lng"
-                            class="text-red-500 text-sm mt-1"
+                        <p class="text-xs text-gray-600 mt-2">
+                            💡 Tip: Click on the map to set precise coordinates,
+                            or search for an address to auto-locate the
+                            property.
+                        </p>
+                    </div>
+
+                    <div v-else class="text-center py-8 text-gray-500">
+                        <svg
+                            class="w-12 h-12 mx-auto mb-3 text-gray-300"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
-                            {{ errors.coordinates_lng }}
-                        </div>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            ></path>
+                        </svg>
+                        <p class="text-sm">
+                            GIS mapping is disabled. Enable it above to add
+                            precise location coordinates.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -1054,7 +1057,6 @@
 
                     <div v-if="canFeatureProperty">
                         <label class="flex items-center space-x-3 mt-8">
-                            // Around line 583-587
                             <input
                                 id="is_featured"
                                 v-model="form.is_featured"
@@ -1075,7 +1077,7 @@
             >
                 <div class="flex justify-end space-x-4">
                     <Link
-                        :href="route('properties.index')"
+                        :href="route('broker.properties.index')"
                         class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200"
                     >
                         Cancel
@@ -1135,8 +1137,12 @@
 import { ref, computed, watch } from "vue";
 import { useForm, usePage, Link } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import MapLocationPicker from "@/Components/MapLocationPicker.vue";
 
 const page = usePage();
+
+// GIS Mapping toggle
+const enableGISMapping = ref(false);
 
 const form = useForm({
     title: "",
@@ -1175,6 +1181,12 @@ const processing = ref(false);
 const imagePreview = ref([]);
 const virtualTourImagePreview = ref([]);
 const nearbyLandmarksText = ref("");
+
+// Map coordinates for the MapLocationPicker component
+const coordinates = ref({
+    lat: form.coordinates_lat ? parseFloat(form.coordinates_lat) : null,
+    lng: form.coordinates_lng ? parseFloat(form.coordinates_lng) : null,
+});
 
 // Property types aligned with backend App\Models\Property::TYPES
 const propertyTypes = [
@@ -1239,7 +1251,7 @@ const municipalities = [
 
 const canFeatureProperty = computed(() => {
     const user = page.props.auth.user;
-    return user.role === "admin";
+    return user.role === "admin" || user.role === "broker";
 });
 
 const isAdmin = computed(() => {
@@ -1249,6 +1261,15 @@ const isAdmin = computed(() => {
 
 const formatType = (type) => {
     return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+// Handle location selection from map
+const onLocationSelected = (location) => {
+    if (location && location.lat && location.lng) {
+        form.coordinates_lat = location.lat.toString();
+        form.coordinates_lng = location.lng.toString();
+        coordinates.value = location;
+    }
 };
 
 const calculateTotalPrice = () => {
@@ -1301,6 +1322,28 @@ const removeVirtualTourImage = (index) => {
     form.virtual_tour_images = newImages;
     virtualTourImagePreview.value.splice(index, 1);
 };
+
+// Watch for changes in coordinates from the map component
+watch(
+    coordinates,
+    (newCoords) => {
+        if (newCoords && newCoords.lat && newCoords.lng) {
+            form.coordinates_lat = newCoords.lat.toString();
+            form.coordinates_lng = newCoords.lng.toString();
+        }
+    },
+    { deep: true }
+);
+
+// Watch for GIS mapping toggle
+watch(enableGISMapping, (enabled) => {
+    if (!enabled) {
+        // Clear coordinates when GIS mapping is disabled
+        form.coordinates_lat = "";
+        form.coordinates_lng = "";
+        coordinates.value = { lat: null, lng: null };
+    }
+});
 
 // Watch for changes in nearby landmarks text and convert to array
 watch(nearbyLandmarksText, (newValue) => {

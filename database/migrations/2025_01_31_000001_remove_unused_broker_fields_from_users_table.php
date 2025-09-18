@@ -10,10 +10,19 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // Remove unused fields that are not reflected in frontend
-            $table->dropColumn([
-                'specialization',
-                'company_address', // Using separate address fields instead
-            ]);
+            $columnsToRemove = [];
+            
+            if (Schema::hasColumn('users', 'specialization')) {
+                $columnsToRemove[] = 'specialization';
+            }
+            
+            if (Schema::hasColumn('users', 'company_address')) {
+                $columnsToRemove[] = 'company_address'; // Using separate address fields instead
+            }
+            
+            if (!empty($columnsToRemove)) {
+                $table->dropColumn($columnsToRemove);
+            }
         });
     }
 

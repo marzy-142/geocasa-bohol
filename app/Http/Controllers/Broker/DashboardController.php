@@ -49,11 +49,11 @@ class DashboardController extends Controller
             $query->where('broker_id', $user->id);
         })
         ->with([
-            'property:id,title,price,broker_id',
+            'property:id,title,total_price,broker_id',
             'client:id,name'
         ])
-        ->select('id', 'property_id', 'client_id', 'status', 'created_at')
-        ->latest()
+        ->select('inquiries.id', 'inquiries.property_id', 'inquiries.client_id', 'inquiries.status', 'inquiries.created_at')
+        ->orderBy('inquiries.created_at', 'desc')
         ->take(10)
         ->get()
         ->map(function($inquiry) {
@@ -61,7 +61,7 @@ class DashboardController extends Controller
                 'id' => $inquiry->id,
                 'property' => $inquiry->property->title,
                 'client' => $inquiry->client->name ?? 'Anonymous',
-                'amount' => '₱' . number_format($inquiry->property->price),
+                'amount' => '₱' . number_format($inquiry->property->total_price),
                 'date' => $inquiry->created_at->format('M d, Y'),
                 'status' => $inquiry->status,
             ];
@@ -119,7 +119,7 @@ class DashboardController extends Controller
                 return [
                     'id' => $property->id,
                     'title' => $property->title,
-                    'price' => $property->price,
+                    'price' => $property->total_price,
                     'inquiries_count' => $property->inquiries_count,
                     'transactions_count' => $property->transactions_count,
                     'conversion_rate' => $property->inquiries_count > 0 

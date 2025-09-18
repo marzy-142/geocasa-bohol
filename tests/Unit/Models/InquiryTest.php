@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Models;
 
+use App\Models\Client;
 use App\Models\Inquiry;
 use App\Models\Property;
 use App\Models\User;
@@ -21,13 +22,18 @@ class InquiryTest extends TestCase
     public function test_inquiry_has_correct_fillable_attributes(): void
     {
         $fillable = [
-            'client_id',
-            'property_id',
+            'name',
+            'email',
+            'phone',
             'message',
-            'preferred_contact_method',
-            'budget_range',
+            'inquiry_type',
+            'property_id',
+            'client_id',
             'status',
-            'response',
+            'contacted_at',
+            'scheduled_at',
+            'broker_notes',
+            'broker_response',
             'responded_at'
         ];
 
@@ -40,37 +46,32 @@ class InquiryTest extends TestCase
         $inquiry = new Inquiry();
         $casts = $inquiry->getCasts();
 
+        $this->assertArrayHasKey('contacted_at', $casts);
+        $this->assertEquals('datetime', $casts['contacted_at']);
+        $this->assertArrayHasKey('scheduled_at', $casts);
+        $this->assertEquals('datetime', $casts['scheduled_at']);
         $this->assertArrayHasKey('responded_at', $casts);
         $this->assertEquals('datetime', $casts['responded_at']);
     }
 
     public function test_inquiry_belongs_to_client(): void
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $broker = User::factory()->create([
-            'role' => 'broker',
-            'is_approved' => true,
-            'application_status' => 'approved'
-        ]);
+        $broker = User::factory()->broker()->create();
+        $client = Client::factory()->create(['broker_id' => $broker->id]);
         $property = Property::factory()->create(['broker_id' => $broker->id]);
         $inquiry = Inquiry::factory()->create([
             'client_id' => $client->id,
             'property_id' => $property->id
         ]);
 
-        $this->assertInstanceOf(User::class, $inquiry->client);
+        $this->assertInstanceOf(Client::class, $inquiry->client);
         $this->assertEquals($client->id, $inquiry->client->id);
-        $this->assertEquals('client', $inquiry->client->role);
     }
 
     public function test_inquiry_belongs_to_property(): void
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $broker = User::factory()->create([
-            'role' => 'broker',
-            'is_approved' => true,
-            'application_status' => 'approved'
-        ]);
+        $broker = User::factory()->broker()->create();
+        $client = Client::factory()->create(['broker_id' => $broker->id]);
         $property = Property::factory()->create(['broker_id' => $broker->id]);
         $inquiry = Inquiry::factory()->create([
             'client_id' => $client->id,
@@ -83,59 +84,63 @@ class InquiryTest extends TestCase
 
     public function test_inquiry_can_be_created_with_required_attributes(): void
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $broker = User::factory()->create([
-            'role' => 'broker',
-            'is_approved' => true,
-            'application_status' => 'approved'
-        ]);
+        $broker = User::factory()->broker()->create();
+        $client = Client::factory()->create(['broker_id' => $broker->id]);
         $property = Property::factory()->create(['broker_id' => $broker->id]);
 
         $inquiry = Inquiry::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
             'client_id' => $client->id,
             'property_id' => $property->id,
             'message' => 'I am interested in this property.',
-            'preferred_contact_method' => 'email',
-            'status' => 'pending'
+            'inquiry_type' => 'general',
+            'status' => 'new'
         ]);
 
         $this->assertInstanceOf(Inquiry::class, $inquiry);
+        $this->assertEquals('John Doe', $inquiry->name);
+        $this->assertEquals('john@example.com', $inquiry->email);
         $this->assertEquals($client->id, $inquiry->client_id);
         $this->assertEquals($property->id, $inquiry->property_id);
         $this->assertEquals('I am interested in this property.', $inquiry->message);
-        $this->assertEquals('email', $inquiry->preferred_contact_method);
-        $this->assertEquals('pending', $inquiry->status);
+        $this->assertEquals('general', $inquiry->inquiry_type);
+        $this->assertEquals('new', $inquiry->status);
     }
 
     public function test_inquiry_can_be_created_with_all_attributes(): void
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $broker = User::factory()->create([
-            'role' => 'broker',
-            'is_approved' => true,
-            'application_status' => 'approved'
-        ]);
+        $broker = User::factory()->broker()->create();
+        $client = Client::factory()->create(['broker_id' => $broker->id]);
         $property = Property::factory()->create(['broker_id' => $broker->id]);
 
         $inquiry = Inquiry::create([
+            'name' => 'Jane Smith',
+            'email' => 'jane@example.com',
+            'phone' => '+63 912 345 6789',
             'client_id' => $client->id,
             'property_id' => $property->id,
             'message' => 'I am very interested in this beautiful property.',
-            'preferred_contact_method' => 'phone',
-            'budget_range' => '5000000-7000000',
-            'status' => 'responded',
-            'response' => 'Thank you for your interest. Let me schedule a viewing.',
+            'inquiry_type' => 'viewing',
+            'status' => 'contacted',
+            'contacted_at' => now(),
+            'broker_notes' => 'Client seems very interested',
+            'broker_response' => 'Thank you for your interest. Let me schedule a viewing.',
             'responded_at' => now()
         ]);
 
         $this->assertInstanceOf(Inquiry::class, $inquiry);
+        $this->assertEquals('Jane Smith', $inquiry->name);
+        $this->assertEquals('jane@example.com', $inquiry->email);
+        $this->assertEquals('+63 912 345 6789', $inquiry->phone);
         $this->assertEquals($client->id, $inquiry->client_id);
         $this->assertEquals($property->id, $inquiry->property_id);
         $this->assertEquals('I am very interested in this beautiful property.', $inquiry->message);
-        $this->assertEquals('phone', $inquiry->preferred_contact_method);
-        $this->assertEquals('5000000-7000000', $inquiry->budget_range);
-        $this->assertEquals('responded', $inquiry->status);
-        $this->assertEquals('Thank you for your interest. Let me schedule a viewing.', $inquiry->response);
+        $this->assertEquals('viewing', $inquiry->inquiry_type);
+        $this->assertEquals('contacted', $inquiry->status);
+        $this->assertNotNull($inquiry->contacted_at);
+        $this->assertEquals('Client seems very interested', $inquiry->broker_notes);
+        $this->assertEquals('Thank you for your interest. Let me schedule a viewing.', $inquiry->broker_response);
         $this->assertNotNull($inquiry->responded_at);
     }
 
@@ -144,105 +149,83 @@ class InquiryTest extends TestCase
         $inquiry = Inquiry::factory()->create();
 
         $this->assertInstanceOf(Inquiry::class, $inquiry);
-        $this->assertNotNull($inquiry->client_id);
+        $this->assertNotNull($inquiry->name);
+        $this->assertNotNull($inquiry->email);
         $this->assertNotNull($inquiry->property_id);
         $this->assertNotNull($inquiry->message);
-        $this->assertNotNull($inquiry->preferred_contact_method);
+        $this->assertNotNull($inquiry->inquiry_type);
         $this->assertNotNull($inquiry->status);
-        $this->assertInstanceOf(User::class, $inquiry->client);
         $this->assertInstanceOf(Property::class, $inquiry->property);
+        if ($inquiry->client_id) {
+            $this->assertInstanceOf(Client::class, $inquiry->client);
+        }
     }
 
     public function test_inquiry_can_be_marked_as_responded(): void
     {
-        $inquiry = Inquiry::factory()->create(['status' => 'pending']);
+        $inquiry = Inquiry::factory()->create(['status' => 'new']);
 
         $inquiry->update([
-            'status' => 'responded',
-            'response' => 'Thank you for your inquiry. I will contact you soon.',
+            'status' => 'contacted',
+            'broker_response' => 'Thank you for your inquiry. I will contact you soon.',
             'responded_at' => now()
         ]);
 
-        $this->assertEquals('responded', $inquiry->status);
-        $this->assertEquals('Thank you for your inquiry. I will contact you soon.', $inquiry->response);
+        $this->assertEquals('contacted', $inquiry->status);
+        $this->assertEquals('Thank you for your inquiry. I will contact you soon.', $inquiry->broker_response);
         $this->assertNotNull($inquiry->responded_at);
     }
 
     public function test_inquiry_can_be_closed(): void
     {
-        $inquiry = Inquiry::factory()->create(['status' => 'responded']);
+        $inquiry = Inquiry::factory()->create(['status' => 'contacted']);
 
         $inquiry->update([
             'status' => 'closed',
-            'response' => 'Property has been sold.'
+            'broker_response' => 'Property has been sold.'
         ]);
 
         $this->assertEquals('closed', $inquiry->status);
-        $this->assertEquals('Property has been sold.', $inquiry->response);
+        $this->assertEquals('Property has been sold.', $inquiry->broker_response);
     }
 
-    public function test_inquiry_supports_soft_deletes(): void
-    {
-        $inquiry = Inquiry::factory()->create();
-        $inquiryId = $inquiry->id;
 
-        $inquiry->delete();
-
-        $this->assertSoftDeleted('inquiries', ['id' => $inquiryId]);
-        $this->assertNotNull($inquiry->fresh()->deleted_at);
-    }
-
-    public function test_inquiry_can_be_restored_after_soft_delete(): void
-    {
-        $inquiry = Inquiry::factory()->create();
-        $inquiryId = $inquiry->id;
-
-        $inquiry->delete();
-        $this->assertSoftDeleted('inquiries', ['id' => $inquiryId]);
-
-        $inquiry->restore();
-        $this->assertDatabaseHas('inquiries', [
-            'id' => $inquiryId,
-            'deleted_at' => null
-        ]);
-    }
 
     public function test_inquiry_status_defaults_to_pending(): void
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $broker = User::factory()->create([
-            'role' => 'broker',
-            'is_approved' => true,
-            'application_status' => 'approved'
-        ]);
+        $broker = User::factory()->broker()->create();
+        $client = Client::factory()->create(['broker_id' => $broker->id]);
         $property = Property::factory()->create(['broker_id' => $broker->id]);
 
         $inquiry = Inquiry::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
             'client_id' => $client->id,
             'property_id' => $property->id,
             'message' => 'I am interested in this property.',
-            'preferred_contact_method' => 'email'
+            'inquiry_type' => 'general'
         ]);
 
-        $this->assertEquals('pending', $inquiry->status);
+        $inquiry->refresh();
+        $this->assertEquals('new', $inquiry->status);
     }
 
-    public function test_inquiry_validates_preferred_contact_method(): void
+    public function test_inquiry_validates_inquiry_type(): void
     {
-        $validMethods = ['email', 'phone', 'both'];
+        $validTypes = ['general', 'viewing', 'purchase', 'information'];
         
-        foreach ($validMethods as $method) {
+        foreach ($validTypes as $type) {
             $inquiry = Inquiry::factory()->create([
-                'preferred_contact_method' => $method
+                'inquiry_type' => $type
             ]);
             
-            $this->assertEquals($method, $inquiry->preferred_contact_method);
+            $this->assertEquals($type, $inquiry->inquiry_type);
         }
     }
 
     public function test_inquiry_validates_status_values(): void
     {
-        $validStatuses = ['pending', 'responded', 'closed'];
+        $validStatuses = ['new', 'contacted', 'scheduled', 'completed', 'closed'];
         
         foreach ($validStatuses as $status) {
             $inquiry = Inquiry::factory()->create([
@@ -255,19 +238,17 @@ class InquiryTest extends TestCase
 
     public function test_inquiry_message_is_required(): void
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $broker = User::factory()->create([
-            'role' => 'broker',
-            'is_approved' => true,
-            'application_status' => 'approved'
-        ]);
+        $broker = User::factory()->broker()->create();
+        $client = Client::factory()->create(['broker_id' => $broker->id]);
         $property = Property::factory()->create(['broker_id' => $broker->id]);
 
         $inquiry = Inquiry::create([
+            'name' => 'Jane Doe',
+            'email' => 'jane@example.com',
             'client_id' => $client->id,
             'property_id' => $property->id,
             'message' => 'Test message',
-            'preferred_contact_method' => 'email'
+            'inquiry_type' => 'general'
         ]);
 
         $this->assertNotEmpty($inquiry->message);

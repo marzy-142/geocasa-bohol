@@ -17,6 +17,8 @@ class Inquiry extends Model
         'inquiry_type',
         'property_id',
         'client_id',
+        'assigned_broker_id',
+        'user_id',
         'status',
         'contacted_at',
         'scheduled_at',
@@ -44,7 +46,17 @@ class Inquiry extends Model
 
     public function broker()
     {
+        return $this->belongsTo(User::class, 'assigned_broker_id');
+    }
+
+    public function propertyBroker()
+    {
         return $this->hasOneThrough(User::class, Property::class, 'id', 'id', 'property_id', 'broker_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function complianceReports()
@@ -70,9 +82,7 @@ class Inquiry extends Model
 
     public function scopeForBroker($query, $brokerId)
     {
-        return $query->whereHas('property', function ($q) use ($brokerId) {
-            $q->where('broker_id', $brokerId);
-        });
+        return $query->where('assigned_broker_id', $brokerId);
     }
 
     public function scopeRecent($query)

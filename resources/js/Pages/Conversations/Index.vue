@@ -247,7 +247,7 @@
                             :key="message.id"
                             :class="[
                                 'flex',
-                                message.sender_id === $page.props.auth.user.id
+                                message.sender_id === page.props.auth.user.id
                                     ? 'justify-end'
                                     : 'justify-start',
                             ]"
@@ -256,7 +256,7 @@
                                 :class="[
                                     'max-w-xs lg:max-w-md px-4 py-2 rounded-lg',
                                     message.sender_id ===
-                                    $page.props.auth.user.id
+                                    page.props.auth.user.id
                                         ? 'bg-blue-600 text-white'
                                         : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white',
                                 ]"
@@ -264,7 +264,7 @@
                                 <div
                                     v-if="
                                         message.sender_id !==
-                                        $page.props.auth.user.id
+                                        page.props.auth.user.id
                                     "
                                     class="text-xs font-medium mb-1 opacity-75"
                                 >
@@ -310,7 +310,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import {
     ChatBubbleLeftRightIcon,
@@ -324,6 +324,8 @@ const props = defineProps({
     selectedConversationId: Number,
     messages: Array,
 });
+
+const page = usePage();
 
 const selectedConversation = ref(null);
 const messages = ref(props.messages || []);

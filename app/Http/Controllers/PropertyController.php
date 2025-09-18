@@ -153,6 +153,22 @@ class PropertyController extends Controller
         ]);
     }
 
+    /**
+     * Display a single property for broker dashboard
+     */
+    public function brokerShow(Property $property)
+    {
+        // Ensure only the property owner (broker) can access
+        $this->authorize('view', $property);
+        
+        $property->load(['broker', 'client', 'inquiries.client', 'transactions']);
+        
+        return Inertia::render('Properties/Show', [
+            'property' => $property,
+            'isBrokerView' => true
+        ]);
+    }
+
     public function create()
     {
         $this->authorize('create', Property::class);
@@ -201,20 +217,22 @@ class PropertyController extends Controller
             $validated['lot_area_hectares'] = $validated['lot_area_sqm'] / 10000;
         }
     
-        // Handle secure file uploads using the enhanced security service
+        // Map frontend field names to database column names
+        $validated['latitude'] = $validated['coordinates_lat'] ?? null;
+        $validated['longitude'] = $validated['coordinates_lng'] ?? null;
+        $validated['price'] = $validated['total_price'];
+        $validated['property_type'] = $validated['type'];
+        $validated['city'] = $validated['municipality'];
+        $validated['province'] = $validated['barangay'];
+    
+        // Handle secure file uploads
         $storedFiles = $request->storeFilesSecurely([
             'images',
-            'documents', 
             'virtual_tour_images'
         ], 'properties', 'public');
         
-        // Add stored file paths to validated data
         if (isset($storedFiles['images'])) {
             $validated['images'] = $storedFiles['images'];
-        }
-        
-        if (isset($storedFiles['documents'])) {
-            $validated['documents'] = $storedFiles['documents'];
         }
         
         if (isset($storedFiles['virtual_tour_images'])) {
@@ -225,7 +243,10 @@ class PropertyController extends Controller
         }
     
         $property = Property::create($validated);
-    
+        
+        // Set expiry date for new properties (90 days from creation)
+        $property->setExpiryDate(90);
+
         return redirect()->route('broker.properties.index')
             ->with('success', 'Land property created successfully with enhanced features.');
     }
@@ -365,6 +386,9 @@ class PropertyController extends Controller
         }
 
         $property->update($validated);
+        
+        // Reset expiry date when property is updated (90 days from update)
+        $property->setExpiryDate(90);
 
         return redirect()->route('broker.properties.index')
             ->with('success', 'Property updated successfully.');
@@ -399,14 +423,7 @@ class PropertyController extends Controller
             ->with('success', 'Land property deleted successfully.');
     }
 
-    public function toggleFeatured(Property $property)
-    {
-        $this->authorize('update', $property);
-        
-        $property->update(['is_featured' => !$property->is_featured]);
-        
-        return back()->with('success', 'Property featured status updated.');
-    }
+
 
     private function handleFileUpdates(Request $request, Property $property, array &$validated)
     {
@@ -504,5 +521,213 @@ class PropertyController extends Controller
             'has_virtual_tour' => $validated['has_virtual_tour'],
             'validated_array' => $validated
         ]);
+    }
+
+    /**
+     * Show property renewals dashboard for broker
+     */
+    public function renewals()
+    {
+        $broker = Auth::user();
+        
+        // Get properties expiring in the next 30 days
+        $expiringProperties = Property::where('broker_id', $broker->id)
+            ->where('expiry_date', '>', now())
+            ->where('expiry_date', '<=', now()->addDays(30))
+            ->where('status', '!=', 'pending_renewal')
+            ->with(['inquiries' => function($query) {
+                $query->where('created_at', '>=', now()->subDays(30));
+            }])
+            ->orderBy('expiry_date', 'asc')
+            ->get()
+            ->map(function($property) {
+                $property->expires_at_human = $property->expiry_date->diffForHumans();
+                $property->days_until_expiry = now()->diffInDays($property->expiry_date, false);
+                return $property;
+            });
+        
+        // Get expired properties
+        $expiredProperties = Property::where('broker_id', $broker->id)
+            ->where('expiry_date', '<', now())
+            ->where('status', '!=', 'pending_renewal')
+            ->with(['inquiries' => function($query) {
+                $query->where('created_at', '>=', now()->subDays(30));
+            }])
+            ->orderBy('expiry_date', 'desc')
+            ->get()
+            ->map(function($property) {
+                $property->expires_at_human = $property->expiry_date->diffForHumans();
+                $property->days_until_expiry = now()->diffInDays($property->expiry_date, false);
+                return $property;
+            });
+        
+        // Get recently renewed properties (last 30 days)
+        $renewedProperties = Property::where('broker_id', $broker->id)
+            ->where('renewed_at', '>=', now()->subDays(30))
+            ->with(['inquiries' => function($query) {
+                $query->where('created_at', '>=', now()->subDays(30));
+            }])
+            ->orderBy('renewed_at', 'desc')
+            ->get()
+            ->map(function($property) {
+                $property->expires_at_human = $property->expiry_date->diffForHumans();
+                $property->renewed_at_human = $property->renewed_at->diffForHumans();
+                return $property;
+            });
+        
+        // Calculate stats
+        $stats = [
+            'expiring_count' => $expiringProperties->count(),
+            'expired_count' => $expiredProperties->count(),
+            'renewed_count' => $renewedProperties->count(),
+            'total_properties' => Property::where('broker_id', $broker->id)->count()
+        ];
+        
+        return Inertia::render('Broker/PropertyRenewals', [
+            'expiring_properties' => $expiringProperties,
+            'expired_properties' => $expiredProperties,
+            'renewed_properties' => $renewedProperties,
+            'stats' => $stats
+        ]);
+    }
+
+    /**
+     * Renew a property listing
+     */
+    public function renew(Property $property)
+    {
+        $broker = Auth::user();
+        
+        // Ensure the property belongs to the authenticated broker
+        if ($property->broker_id !== $broker->id) {
+            abort(403, 'Unauthorized access to property.');
+        }
+        
+        try {
+            // Set new expiry date (90 days from now)
+            $property->setExpiryDate(90);
+            
+            // Update status to active if it was expired or pending renewal
+            if (in_array($property->status, ['expired', 'pending_renewal'])) {
+                $property->status = 'active';
+            }
+            
+            // Set renewed timestamp
+            $property->renewed_at = now();
+            $property->save();
+            
+            \Log::info('Property renewed successfully', [
+                'property_id' => $property->id,
+                'broker_id' => $broker->id,
+                'new_expiry_date' => $property->expiry_date,
+                'renewed_at' => $property->renewed_at
+            ]);
+            
+            return redirect()->back()->with('success', 'Property renewed successfully! Your listing is now active for another 90 days.');
+            
+        } catch (\Exception $e) {
+            \Log::error('Property renewal failed', [
+                'property_id' => $property->id,
+                'broker_id' => $broker->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to renew property. Please try again.');
+        }
+    }
+
+    /**
+     * Toggle featured status of a property
+     */
+    public function toggleFeatured(Property $property)
+    {
+        $broker = Auth::user();
+        
+        // Ensure the property belongs to the authenticated broker
+        if ($property->broker_id !== $broker->id) {
+            abort(403, 'Unauthorized access to property.');
+        }
+
+        try {
+            // If trying to feature a property, check the limit
+            if (!$property->is_featured) {
+                $featuredCount = Property::where('broker_id', $broker->id)
+                    ->featured()
+                    ->count();
+                
+                $maxFeatured = config('app.max_featured_properties', 5); // Default to 5
+                
+                if ($featuredCount >= $maxFeatured) {
+                    return redirect()->back()->with('error', 
+                        "You can only have {$maxFeatured} featured properties at a time. Please un-feature another property first.");
+                }
+            }
+            
+            // Toggle the featured status
+            $property->is_featured = !$property->is_featured;
+            $property->save();
+            
+            $message = $property->is_featured 
+                ? 'Property has been featured successfully!' 
+                : 'Property has been removed from featured listings.';
+                
+            return redirect()->back()->with('success', $message);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to toggle featured status', [
+                'property_id' => $property->id,
+                'broker_id' => $broker->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to update featured status. Please try again.');
+        }
+    }
+
+    /**
+     * Auto-replace oldest featured property with new one
+     */
+    public function autoFeature(Property $property)
+    {
+        $broker = Auth::user();
+        
+        // Ensure the property belongs to the authenticated broker
+        if ($property->broker_id !== $broker->id) {
+            abort(403, 'Unauthorized access to property.');
+        }
+
+        try {
+            $maxFeatured = config('app.max_featured_properties', 5);
+            $featuredProperties = Property::where('broker_id', $broker->id)
+                ->featured()
+                ->orderBy('updated_at', 'asc') // Oldest first
+                ->get();
+            
+            // If at limit, remove the oldest featured property
+            if ($featuredProperties->count() >= $maxFeatured) {
+                $oldestFeatured = $featuredProperties->first();
+                $oldestFeatured->is_featured = false;
+                $oldestFeatured->save();
+            }
+            
+            // Feature the new property
+            $property->is_featured = true;
+            $property->save();
+            
+            $message = $featuredProperties->count() >= $maxFeatured
+                ? 'Property featured successfully! The oldest featured property has been automatically removed.'
+                : 'Property has been featured successfully!';
+                
+            return redirect()->back()->with('success', $message);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to auto-feature property', [
+                'property_id' => $property->id,
+                'broker_id' => $broker->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to feature property. Please try again.');
+        }
     }
 }

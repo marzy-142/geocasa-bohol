@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Client;
 use App\Models\Inquiry;
 use App\Models\Transaction;
+use App\Models\Conversation;
 use App\Notifications\NewInquiryNotification;
 use App\Events\NewInquiryReceived;
 use Illuminate\Http\Request;
@@ -184,6 +185,18 @@ class PublicController extends Controller
             ]
         );
 
+        // Store inquiry data in session for auto-populating auth forms
+        session([
+            'inquiry_data' => [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'property_title' => $property->title,
+                'property_id' => $property->id,
+                'timestamp' => now()->timestamp
+            ]
+        ]);
+
         // Create inquiry
         $inquiry = Inquiry::create([
             'property_id' => $property->id,
@@ -198,13 +211,55 @@ class PublicController extends Controller
         // Load relationships for notification
         $inquiry->load(['property', 'client']);
 
+        // Create conversation for this inquiry to enable messaging
+        $conversation = Conversation::createForInquiry($inquiry);
+
         // Send notification to the property broker
         $property->broker->notify(new NewInquiryNotification($inquiry));
         
         // Broadcast real-time event for immediate dashboard updates
         broadcast(new NewInquiryReceived($inquiry));
 
+        // Return JSON response for API requests, redirect for web requests
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Your inquiry has been sent successfully! The broker will contact you soon.',
+                'inquiry_id' => $inquiry->id
+            ]);
+        }
+
         return back()->with('success', 'Your inquiry has been sent successfully! The broker will contact you soon.');
+    }
+
+    /**
+     * Store inquiry data in session for auth form auto-population
+     */
+    public function storeInquirySession(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'message' => 'nullable|string|max:1000',
+            'property_id' => 'nullable|integer|exists:properties,id',
+            'property_title' => 'nullable|string|max:255'
+        ]);
+
+        // Store inquiry data in session for auto-populating auth forms
+        session([
+            'inquiry_data' => [
+                'name' => $validated['name'] ?? '',
+                'email' => $validated['email'] ?? '',
+                'phone' => $validated['phone'] ?? '',
+                'message' => $validated['message'] ?? '',
+                'property_title' => $validated['property_title'] ?? '',
+                'property_id' => $validated['property_id'] ?? null,
+                'timestamp' => now()->timestamp
+            ]
+        ]);
+
+        return back()->with('success', 'Inquiry data stored successfully');
     }
 
     /**

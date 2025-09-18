@@ -23,7 +23,7 @@ class TransactionController extends Controller
         
         // Optimized eager loading with specific columns
         $query = Transaction::with([
-            'property:id,title,location,price,broker_id',
+            'property:id,title,address,municipality,total_price,broker_id',
             'client:id,name,email,phone',
             'broker:id,name,email',
             'inquiry:id,property_id,client_id,inquiry_type'
@@ -41,7 +41,8 @@ class TransactionController extends Controller
                 $q->where('transaction_number', 'like', "%{$search}%")
                   ->orWhereHas('property', function ($q) use ($search) {
                       $q->where('title', 'like', "%{$search}%")
-                        ->orWhere('location', 'like', "%{$search}%");
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhere('municipality', 'like', "%{$search}%");
                   })
                   ->orWhereHas('client', function ($q) use ($search) {
                       $q->where('name', 'like', "%{$search}%")
@@ -108,12 +109,19 @@ class TransactionController extends Controller
         $user = Auth::user();
         
         // Optimized data loading for form
-        $properties = Property::select('id', 'title', 'location', 'price')
+        $properties = Property::select('id', 'title', 'address', 'municipality', 'total_price', 'type', 'status')
             ->when($user->role === 'broker', function($q) use ($user) {
                 return $q->where('broker_id', $user->id);
             })
             ->orderBy('title')
-            ->get();
+            ->get()
+            ->map(function($property) {
+                // Add computed fields for the frontend
+                $property->price = $property->total_price;
+                // type is already the correct column name, no need to map
+                $property->location = $property->address . ', ' . $property->municipality;
+                return $property;
+            });
             
         $clients = Client::select('id', 'name', 'email', 'phone')
             ->when($user->role === 'broker', function($q) use ($user) {
@@ -125,7 +133,9 @@ class TransactionController extends Controller
         $inquiries = Inquiry::with(['property:id,title', 'client:id,name'])
             ->select('id', 'property_id', 'client_id', 'inquiry_type')
             ->when($user->role === 'broker', function($q) use ($user) {
-                return $q->where('broker_id', $user->id);
+                return $q->whereHas('property', function($subQuery) use ($user) {
+                    $subQuery->where('broker_id', $user->id);
+                });
             })
             ->whereIn('status', ['new', 'contacted', 'scheduled'])
             ->orderBy('created_at', 'desc')
@@ -184,7 +194,7 @@ class TransactionController extends Controller
         }
         
         $transaction->load([
-            'property:id,title,location,price,type,status,broker_id',
+            'property:id,title,address,municipality,total_price,type,status,broker_id',
             'client:id,name,email,phone',
             'broker:id,name,email',
             'inquiry:id,property_id,client_id,inquiry_type,status'
@@ -208,14 +218,14 @@ class TransactionController extends Controller
         }
         
         $transaction->load([
-            'property:id,title,location,price,type,status,broker_id',
+            'property:id,title,address,municipality,total_price,type,status,broker_id',
             'client:id,name,email,phone',
             'broker:id,name,email',
             'inquiry:id,property_id,client_id,inquiry_type,status'
         ]);
         
         // Optimized data loading for form
-        $properties = Property::select('id', 'title', 'location', 'price')
+        $properties = Property::select('id', 'title', 'address', 'municipality', 'total_price')
             ->when($user->role === 'broker', function($q) use ($user) {
                 return $q->where('broker_id', $user->id);
             })
@@ -391,7 +401,7 @@ class TransactionController extends Controller
     {
         // Admin can see all transactions
         $query = Transaction::with([
-            'property:id,title,location,price,broker_id',
+            'property:id,title,address,municipality,total_price,broker_id',
             'client:id,name,email,phone',
             'broker:id,name,email',
             'inquiry:id,property_id,client_id,inquiry_type'
@@ -404,7 +414,8 @@ class TransactionController extends Controller
                 $q->where('transaction_number', 'like', "%{$search}%")
                   ->orWhereHas('property', function ($q) use ($search) {
                       $q->where('title', 'like', "%{$search}%")
-                        ->orWhere('location', 'like', "%{$search}%");
+                        ->orWhere('address', 'like', "%{$search}%")
+                        ->orWhere('municipality', 'like', "%{$search}%");
                   })
                   ->orWhereHas('client', function ($q) use ($search) {
                       $q->where('name', 'like', "%{$search}%")
@@ -473,7 +484,7 @@ class TransactionController extends Controller
     public function adminShow(Transaction $transaction)
     {
         $transaction->load([
-            'property:id,title,location,price,type,status,broker_id',
+            'property:id,title,address,municipality,total_price,type,status,broker_id',
             'client:id,name,email,phone',
             'broker:id,name,email',
             'inquiry:id,property_id,client_id,inquiry_type,status'

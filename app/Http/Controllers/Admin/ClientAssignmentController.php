@@ -3,47 +3,37 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SellerRequest;
 use App\Models\User;
-use App\Notifications\BrokerSellerAssignmentNotification;
-use App\Mail\SellerBrokerAssignedMail;
+use App\Models\Client;
+use App\Models\SellerRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class ClientAssignmentController extends Controller
 {
     /**
-     * Display the seller-broker assignment management page
+     * Display client assignment management page
      */
     public function index(Request $request)
     {
-        // Ensure only admins can access this
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Only admins can manage seller-broker assignments.');
-        }
-
-        // Build query for seller requests
-        $query = SellerRequest::with(['assignedBroker', 'property']);
+        $query = SellerRequest::with(['user', 'assignedBroker', 'property'])
+            ->select('id', 'user_id', 'assigned_broker_id', 'property_id', 'status', 'created_at', 'updated_at');
 
         // Apply filters
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('seller_name', 'like', "%{$search}%")
-                  ->orWhere('seller_email', 'like', "%{$search}%")
-                  ->orWhere('seller_phone', 'like', "%{$search}%")
-                  ->orWhere('property_title', 'like', "%{$search}%");
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('assignment_status')) {
-            if ($request->assignment_status === 'unassigned') {
-                $query->whereNull('assigned_broker_id');
-            } elseif ($request->assignment_status === 'assigned') {
+            if ($request->assignment_status === 'assigned') {
                 $query->whereNotNull('assigned_broker_id');
+            } elseif ($request->assignment_status === 'unassigned') {
+                $query->whereNull('assigned_broker_id');
             }
         }
 
@@ -55,12 +45,12 @@ class ClientAssignmentController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Get seller requests with pagination
         $sellerRequests = $query->orderBy('created_at', 'desc')->paginate(15);
 
         // Get all approved brokers with seller request counts
         $brokers = User::where('role', 'broker')
             ->where('is_approved', true)
+            ->where('application_status', 'approved')
             ->withCount(['assignedSellerRequests' => function($query) {
                 $query->whereNotNull('assigned_broker_id');
             }])
@@ -88,6 +78,7 @@ class ClientAssignmentController extends Controller
         $assignedSellerRequests = SellerRequest::whereNotNull('assigned_broker_id')->count();
         $activeBrokers = User::where('role', 'broker')
             ->where('is_approved', true)
+            ->where('application_status', 'approved')
             ->count();
 
         $avgSellerRequestsPerBroker = $activeBrokers > 0 
@@ -104,7 +95,7 @@ class ClientAssignmentController extends Controller
     }
 
     /**
-     * Get broker performance analytics for seller requests
+     * Get broker performance analytics
      */
     public function getBrokerAnalytics(Request $request)
     {
@@ -114,45 +105,54 @@ class ClientAssignmentController extends Controller
 
         $brokers = User::where('role', 'broker')
             ->where('is_approved', true)
+            ->where('application_status', 'approved')
             ->withCount([
-                'assignedSellerRequests',
-                'assignedSellerRequests as pending_seller_requests_count' => function ($query) {
-                    $query->where('status', 'pending');
+                'clients as total_clients',
+                'clients as active_clients_count' => function ($query) {
+                    $query->where('status', 'active');
                 },
-                'assignedSellerRequests as approved_seller_requests_count' => function ($query) {
-                    $query->where('status', 'approved');
+                'transactions as completed_transactions' => function ($query) {
+                    $query->where('status', 'finalized');
                 },
-                'assignedSellerRequests as listed_properties_count' => function ($query) {
-                    $query->whereNotNull('property_id');
-                }
+                'transactions as total_transactions'
             ])
-            ->orderByDesc('assigned_seller_requests_count')
+            ->withSum('transactions as total_sales_value', 'total_amount')
+            ->orderByDesc('completed_transactions')
             ->get()
             ->map(function ($broker) {
-                $listingRate = $broker->assigned_seller_requests_count > 0 
-                    ? round(($broker->listed_properties_count / $broker->assigned_seller_requests_count) * 100, 1)
+                $conversionRate = $broker->total_clients > 0 
+                    ? round(($broker->completed_transactions / $broker->total_clients) * 100, 1)
+                    : 0;
+
+                $avgDealValue = $broker->completed_transactions > 0 
+                    ? round($broker->total_sales_value / $broker->completed_transactions, 2)
                     : 0;
 
                 return [
                     'id' => $broker->id,
                     'name' => $broker->name,
                     'email' => $broker->email,
-                    'total_seller_requests' => $broker->assigned_seller_requests_count,
-                    'pending_requests' => $broker->pending_seller_requests_count,
-                    'approved_requests' => $broker->approved_seller_requests_count,
-                    'listed_properties' => $broker->listed_properties_count,
-                    'listing_rate' => $listingRate,
+                    'total_clients' => $broker->total_clients,
+                    'active_clients' => $broker->active_clients_count,
+                    'completed_transactions' => $broker->completed_transactions,
+                    'total_transactions' => $broker->total_transactions,
+                    'total_sales_value' => $broker->total_sales_value ?: 0,
+                    'formatted_sales_value' => '₱' . number_format($broker->total_sales_value ?: 0, 2),
+                    'conversion_rate' => $conversionRate,
+                    'avg_deal_value' => $avgDealValue,
+                    'formatted_avg_deal_value' => '₱' . number_format($avgDealValue, 2),
                 ];
             });
 
         return response()->json([
             'success' => true,
             'data' => $brokers,
+            'message' => 'Broker analytics retrieved successfully'
         ]);
     }
 
     /**
-     * Get assignment recommendations based on broker workload and performance for seller requests
+     * Get assignment recommendations based on broker workload and performance
      */
     public function getAssignmentRecommendations(Request $request)
     {
@@ -169,6 +169,7 @@ class ClientAssignmentController extends Controller
         // Get brokers with their current workload and performance metrics
         $brokers = User::where('role', 'broker')
             ->where('is_approved', true)
+            ->where('application_status', 'approved')
             ->withCount([
                 'assignedSellerRequests',
                 'assignedSellerRequests as pending_seller_requests_count' => function ($query) {
@@ -183,15 +184,13 @@ class ClientAssignmentController extends Controller
                 // Calculate recommendation score based on:
                 // 1. Current workload (lower is better)
                 // 2. Performance history (listing success rate)
-                // 3. Location proximity (if available)
-                
-                $workloadScore = max(0, 100 - ($broker->pending_seller_requests_count * 15)); // Penalize high workload
+                $workloadScore = max(0, 100 - ($broker->pending_seller_requests_count * 10));
                 $performanceScore = $broker->assigned_seller_requests_count > 0 
                     ? ($broker->listed_properties_count / $broker->assigned_seller_requests_count) * 100
-                    : 50; // Default score for new brokers
+                    : 50;
                 
                 $totalScore = ($workloadScore * 0.6) + ($performanceScore * 0.4);
-                
+
                 return [
                     'id' => $broker->id,
                     'name' => $broker->name,
@@ -213,14 +212,10 @@ class ClientAssignmentController extends Controller
     }
 
     /**
-     * Assign broker to seller request
+     * Assign a broker to a seller request
      */
     public function assign(Request $request)
     {
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Only admins can assign brokers to seller requests.');
-        }
-
         $validated = $request->validate([
             'seller_request_id' => 'required|exists:seller_requests,id',
             'broker_id' => 'required|exists:users,id',
@@ -230,25 +225,15 @@ class ClientAssignmentController extends Controller
         $broker = User::where('id', $validated['broker_id'])
             ->where('role', 'broker')
             ->where('is_approved', true)
+            ->where('application_status', 'approved')
             ->firstOrFail();
-
-        $wasAssigned = $sellerRequest->assigned_broker_id !== null;
-        $action = $wasAssigned ? 'reassigned' : 'assigned';
 
         $sellerRequest->update([
             'assigned_broker_id' => $broker->id,
+            'assigned_at' => now(),
         ]);
 
-        // Send notification to the broker
-        $broker->notify(new BrokerSellerAssignmentNotification($sellerRequest, Auth::user(), $action));
-
-        // Send email to the seller
-        if ($sellerRequest->seller_email) {
-            Mail::to($sellerRequest->seller_email)
-                ->send(new SellerBrokerAssignedMail($sellerRequest, $broker, Auth::user()));
-        }
-
-        return redirect()->back()->with('success', 'Broker assigned successfully to seller request.');
+        return redirect()->back()->with('success', "Seller request assigned to {$broker->name} successfully.");
     }
 
     /**
@@ -256,12 +241,8 @@ class ClientAssignmentController extends Controller
      */
     public function bulkAssign(Request $request)
     {
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Only admins can bulk assign brokers to seller requests.');
-        }
-
         $validated = $request->validate([
-            'seller_request_ids' => 'required|array|min:1',
+            'seller_request_ids' => 'required|array',
             'seller_request_ids.*' => 'exists:seller_requests,id',
             'broker_id' => 'required|exists:users,id',
         ]);
@@ -269,46 +250,26 @@ class ClientAssignmentController extends Controller
         $broker = User::where('id', $validated['broker_id'])
             ->where('role', 'broker')
             ->where('is_approved', true)
+            ->where('application_status', 'approved')
             ->firstOrFail();
 
-        // Get seller requests before updating to check assignment status
-        $sellerRequests = SellerRequest::whereIn('id', $validated['seller_request_ids'])->get();
+        $updated = SellerRequest::whereIn('id', $validated['seller_request_ids'])
+            ->update([
+                'assigned_broker_id' => $broker->id,
+                'assigned_at' => now(),
+            ]);
 
-        SellerRequest::whereIn('id', $validated['seller_request_ids'])
-            ->update(['assigned_broker_id' => $broker->id]);
-
-        // Send notifications for each seller request
-        foreach ($sellerRequests as $sellerRequest) {
-            $wasAssigned = $sellerRequest->assigned_broker_id !== null;
-            $action = $wasAssigned ? 'reassigned' : 'assigned';
-
-            // Send notification to the broker
-            $broker->notify(new BrokerSellerAssignmentNotification($sellerRequest, Auth::user(), $action));
-
-            // Send email to the seller
-            if ($sellerRequest->seller_email) {
-                Mail::to($sellerRequest->seller_email)
-                    ->send(new SellerBrokerAssignedMail($sellerRequest, $broker, Auth::user()));
-            }
-        }
-
-        $count = count($validated['seller_request_ids']);
-        return redirect()->back()->with('success', "Successfully assigned {$count} seller requests to {$broker->name}.");
+        return redirect()->back()->with('success', "{$updated} seller requests assigned to {$broker->name} successfully.");
     }
 
     /**
-     * Get workload level description for seller requests
+     * Get workload level description
      */
-    private function getWorkloadLevel($pendingRequests)
+    private function getWorkloadLevel($pendingCount)
     {
-        if ($pendingRequests <= 3) {
-            return 'Light';
-        } elseif ($pendingRequests <= 6) {
-            return 'Moderate';
-        } elseif ($pendingRequests <= 10) {
-            return 'Heavy';
-        } else {
-            return 'Overloaded';
-        }
+        if ($pendingCount <= 2) return 'Light';
+        if ($pendingCount <= 5) return 'Moderate';
+        if ($pendingCount <= 8) return 'Heavy';
+        return 'Overloaded';
     }
 }

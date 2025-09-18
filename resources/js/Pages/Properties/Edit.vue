@@ -13,13 +13,13 @@
                 </div>
                 <div class="flex space-x-2">
                     <Link
-                        :href="route('properties.show', property.slug)"
+                        :href="route('broker.properties.show', property.slug)"
                         class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors"
                     >
                         View Property
                     </Link>
                     <Link
-                        :href="route('properties.index')"
+                        :href="route('broker.properties.index')"
                         class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors"
                     >
                         Back to Properties
@@ -284,39 +284,76 @@
 
             <!-- GPS Coordinates -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                    GPS Coordinates
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">
+                        GIS Mapping
+                    </h3>
+                    <label class="flex items-center space-x-3">
+                        <input
+                            v-model="enableGISMapping"
+                            type="checkbox"
+                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span class="text-sm font-medium text-gray-700">
+                            🗺️ Enable GIS Mapping
+                        </span>
+                    </label>
+                </div>
+
+                <div
+                    v-if="enableGISMapping"
+                    class="grid grid-cols-1 md:grid-cols-2 gap-6"
+                >
                     <div>
                         <InputLabel for="coordinates_lat" value="Latitude" />
                         <TextInput
                             id="coordinates_lat"
                             v-model="form.coordinates_lat"
                             type="number"
-                            step="0.000001"
+                            step="any"
                             class="mt-1 block w-full"
+                            placeholder="e.g., 9.8349"
                         />
                         <InputError
                             class="mt-2"
                             :message="form.errors.coordinates_lat"
                         />
                     </div>
-
                     <div>
                         <InputLabel for="coordinates_lng" value="Longitude" />
                         <TextInput
                             id="coordinates_lng"
                             v-model="form.coordinates_lng"
                             type="number"
-                            step="0.000001"
+                            step="any"
                             class="mt-1 block w-full"
+                            placeholder="e.g., 124.1436"
                         />
                         <InputError
                             class="mt-2"
                             :message="form.errors.coordinates_lng"
                         />
                     </div>
+                </div>
+
+                <div v-else class="text-center py-8 text-gray-500">
+                    <svg
+                        class="w-12 h-12 mx-auto mb-3 text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        ></path>
+                    </svg>
+                    <p class="text-sm">
+                        GIS mapping is disabled. Enable it above to add or edit
+                        location coordinates.
+                    </p>
                 </div>
             </div>
 
@@ -443,7 +480,7 @@
                         />
                     </div>
 
-                    <div class="flex items-center">
+                    <div v-if="canFeatureProperty" class="flex items-center">
                         <Checkbox
                             id="is_featured"
                             v-model:checked="form.is_featured"
@@ -451,7 +488,7 @@
                         />
                         <InputLabel
                             for="is_featured"
-                            value="Featured Property"
+                            value="⭐ Featured Property"
                             class="ml-2"
                         />
                     </div>
@@ -775,7 +812,7 @@
             <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
                 <div class="flex items-center justify-end space-x-4">
                     <Link
-                        :href="route('properties.show', property.slug)"
+                        :href="route('broker.properties.show', property.slug)"
                         class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors"
                     >
                         Cancel
@@ -816,7 +853,21 @@ import Checkbox from "@/Components/Checkbox.vue";
 
 const props = defineProps({
     property: Object,
+    user: Object,
 });
+
+// Computed property to check if user can feature properties
+const canFeatureProperty = computed(() => {
+    return (
+        props.user &&
+        (props.user.role === "admin" || props.user.role === "broker")
+    );
+});
+
+// GIS Mapping toggle - initialize based on existing coordinates
+const enableGISMapping = ref(
+    !!(props.property.coordinates_lat && props.property.coordinates_lng)
+);
 
 const municipalities = [
     "Tagbilaran City",
@@ -982,6 +1033,15 @@ watch(nearbyLandmarksText, (newValue) => {
         .split(",")
         .map((item) => item.trim())
         .filter((item) => item);
+});
+
+// Watch for GIS mapping toggle
+watch(enableGISMapping, (enabled) => {
+    if (!enabled) {
+        // Clear coordinates when GIS mapping is disabled
+        form.coordinates_lat = "";
+        form.coordinates_lng = "";
+    }
 });
 
 // Keep in sync with App\Models\Property::TYPES

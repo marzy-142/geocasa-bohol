@@ -18,9 +18,22 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): Response
     {
+        // Get inquiry data from session for auto-population
+        $inquiryData = session('inquiry_data');
+        
+        // Clear inquiry data older than 30 minutes to prevent stale data
+        if ($inquiryData && isset($inquiryData['timestamp'])) {
+            $thirtyMinutesAgo = now()->subMinutes(30)->timestamp;
+            if ($inquiryData['timestamp'] < $thirtyMinutesAgo) {
+                session()->forget('inquiry_data');
+                $inquiryData = null;
+            }
+        }
+        
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'inquiryData' => $inquiryData
         ]);
     }
 
@@ -32,6 +45,16 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // Link existing inquiries and clients to the authenticated user
+        $user = Auth::user();
+        $inquiryLinkingService = app(\App\Services\InquiryLinkingService::class);
+        $linkingResult = $inquiryLinkingService->linkExistingInquiriesToUser($user);
+
+        // Add linking result to session for display if any inquiries were linked
+        if ($linkingResult['linked_inquiries'] > 0 || $linkingResult['linked_clients'] > 0) {
+            session()->flash('inquiry_linking_success', $linkingResult['message']);
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

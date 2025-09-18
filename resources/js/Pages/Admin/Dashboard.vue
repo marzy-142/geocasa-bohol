@@ -93,7 +93,7 @@ const statsCards = [
 const getHealthStatusColor = (status) => {
     const colors = {
         healthy: "bg-green-50 text-green-700",
-        warning: "bg-yellow-50 text-yellow-700",
+        warning: "bg-orange-50 text-orange-700",
         error: "bg-red-50 text-red-700",
     };
     return colors[status] || colors.error;
@@ -102,7 +102,7 @@ const getHealthStatusColor = (status) => {
 const getHealthIndicatorColor = (status) => {
     const colors = {
         healthy: "bg-green-500",
-        warning: "bg-yellow-500",
+        warning: "bg-orange-500",
         error: "bg-red-500",
     };
     return colors[status] || colors.error;
@@ -113,303 +113,272 @@ const getHealthIndicatorColor = (status) => {
     <Head title="Admin Dashboard - GeoCasa Bohol" />
 
     <ModernDashboardLayout>
-        <!-- Admin Dashboard Header -->
-        <div
-            class="mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 border border-blue-200 shadow-lg"
-        >
+        <!-- Main Dashboard Container -->
+        <div class="max-w-7xl mx-auto space-y-8">
+            <!-- Dashboard Header -->
             <div
-                class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+                class="bg-white rounded-2xl border border-slate-200/60 p-8 shadow-sm"
             >
-                <div>
-                    <div class="flex items-center gap-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-5">
                         <div
-                            class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg"
+                            class="w-14 h-14 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center border border-blue-200/50"
                         >
-                            <UserGroupIcon class="w-8 h-8 text-white" />
+                            <UserGroupIcon class="w-7 h-7 text-blue-600" />
                         </div>
                         <div>
-                            <div class="flex items-center gap-3 mb-2">
-                                <h1 class="text-3xl font-bold text-slate-900">
-                                    Admin Dashboard
-                                </h1>
-                                <span
-                                    class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium border border-green-200"
-                                    >Active</span
-                                >
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="flex items-center gap-2">
-                                    <span
-                                        class="w-2 h-2 bg-green-500 rounded-full"
-                                    ></span>
-                                    <span
-                                        class="text-slate-600 text-sm font-medium"
-                                        >System Online</span
-                                    >
-                                </div>
-                                <div class="w-px h-4 bg-slate-300"></div>
+                            <h1 class="text-2xl font-bold text-slate-900 mb-2">
+                                Admin Dashboard
+                            </h1>
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+                                ></div>
                                 <span class="text-slate-600 text-sm font-medium"
-                                    >Administrator Panel</span
+                                    >System Online</span
                                 >
                             </div>
                         </div>
                     </div>
-                    <p class="text-slate-700 text-lg">
-                        Manage platform operations, users, and system settings for GeoCasa Bohol.
-                    </p>
-                </div>
-                <div class="flex items-center gap-4">
-                    <Link
-                        :href="route('admin.reports.dashboard')"
-                        class="bg-white hover:bg-blue-50 text-blue-600 px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 border border-blue-200 shadow-sm hover:shadow-md"
-                    >
-                        <EyeIcon class="w-5 h-5" />
-                        Analytics
-                    </Link>
-                    <Link
-                        :href="route('admin.activity.index')"
-                        class="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
-                    >
-                        <ClockIcon class="w-5 h-5" />
-                        Activity Log
-                    </Link>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dashboard Statistics -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <!-- Brokers Card -->
-            <div
-                class="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all duration-200"
-            >
-                <div class="flex items-center justify-between mb-4">
-                    <div
-                        class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"
-                    >
-                        <UserGroupIcon class="w-6 h-6 text-blue-600" />
-                    </div>
-                    <span
-                        class="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-md"
-                        >Active</span
-                    >
-                </div>
-                <div class="space-y-1">
-                    <h3 class="text-2xl font-bold text-slate-900">
-                        {{ props.stats.totalBrokers }}
-                    </h3>
-                    <p class="text-sm font-medium text-slate-700">
-                        Registered Brokers
-                    </p>
-                    <p class="text-xs text-slate-500">
-                        Platform agents
-                    </p>
-                </div>
-            </div>
-
-            <div
-                class="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all duration-200"
-            >
-                <div class="flex items-center justify-between mb-4">
-                    <div
-                        class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center"
-                    >
-                        <ClockIcon class="w-6 h-6 text-orange-600" />
-                    </div>
-                    <span
-                        class="text-xs font-medium text-orange-700 bg-orange-50 px-2 py-1 rounded-md"
-                        >Pending</span
-                    >
-                </div>
-                <div class="space-y-1">
-                    <h3 class="text-2xl font-bold text-slate-900">
-                        {{ props.stats.pendingApprovals }}
-                    </h3>
-                    <p class="text-sm font-medium text-slate-700">
-                        Pending Approvals
-                    </p>
-                    <p class="text-xs text-slate-500">
-                        Awaiting review
-                    </p>
-                </div>
-            </div>
-
-            <div
-                class="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all duration-200"
-            >
-                <div class="flex items-center justify-between mb-4">
-                    <div
-                        class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center"
-                    >
-                        <BuildingOfficeIcon class="w-6 h-6 text-green-600" />
-                    </div>
-                    <span
-                        class="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded-md"
-                        >Listed</span
-                    >
-                </div>
-                <div class="space-y-1">
-                    <h3 class="text-2xl font-bold text-slate-900">
-                        {{ props.stats.totalProperties }}
-                    </h3>
-                    <p class="text-sm font-medium text-slate-700">
-                        Total Properties
-                    </p>
-                    <p class="text-xs text-slate-500">
-                        Platform listings
-                    </p>
-                </div>
-            </div>
-
-            <div
-                class="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all duration-200"
-            >
-                <div class="flex items-center justify-between mb-4">
-                    <div
-                        class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center"
-                    >
-                        <CreditCardIcon class="w-6 h-6 text-purple-600" />
-                    </div>
-                    <span
-                        class="text-xs font-medium text-purple-700 bg-purple-50 px-2 py-1 rounded-md"
-                        >Completed</span
-                    >
-                </div>
-                <div class="space-y-1">
-                    <h3 class="text-2xl font-bold text-slate-900">
-                        {{ props.stats.totalTransactions }}
-                    </h3>
-                    <p class="text-sm font-medium text-slate-700">
-                        Transactions
-                    </p>
-                    <p class="text-xs text-slate-500">
-                        Platform activity
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reminders Widget -->
-        <div
-            v-if="
-                props.reminders &&
-                props.reminders.summary &&
-                props.reminders.summary.total_reminders > 0
-            "
-            class="mb-8"
-        >
-            <ReminderWidget :show-details="true" :max-items="5" />
-        </div>
-
-        <!-- Client-Broker Assignment Widgets -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
-            <!-- Quick Assignment Widget -->
-            <div
-                class="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all duration-200"
-            >
-                <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-3">
+                        <Link
+                            :href="route('admin.reports.dashboard')"
+                            class="text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 border border-transparent hover:border-blue-200"
+                        >
+                            <EyeIcon class="w-4 h-4" />
+                            Analytics
+                        </Link>
+                        <Link
+                            :href="route('admin.activity.index')"
+                            class="bg-blue-600 text-white hover:bg-blue-700 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                        >
+                            <ClockIcon class="w-4 h-4" />
+                            Activity
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <div
+                    class="bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 hover:border-blue-300/60 group"
+                >
+                    <div class="flex items-center gap-4">
                         <div
-                            class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"
+                            class="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center border border-blue-200/50 group-hover:scale-110 transition-transform duration-300"
                         >
                             <UserGroupIcon class="w-6 h-6 text-blue-600" />
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-slate-900">
-                                Seller Assignments
-                            </h2>
-                            <p class="text-sm text-slate-600">
-                                Assign seller requests to brokers
+                            <p class="text-3xl font-bold text-slate-900 mb-1">
+                                {{ props.stats.totalBrokers }}
+                            </p>
+                            <p class="text-sm font-medium text-slate-600">
+                                Total Brokers
                             </p>
                         </div>
                     </div>
-                    <Link
-                        :href="route('admin.client-assignments')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors"
-                    >
-                        Manage All
-                    </Link>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div
-                        class="text-center p-4 bg-slate-50 rounded-xl border border-slate-200"
-                    >
-                        <div class="text-2xl font-bold text-red-600 mb-1">
-                            {{ props.unassignedSellerRequests || 0 }}
+                <div
+                    class="bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 hover:border-orange-300/60 group"
+                >
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl flex items-center justify-center border border-orange-200/50 group-hover:scale-110 transition-transform duration-300"
+                        >
+                            <ClockIcon class="w-6 h-6 text-orange-600" />
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-slate-900 mb-1">
+                                {{ props.stats.pendingApprovals }}
+                            </p>
+                            <p class="text-sm font-medium text-slate-600">
+                                Pending Approvals
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 hover:border-blue-300/60 group"
+                >
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center border border-blue-200/50 group-hover:scale-110 transition-transform duration-300"
+                        >
+                            <BuildingOfficeIcon class="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-slate-900 mb-1">
+                                {{ props.stats.totalProperties }}
+                            </p>
+                            <p class="text-sm font-medium text-slate-600">
+                                Total Properties
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 hover:border-blue-300/60 group"
+                >
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center border border-blue-200/50 group-hover:scale-110 transition-transform duration-300"
+                        >
+                            <CreditCardIcon class="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-slate-900 mb-1">
+                                {{ props.stats.totalTransactions }}
+                            </p>
+                            <p class="text-sm font-medium text-slate-600">
+                                Total Transactions
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reminders Widget -->
+            <div
+                v-if="
+                    props.reminders &&
+                    props.reminders.summary &&
+                    props.reminders.summary.total_reminders > 0
+                "
+            >
+                <div
+                    class="bg-white rounded-xl border border-slate-200/60 p-6 shadow-sm"
+                >
+                    <div class="flex items-center gap-3 mb-6">
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg flex items-center justify-center border border-orange-200/50"
+                        >
+                            <ClockIcon class="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">
+                                Reminders
+                            </h2>
+                            <p class="text-slate-600 text-xs">
+                                {{ props.reminders.summary.total_reminders }}
+                                pending tasks
+                            </p>
+                        </div>
+                    </div>
+                    <ReminderWidget :show-details="true" :max-items="4" />
+                </div>
+            </div>
+
+            <!-- Client-Broker Assignment Widgets -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Quick Assignment Widget -->
+                <div
+                    class="bg-white rounded-xl border border-slate-200/60 p-6 shadow-sm hover:shadow-lg transition-all duration-300"
+                >
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center border border-blue-200/50"
+                            >
+                                <UserGroupIcon class="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900">
+                                    Seller Assignments
+                                </h2>
+                                <p class="text-xs text-slate-600">
+                                    Manage broker assignments
+                                </p>
+                            </div>
+                        </div>
+                        <Link
+                            :href="route('seller-requests.index')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200"
+                        >
+                            View All
+                        </Link>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div
+                            class="text-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200/60"
+                        >
+                            <div class="text-2xl font-bold text-red-600 mb-1">
+                                {{ props.unassignedSellerRequests || 0 }}
+                            </div>
+                            <div class="text-xs text-slate-700 font-medium">
+                                Unassigned
+                            </div>
                         </div>
                         <div
-                            class="text-xs text-slate-600 font-medium"
+                            class="text-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200/60"
+                        >
+                            <div class="text-2xl font-bold text-green-600 mb-1">
+                                {{ props.assignedSellerRequests || 0 }}
+                            </div>
+                            <div class="text-xs text-slate-700 font-medium">
+                                Assigned
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <Link
+                            :href="route('seller-requests.index')"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 text-center"
+                        >
+                            Manage Assignments
+                        </Link>
+                        <Link
+                            :href="
+                                route('seller-requests.index') +
+                                '?assignment_status=unassigned'
+                            "
+                            class="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 text-center"
                         >
                             Unassigned
-                        </div>
+                        </Link>
                     </div>
-                    <div
-                        class="text-center p-4 bg-slate-50 rounded-xl border border-slate-200"
-                    >
-                        <div class="text-2xl font-bold text-green-600 mb-1">
-                            {{ props.assignedSellerRequests || 0 }}
-                        </div>
-                        <div
-                            class="text-xs text-slate-600 font-medium"
-                        >
-                            Assigned
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex gap-3">
-                    <Link
-                        :href="route('admin.client-assignments')"
-                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
-                    >
-                        Bulk Assign
-                    </Link>
-                    <Link
-                        :href="
-                            route('admin.client-assignments') +
-                            '?filter=unassigned'
-                        "
-                        class="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
-                    >
-                        View Unassigned
-                    </Link>
                 </div>
             </div>
 
             <!-- Broker Performance Widget -->
             <div
-                class="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all duration-200"
+                class="bg-white rounded-xl border border-slate-200/60 p-6 shadow-sm hover:shadow-lg transition-all duration-300"
             >
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-3">
                         <div
-                            class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center"
+                            class="w-10 h-10 bg-gradient-to-br from-green-50 to-green-100 rounded-lg flex items-center justify-center border border-green-200/50"
                         >
-                            <ChartBarIcon class="w-6 h-6 text-green-600" />
+                            <ChartBarIcon class="w-5 h-5 text-green-600" />
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-slate-900">
+                            <h2 class="text-lg font-bold text-slate-900">
                                 Broker Analytics
                             </h2>
-                            <p class="text-sm text-slate-600">
-                                Monitor broker assignments
+                            <p class="text-xs text-slate-600">
+                                Performance overview
                             </p>
                         </div>
                     </div>
                     <Link
-                        :href="route('admin.broker-analytics-page')"
-                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors"
+                        :href="route('admin.reports.brokers')"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-sm hover:shadow-md"
                     >
                         View Analytics
                     </Link>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="grid grid-cols-2 gap-6 mb-8">
                     <div
-                        class="text-center p-4 bg-slate-50 rounded-xl border border-slate-200"
+                        class="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200/60"
                     >
-                        <div class="text-2xl font-bold text-blue-600 mb-1">
+                        <div class="text-3xl font-bold text-blue-600 mb-2">
                             {{
                                 Math.round(
                                     ((props.stats.assignedClients || 0) /
@@ -418,36 +387,32 @@ const getHealthIndicatorColor = (status) => {
                                 ) / 10
                             }}
                         </div>
-                        <div
-                            class="text-xs text-slate-600 font-medium"
-                        >
+                        <div class="text-sm text-slate-700 font-medium">
                             Avg Clients/Broker
                         </div>
                     </div>
                     <div
-                        class="text-center p-4 bg-slate-50 rounded-xl border border-slate-200"
+                        class="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200/60"
                     >
-                        <div class="text-2xl font-bold text-purple-600 mb-1">
+                        <div class="text-3xl font-bold text-blue-600 mb-2">
                             {{ props.stats.activeBrokers || 0 }}
                         </div>
-                        <div
-                            class="text-xs text-slate-600 font-medium"
-                        >
+                        <div class="text-sm text-slate-700 font-medium">
                             Active Brokers
                         </div>
                     </div>
                 </div>
 
-                <div class="flex gap-3">
+                <div class="flex gap-4">
                     <Link
                         :href="route('admin.assignment-recommendations')"
-                        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 text-center shadow-sm hover:shadow-md"
                     >
                         Recommendations
                     </Link>
                     <Link
-                        :href="route('admin.broker-analytics-page')"
-                        class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
+                        :href="route('admin.reports.brokers')"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl text-sm font-medium transition-all duration-200 text-center shadow-sm hover:shadow-md"
                     >
                         Performance
                     </Link>
@@ -456,84 +421,79 @@ const getHealthIndicatorColor = (status) => {
         </div>
 
         <!-- Performance Overview -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- Broker Performance -->
             <div
-                class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"
+                class="bg-white rounded-2xl border border-slate-200/60 p-8 shadow-sm hover:shadow-lg transition-all duration-300"
             >
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
                         <div
-                            class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center"
+                            class="w-12 h-12 bg-gradient-to-br from-green-50 to-green-100 rounded-xl flex items-center justify-center border border-green-200/50"
                         >
-                            <ChartBarIcon class="w-6 h-6 text-yellow-600" />
+                            <ChartBarIcon class="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-slate-900">
+                            <h2 class="text-xl font-bold text-slate-900 mb-1">
                                 Top Broker Performance
                             </h2>
-                            <p class="text-sm text-slate-600">
+                            <p class="text-sm font-medium text-slate-600">
                                 Leading broker metrics
                             </p>
                         </div>
                     </div>
                     <Link
                         :href="route('leaderboard.index')"
-                        class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-sm hover:shadow-md"
                     >
                         View Metrics
                     </Link>
                 </div>
 
-                <div v-if="topBroker" class="space-y-4">
+                <div v-if="topBroker" class="space-y-6">
                     <div
-                        class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200"
+                        class="flex items-center gap-4 p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200/60"
                     >
                         <div
-                            class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-700 font-semibold text-lg"
+                            class="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center text-green-700 font-bold text-xl border border-green-200/50"
                         >
                             {{ topBroker.name.charAt(0) }}
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h3 class="font-semibold text-slate-900">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-1">
+                                <h3 class="font-bold text-slate-900 text-lg">
                                     {{ topBroker.name }}
                                 </h3>
                                 <span
-                                    class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-md font-medium"
-                                    >Top Performer</span
+                                    class="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-medium border border-green-200/50"
                                 >
+                                    Top Performer
+                                </span>
                             </div>
-                            <p class="text-sm text-slate-600">
+                            <p class="text-sm text-slate-600 font-medium">
                                 {{ topBroker.email }}
                             </p>
                         </div>
                     </div>
 
-                    <div
-                        class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200"
-                    >
+                    <div class="grid grid-cols-2 gap-6">
                         <div
-                            class="text-center p-3 bg-white rounded-lg border border-slate-200"
+                            class="text-center p-6 bg-white rounded-2xl border border-slate-200/60 shadow-sm"
                         >
-                            <div class="text-xl font-bold text-slate-900">
+                            <div class="text-2xl font-bold text-slate-900 mb-2">
                                 {{ topBroker.total_sales }}
                             </div>
-                            <div
-                                class="text-xs text-slate-600 font-medium"
-                            >
+                            <div class="text-sm text-slate-600 font-medium">
                                 Total Sales
                             </div>
                         </div>
                         <div
-                            class="text-center p-3 bg-white rounded-lg border border-slate-200"
+                            class="text-center p-6 bg-white rounded-2xl border border-slate-200/60 shadow-sm"
                         >
-                            <div class="text-xl font-bold text-slate-900">
+                            <div class="text-2xl font-bold text-slate-900 mb-2">
                                 ₱{{ formatNumber(topBroker.total_sales_value) }}
                             </div>
-                            <div
-                                class="text-xs text-slate-600 font-medium"
-                            >
+                            <div class="text-sm text-slate-600 font-medium">
                                 Revenue Generated
                             </div>
                         </div>
@@ -552,26 +512,26 @@ const getHealthIndicatorColor = (status) => {
 
             <!-- Broker Authorization Queue -->
             <div
-                class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"
+                class="bg-white rounded-2xl border border-slate-200/60 p-8 shadow-sm hover:shadow-lg transition-all duration-300"
             >
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-4">
                         <div
-                            class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"
+                            class="w-12 h-12 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl flex items-center justify-center border border-orange-200/50"
                         >
-                            <UserIcon class="w-5 h-5 text-blue-600" />
+                            <UserIcon class="w-6 h-6 text-orange-600" />
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-slate-900">
+                            <h2 class="text-xl font-bold text-slate-900 mb-1">
                                 Broker Authorization Queue
                             </h2>
-                            <p class="text-sm text-slate-600">
+                            <p class="text-sm font-medium text-slate-600">
                                 Pending broker applications
                             </p>
                         </div>
                     </div>
                     <span
-                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium"
+                        class="px-4 py-2 bg-orange-100 text-orange-700 rounded-xl text-sm font-medium border border-orange-200/50"
                     >
                         {{ pendingBrokers.length }} Pending
                     </span>
@@ -580,201 +540,117 @@ const getHealthIndicatorColor = (status) => {
                     <div
                         v-for="broker in pendingBrokers"
                         :key="broker.id"
-                        class="p-4 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors bg-slate-50"
+                        class="p-4 border border-slate-200/60 rounded-xl hover:border-slate-300 transition-all duration-200 bg-gradient-to-br from-slate-50 to-slate-100 hover:shadow-sm"
                     >
-                        <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <div
-                                    class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700 font-semibold"
+                                    class="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center text-orange-700 font-bold text-sm border border-orange-200/50"
                                 >
                                     {{ broker.name.charAt(0).toUpperCase() }}
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <h3 class="font-semibold text-slate-900">
+                                        <h3 class="font-bold text-slate-900">
                                             {{ broker.name }}
                                         </h3>
                                         <span
-                                            class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md font-medium"
-                                            >Pending Review</span
+                                            class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-md font-medium"
                                         >
+                                            {{ broker.applied }}
+                                        </span>
                                     </div>
-                                    <p
-                                        class="text-sm text-slate-600"
-                                    >
+                                    <p class="text-sm text-slate-600">
                                         {{ broker.email }}
-                                    </p>
-                                    <p
-                                        class="text-xs text-slate-500"
-                                    >
-                                        Applied: {{ broker.applied }}
                                     </p>
                                 </div>
                             </div>
                             <Link
                                 :href="route('admin.brokers.show', broker.id)"
-                                class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                                class="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-all duration-200"
                             >
-                                <EyeIcon class="w-4 h-4" />
+                                Review
                             </Link>
-                        </div>
-                        <div
-                            class="flex gap-2 pt-3 border-t border-slate-200"
-                        >
-                            <button
-                                class="flex-1 bg-green-600 text-white hover:bg-green-700 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Approve
-                            </button>
-                            <button
-                                class="flex-1 bg-red-600 text-white hover:bg-red-700 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Deny
-                            </button>
                         </div>
                     </div>
                 </div>
                 <div v-else class="text-center py-8">
                     <ClockIcon class="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <p class="text-slate-500">
-                        No pending applications
-                    </p>
+                    <p class="text-slate-500">No pending applications</p>
                 </div>
             </div>
 
             <!-- System Health Monitor -->
             <div
-                class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"
+                class="bg-white rounded-2xl border border-slate-200/60 p-8 shadow-sm hover:shadow-lg transition-all duration-300"
             >
                 <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-4">
                         <div
-                            class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"
+                            class="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center border border-blue-200/50"
                         >
-                            <CheckCircleIcon class="w-5 h-5 text-green-600" />
+                            <CheckCircleIcon class="w-6 h-6 text-blue-600" />
                         </div>
-                        <div>
-                            <h2 class="text-lg font-semibold text-slate-900">
-                                System Health Monitor
-                            </h2>
-                            <p class="text-slate-600 text-sm">
-                                Real-time system status monitoring
-                            </p>
-                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">
+                            System Health Monitor
+                        </h3>
                     </div>
                     <div
-                        class="flex items-center gap-2 bg-green-100 rounded-lg px-3 py-2"
+                        class="flex items-center gap-3 bg-blue-50 rounded-xl px-4 py-2 border border-blue-200/50"
                     >
                         <div
-                            class="w-2 h-2 bg-green-500 rounded-full"
+                            class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"
                         ></div>
-                        <span class="text-green-700 font-medium text-sm">
-                            Systems Online
-                        </span>
+                        <span class="text-blue-700 text-sm font-medium"
+                            >System Online</span
+                        >
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div
-                        :class="[
-                            'text-center bg-slate-50 rounded-lg p-4 border transition-colors',
-                            getHealthStatusColor(
-                                systemHealth.database.status
-                            ).includes('green')
-                                ? 'border-green-200'
-                                : 'border-red-200',
-                        ]"
+                        class="flex items-center gap-3 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200/50"
                     >
-                        <div class="flex items-center justify-center gap-2 mb-3">
-                            <div
-                                :class="[
-                                    'w-2 h-2 rounded-full',
-                                    getHealthIndicatorColor(
-                                        systemHealth.database.status
-                                    ),
-                                ]"
-                            ></div>
-                            <span class="font-medium text-slate-900"
-                                >Database</span
-                            >
-                        </div>
                         <div
-                            class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3"
+                            :class="[
+                                'w-3 h-3 rounded-full',
+                                getHealthIndicatorColor(
+                                    systemHealth.database.status
+                                ),
+                            ]"
+                        ></div>
+                        <span class="text-sm font-medium text-blue-700"
+                            >Database</span
                         >
-                            <CheckCircleIcon class="w-6 h-6 text-green-600" />
-                        </div>
-                        <p
-                            class="text-green-700 text-sm font-medium bg-green-100 px-2 py-1 rounded-md"
-                        >
-                            {{ systemHealth.database.message }}
-                        </p>
                     </div>
                     <div
-                        :class="[
-                            'text-center bg-slate-50 rounded-lg p-4 border transition-colors',
-                            getHealthStatusColor(
-                                systemHealth.storage.status
-                            ).includes('green')
-                                ? 'border-green-200'
-                                : 'border-red-200',
-                        ]"
+                        class="flex items-center gap-3 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200/50"
                     >
-                        <div class="flex items-center justify-center gap-2 mb-3">
-                            <div
-                                :class="[
-                                    'w-2 h-2 rounded-full',
-                                    getHealthIndicatorColor(
-                                        systemHealth.storage.status
-                                    ),
-                                ]"
-                            ></div>
-                            <span class="font-medium text-slate-900"
-                                >File Storage</span
-                            >
-                        </div>
                         <div
-                            class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3"
+                            :class="[
+                                'w-3 h-3 rounded-full',
+                                getHealthIndicatorColor(
+                                    systemHealth.storage.status
+                                ),
+                            ]"
+                        ></div>
+                        <span class="text-sm font-medium text-blue-700"
+                            >Storage</span
                         >
-                            <CheckCircleIcon class="w-6 h-6 text-green-600" />
-                        </div>
-                        <p
-                            class="text-green-700 text-sm font-medium bg-green-100 px-2 py-1 rounded-md"
-                        >
-                            {{ systemHealth.storage.message }}
-                        </p>
                     </div>
                     <div
-                        :class="[
-                            'text-center bg-slate-50 rounded-lg p-4 border transition-colors',
-                            getHealthStatusColor(
-                                systemHealth.cache.status
-                            ).includes('yellow')
-                                ? 'border-yellow-200'
-                                : 'border-green-200',
-                        ]"
+                        class="flex items-center gap-3 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200/50"
                     >
-                        <div class="flex items-center justify-center gap-2 mb-3">
-                            <div
-                                :class="[
-                                    'w-2 h-2 rounded-full',
-                                    getHealthIndicatorColor(
-                                        systemHealth.cache.status
-                                    ),
-                                ]"
-                            ></div>
-                            <span class="font-medium text-slate-900"
-                                >Cache System</span
-                            >
-                        </div>
                         <div
-                            class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-3"
+                            :class="[
+                                'w-3 h-3 rounded-full',
+                                getHealthIndicatorColor(
+                                    systemHealth.cache.status
+                                ),
+                            ]"
+                        ></div>
+                        <span class="text-sm font-medium text-blue-700"
+                            >Cache</span
                         >
-                            <XCircleIcon class="w-6 h-6 text-yellow-600" />
-                        </div>
-                        <p
-                            class="text-yellow-700 text-sm font-medium bg-yellow-100 px-2 py-1 rounded-md"
-                        >
-                            {{ systemHealth.cache.message }}
-                        </p>
                     </div>
                 </div>
             </div>
@@ -782,29 +658,29 @@ const getHealthIndicatorColor = (status) => {
 
         <!-- Administrative Overview -->
         <div
-            class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"
+            class="bg-white rounded-xl border border-slate-200/60 p-6 shadow-sm hover:shadow-lg transition-all duration-300"
         >
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
                     <div
-                        class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
+                        class="w-10 h-10 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center border border-blue-200/50"
                     >
-                        <BuildingOfficeIcon class="w-6 h-6 text-blue-600" />
+                        <BuildingOfficeIcon class="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                        <h2 class="text-xl font-semibold text-slate-900">
+                        <h2 class="text-lg font-bold text-slate-900">
                             Administrative Overview
                         </h2>
-                        <p class="text-slate-600">
-                            Platform management and oversight
+                        <p class="text-xs text-slate-600">
+                            Platform management
                         </p>
                     </div>
                 </div>
                 <div
-                    class="flex items-center gap-2 bg-green-50 rounded-lg px-4 py-2 border border-green-200"
+                    class="flex items-center gap-3 bg-green-50 rounded-xl px-4 py-2 border border-green-200/50"
                 >
                     <div
-                        class="w-3 h-3 bg-green-500 rounded-full"
+                        class="w-3 h-3 bg-green-500 rounded-full animate-pulse"
                     ></div>
                     <span class="text-green-700 font-medium text-sm">
                         System Active
@@ -813,64 +689,52 @@ const getHealthIndicatorColor = (status) => {
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div
-                    class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
+                    class="text-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200/60 hover:shadow-md transition-all duration-200"
                 >
                     <div
-                        class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3"
+                        class="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3 border border-blue-200/50"
                     >
                         <BuildingOfficeIcon class="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 class="font-semibold text-slate-900 mb-2">
+                    <h3 class="font-bold text-slate-900 mb-2 text-base">
                         Total Properties
                     </h3>
                     <p class="text-2xl font-bold text-slate-900 mb-1">
                         {{ props.stats.totalProperties }}
                     </p>
-                    <p
-                        class="text-slate-600 text-sm"
-                    >
-                        Listed properties
-                    </p>
+                    <p class="text-slate-600 text-xs">Listed properties</p>
                 </div>
                 <div
-                    class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
+                    class="text-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200/60 hover:shadow-md transition-all duration-200"
                 >
                     <div
-                        class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3"
+                        class="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3 border border-blue-200/50"
                     >
-                        <UserGroupIcon class="w-6 h-6 text-green-600" />
+                        <UserGroupIcon class="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 class="font-semibold text-slate-900 mb-2">
+                    <h3 class="font-bold text-slate-900 mb-2 text-base">
                         Active Brokers
                     </h3>
                     <p class="text-2xl font-bold text-slate-900 mb-1">
                         {{ props.stats.totalBrokers }}
                     </p>
-                    <p
-                        class="text-slate-600 text-sm"
-                    >
-                        Verified agents
-                    </p>
+                    <p class="text-slate-600 text-xs">Verified agents</p>
                 </div>
                 <div
-                    class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
+                    class="text-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200/60 hover:shadow-md transition-all duration-200"
                 >
                     <div
-                        class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3"
+                        class="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3 border border-blue-200/50"
                     >
-                        <CreditCardIcon class="w-6 h-6 text-purple-600" />
+                        <CreditCardIcon class="w-6 h-6 text-blue-600" />
                     </div>
-                    <h3 class="font-semibold text-slate-900 mb-2">
+                    <h3 class="font-bold text-slate-900 mb-2 text-base">
                         Total Transactions
                     </h3>
                     <p class="text-2xl font-bold text-slate-900 mb-1">
                         {{ props.stats.totalTransactions }}
                     </p>
-                    <p
-                        class="text-slate-600 text-sm"
-                    >
-                        Completed deals
-                    </p>
+                    <p class="text-slate-600 text-xs">Completed deals</p>
                 </div>
             </div>
             <div
@@ -881,12 +745,13 @@ const getHealthIndicatorColor = (status) => {
                         Platform Management
                     </h3>
                     <p class="text-slate-600 mb-4">
-                        Comprehensive oversight of properties and broker network.
+                        Comprehensive oversight of properties and broker
+                        network.
                     </p>
                 </div>
                 <div class="flex gap-3">
                     <Link
-                        :href="route('properties.index')"
+                        :href="route('admin.properties.index')"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
                     >
                         <EyeIcon class="w-4 h-4" />
@@ -896,86 +761,97 @@ const getHealthIndicatorColor = (status) => {
             </div>
         </div>
         <!-- Recent Activity Feed -->
-        <div class="mb-12">
+        <div class="mb-8">
             <div
-                class="bg-white rounded-3xl border border-neutral-100 shadow-lg overflow-hidden"
+                class="bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200/60 shadow-lg overflow-hidden"
             >
                 <div
-                    class="p-6 border-b border-neutral-100 bg-gradient-to-r from-slate-50 to-blue-50"
+                    class="p-6 border-b border-slate-200/60 bg-gradient-to-r from-blue-50 to-blue-100"
                 >
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div
-                                class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center"
+                                class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center border border-blue-200/50"
                             >
-                                <ChartBarIcon class="w-5 h-5 text-white" />
+                                <ChartBarIcon class="w-5 h-5 text-blue-600" />
                             </div>
                             <div>
-                                <h3 class="text-xl font-bold text-slate-900">
+                                <h3 class="text-lg font-bold text-slate-900">
                                     Recent Activity Feed
                                 </h3>
-                                <p class="text-sm text-slate-600">
-                                    Latest transactions, registrations, and
-                                    system notifications
+                                <p class="text-xs text-slate-600">
+                                    Latest system activity
                                 </p>
                             </div>
                         </div>
                         <Link
                             :href="route('admin.activity.index')"
-                            class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200"
                         >
-                            View All Activity →
+                            View All →
                         </Link>
                     </div>
                 </div>
 
-                <div class="divide-y divide-neutral-100">
+                <div class="divide-y divide-slate-100">
                     <div
                         v-for="activity in recentActivity"
                         :key="activity.id"
-                        class="p-6 hover:bg-neutral-50 transition-colors"
+                        class="p-6 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 transition-all duration-200 group"
                     >
                         <div class="flex items-start gap-4">
                             <div
                                 :class="[
-                                    'w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold',
+                                    'w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-sm border',
                                     activity.color === 'green'
-                                        ? 'bg-green-500'
-                                        : activity.color === 'blue'
-                                        ? 'bg-blue-500'
-                                        : activity.color === 'purple'
-                                        ? 'bg-purple-500'
-                                        : activity.color === 'indigo'
-                                        ? 'bg-indigo-500'
-                                        : 'bg-gray-500',
+                                        ? 'bg-gradient-to-br from-green-500 to-green-600 border-green-300'
+                                        : activity.color === 'orange'
+                                        ? 'bg-gradient-to-br from-orange-500 to-orange-600 border-orange-300'
+                                        : 'bg-gradient-to-br from-blue-500 to-blue-600 border-blue-300',
                                 ]"
                             >
                                 {{ activity.icon }}
                             </div>
                             <div class="flex-1">
                                 <div
-                                    class="flex items-center justify-between mb-1"
+                                    class="flex items-center justify-between mb-2"
                                 >
-                                    <h4 class="font-semibold text-slate-900">
+                                    <h4
+                                        class="font-bold text-slate-900 text-lg group-hover:text-blue-700 transition-colors"
+                                    >
                                         {{ activity.title }}
                                     </h4>
-                                    <span class="text-xs text-slate-500">{{
-                                        activity.created_at
-                                    }}</span>
+                                    <span
+                                        class="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full"
+                                        >{{ activity.created_at }}</span
+                                    >
                                 </div>
-                                <p class="text-sm text-slate-600 mb-2">
+                                <p
+                                    class="text-sm text-slate-600 mb-3 leading-relaxed"
+                                >
                                     {{ activity.description }}
                                 </p>
                                 <div
-                                    class="flex items-center gap-4 text-xs text-slate-500"
+                                    class="flex items-center gap-6 text-xs text-slate-500"
                                 >
-                                    <span class="flex items-center gap-1">
+                                    <span
+                                        class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full"
+                                    >
                                         <UserIcon class="w-3 h-3" />
-                                        {{ activity.user }}
+                                        <span class="font-medium">{{
+                                            activity.user
+                                        }}</span>
                                     </span>
-                                    <span v-if="activity.amount" class="flex items-center gap-1">
+                                    <span
+                                        v-if="activity.amount"
+                                        class="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1.5 rounded-full"
+                                    >
                                         <CreditCardIcon class="w-3 h-3" />
-                                        ₱{{ formatNumber(activity.amount) }}
+                                        <span class="font-bold"
+                                            >₱{{
+                                                formatNumber(activity.amount)
+                                            }}</span
+                                        >
                                     </span>
                                 </div>
                             </div>
@@ -986,24 +862,22 @@ const getHealthIndicatorColor = (status) => {
         </div>
 
         <!-- Performance Indicators -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <!-- Monthly Targets -->
             <div
-                class="bg-gradient-to-br from-emerald-50 to-green-50 rounded-3xl border-2 border-emerald-200 p-8 shadow-lg"
+                class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200/60 p-6 shadow-lg"
             >
-                <div class="flex items-center gap-4 mb-6">
+                <div class="flex items-center gap-3 mb-6">
                     <div
-                        class="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center"
+                        class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center border border-green-300/50"
                     >
-                        <CheckCircleIcon class="w-6 h-6 text-white" />
+                        <CheckCircleIcon class="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-slate-900">
+                        <h3 class="text-lg font-bold text-slate-900">
                             Monthly Targets
                         </h3>
-                        <p class="text-sm text-emerald-600">
-                            Progress towards monthly goals
-                        </p>
+                        <p class="text-xs text-green-600">Progress overview</p>
                     </div>
                 </div>
 
@@ -1013,7 +887,7 @@ const getHealthIndicatorColor = (status) => {
                             <span class="text-sm font-medium text-slate-700"
                                 >Transactions</span
                             >
-                            <span class="text-sm font-bold text-emerald-600">
+                            <span class="text-sm font-bold text-green-600">
                                 {{
                                     performanceIndicators.monthly_targets
                                         ?.transactions?.current || 0
@@ -1025,9 +899,9 @@ const getHealthIndicatorColor = (status) => {
                                 }}
                             </span>
                         </div>
-                        <div class="w-full bg-emerald-100 rounded-full h-3">
+                        <div class="w-full bg-green-100 rounded-full h-3">
                             <div
-                                class="bg-gradient-to-r from-emerald-500 to-green-600 h-3 rounded-full transition-all duration-300"
+                                class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-300"
                                 :style="{
                                     width:
                                         (performanceIndicators.monthly_targets
@@ -1043,7 +917,7 @@ const getHealthIndicatorColor = (status) => {
                             <span class="text-sm font-medium text-slate-700"
                                 >Revenue</span
                             >
-                            <span class="text-sm font-bold text-emerald-600">
+                            <span class="text-sm font-bold text-green-600">
                                 ₱{{
                                     formatNumber(
                                         performanceIndicators.monthly_targets
@@ -1052,9 +926,9 @@ const getHealthIndicatorColor = (status) => {
                                 }}
                             </span>
                         </div>
-                        <div class="w-full bg-emerald-100 rounded-full h-3">
+                        <div class="w-full bg-green-100 rounded-full h-3">
                             <div
-                                class="bg-gradient-to-r from-emerald-500 to-green-600 h-3 rounded-full transition-all duration-300"
+                                class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-300"
                                 :style="{
                                     width:
                                         (performanceIndicators.monthly_targets
@@ -1068,27 +942,25 @@ const getHealthIndicatorColor = (status) => {
 
             <!-- Conversion Rates -->
             <div
-                class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border-2 border-blue-200 p-8 shadow-lg"
+                class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200/60 p-6 shadow-lg"
             >
-                <div class="flex items-center gap-4 mb-6">
+                <div class="flex items-center gap-3 mb-6">
                     <div
-                        class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center"
+                        class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center border border-blue-300/50"
                     >
-                        <ChartBarIcon class="w-6 h-6 text-white" />
+                        <ChartBarIcon class="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold text-slate-900">
+                        <h3 class="text-lg font-bold text-slate-900">
                             Conversion Rates
                         </h3>
-                        <p class="text-sm text-blue-600">
-                            System performance metrics
-                        </p>
+                        <p class="text-xs text-blue-600">Performance metrics</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div
-                        class="text-center p-4 bg-white rounded-2xl border border-blue-100"
+                        class="text-center p-4 bg-gradient-to-br from-white to-blue-50 rounded-xl border border-blue-200/60 shadow-sm hover:shadow-md transition-all duration-200"
                     >
                         <div class="text-2xl font-bold text-blue-600 mb-1">
                             {{
@@ -1098,14 +970,14 @@ const getHealthIndicatorColor = (status) => {
                                 )
                             }}%
                         </div>
-                        <div class="text-xs text-slate-600 font-medium">
+                        <div class="text-xs text-slate-600 font-bold">
                             Inquiry to Sale
                         </div>
                     </div>
                     <div
-                        class="text-center p-4 bg-white rounded-2xl border border-blue-100"
+                        class="text-center p-4 bg-gradient-to-br from-white to-blue-50 rounded-xl border border-blue-200/60 shadow-sm hover:shadow-md transition-all duration-200"
                     >
-                        <div class="text-2xl font-bold text-indigo-600 mb-1">
+                        <div class="text-2xl font-bold text-blue-600 mb-1">
                             {{
                                 Math.round(
                                     performanceIndicators.conversion_rates
@@ -1113,12 +985,12 @@ const getHealthIndicatorColor = (status) => {
                                 )
                             }}%
                         </div>
-                        <div class="text-xs text-slate-600 font-medium">
+                        <div class="text-xs text-slate-600 font-bold">
                             Property Sale Rate
                         </div>
                     </div>
                     <div
-                        class="text-center p-4 bg-white rounded-2xl border border-blue-100"
+                        class="text-center p-4 bg-gradient-to-br from-white to-purple-50 rounded-xl border border-purple-200/60 shadow-sm hover:shadow-md transition-all duration-200"
                     >
                         <div class="text-2xl font-bold text-purple-600 mb-1">
                             {{
@@ -1128,12 +1000,12 @@ const getHealthIndicatorColor = (status) => {
                                 )
                             }}%
                         </div>
-                        <div class="text-xs text-slate-600 font-medium">
+                        <div class="text-xs text-slate-600 font-bold">
                             Broker Approval
                         </div>
                     </div>
                     <div
-                        class="text-center p-4 bg-white rounded-2xl border border-blue-100"
+                        class="text-center p-4 bg-gradient-to-br from-white to-green-50 rounded-xl border border-green-200/60 shadow-sm hover:shadow-md transition-all duration-200"
                     >
                         <div class="text-2xl font-bold text-green-600 mb-1">
                             {{
@@ -1141,7 +1013,7 @@ const getHealthIndicatorColor = (status) => {
                                     ?.uptime || "N/A"
                             }}
                         </div>
-                        <div class="text-xs text-slate-600 font-medium">
+                        <div class="text-xs text-slate-600 font-bold">
                             System Uptime
                         </div>
                     </div>
@@ -1149,110 +1021,138 @@ const getHealthIndicatorColor = (status) => {
             </div>
         </div>
 
-        <!-- Enhanced Shortcut Access Panel -->
+        <!-- Quick Access Panel -->
         <div
-            class="bg-gradient-to-br from-slate-50 to-neutral-50 rounded-3xl border border-neutral-200 p-8 shadow-lg mb-12"
+            class="bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200/60 p-6 shadow-lg mb-6"
         >
-            <div class="flex items-center gap-4 mb-8">
+            <div class="flex items-center gap-3 mb-6">
                 <div
-                    class="w-12 h-12 bg-slate-600 rounded-lg flex items-center justify-center"
+                    class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center border border-blue-200/50"
                 >
-                    <PlusIcon class="w-6 h-6 text-white" />
+                    <PlusIcon class="w-5 h-5 text-blue-600" />
                 </div>
-                <div>
-                    <h3 class="text-2xl font-bold text-slate-900">
-                        Quick Access Panel
-                    </h3>
-                    <p class="text-slate-600">
-                        Direct links to most-used admin functions
-                    </p>
-                </div>
+                <h3 class="text-lg font-bold text-slate-900">Quick Actions</h3>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <Link
-                    :href="route('admin.users.index')"
-                    class="flex flex-col items-center p-4 bg-white rounded-2xl border border-neutral-200 hover:border-blue-300 hover:shadow-md transition-all group"
-                >
-                    <div
-                        class="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-xl flex items-center justify-center mb-3 transition-colors"
+            <div class="space-y-8">
+                <!-- Management Section -->
+                <div>
+                    <h4
+                        class="text-sm font-bold text-slate-600 mb-4 uppercase tracking-wider"
                     >
-                        <UserGroupIcon class="w-6 h-6 text-blue-600" />
+                        Management
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Link
+                            :href="route('admin.users.index')"
+                            class="flex items-center gap-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl hover:from-blue-50 hover:to-blue-100 hover:border-blue-200 border border-slate-200/60 transition-all duration-200 group shadow-sm hover:shadow-md"
+                        >
+                            <div
+                                class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-2xl flex items-center justify-center border border-blue-200/50"
+                            >
+                                <UserGroupIcon class="w-5 h-5 text-blue-600" />
+                            </div>
+                            <span
+                                class="text-sm font-bold text-slate-700 group-hover:text-blue-700"
+                                >Users</span
+                            >
+                        </Link>
+                        <Link
+                            :href="route('admin.properties.index')"
+                            class="flex items-center gap-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl hover:from-blue-50 hover:to-blue-100 hover:border-blue-200 border border-slate-200/60 transition-all duration-200 group shadow-sm hover:shadow-md"
+                        >
+                            <div
+                                class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-2xl flex items-center justify-center border border-blue-200/50"
+                            >
+                                <BuildingOfficeIcon
+                                    class="w-5 h-5 text-blue-600"
+                                />
+                            </div>
+                            <span
+                                class="text-sm font-bold text-slate-700 group-hover:text-blue-700"
+                                >Properties</span
+                            >
+                        </Link>
+                        <Link
+                            :href="route('admin.transactions.index')"
+                            class="flex items-center gap-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl hover:from-blue-50 hover:to-blue-100 hover:border-blue-200 border border-slate-200/60 transition-all duration-200 group shadow-sm hover:shadow-md"
+                        >
+                            <div
+                                class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-2xl flex items-center justify-center border border-blue-200/50"
+                            >
+                                <CreditCardIcon class="w-5 h-5 text-blue-600" />
+                            </div>
+                            <span
+                                class="text-sm font-bold text-slate-700 group-hover:text-blue-700"
+                                >Transactions</span
+                            >
+                        </Link>
+                        <Link
+                            :href="route('admin.brokers.index')"
+                            class="flex items-center gap-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl hover:from-blue-50 hover:to-blue-100 hover:border-blue-200 border border-slate-200/60 transition-all duration-200 group shadow-sm hover:shadow-md"
+                        >
+                            <div
+                                class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-2xl flex items-center justify-center border border-blue-200/50"
+                            >
+                                <UserGroupIcon class="w-5 h-5 text-blue-600" />
+                            </div>
+                            <span
+                                class="text-sm font-bold text-slate-700 group-hover:text-blue-700"
+                                >Brokers</span
+                            >
+                        </Link>
                     </div>
-                    <span class="text-sm font-medium text-slate-700 text-center"
-                        >User Management</span
-                    >
-                </Link>
+                </div>
 
-                <Link
-                    :href="route('admin.properties.index')"
-                    class="flex flex-col items-center p-4 bg-white rounded-2xl border border-neutral-200 hover:border-green-300 hover:shadow-md transition-all group"
-                >
-                    <div
-                        class="w-12 h-12 bg-green-100 group-hover:bg-green-200 rounded-xl flex items-center justify-center mb-3 transition-colors"
-                    >
-                        <BuildingOfficeIcon class="w-6 h-6 text-green-600" />
+                <!-- Analytics Section -->
+                <div>
+                    <h4 class="text-sm font-medium text-slate-500 mb-3">
+                        Analytics & Monitoring
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <Link
+                            :href="route('admin.reports.dashboard')"
+                            class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all group"
+                        >
+                            <div
+                                class="w-8 h-8 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center"
+                            >
+                                <EyeIcon class="w-4 h-4 text-blue-600" />
+                            </div>
+                            <span class="text-sm font-medium text-slate-700"
+                                >Reports</span
+                            >
+                        </Link>
+                        <Link
+                            :href="route('admin.activity.index')"
+                            class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all group"
+                        >
+                            <div
+                                class="w-8 h-8 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center"
+                            >
+                                <ClockIcon class="w-4 h-4 text-blue-600" />
+                            </div>
+                            <span class="text-sm font-medium text-slate-700"
+                                >Activity</span
+                            >
+                        </Link>
+                        <Link
+                            :href="route('admin.compliance.index')"
+                            class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-orange-50 hover:border-orange-200 border border-transparent transition-all group"
+                        >
+                            <div
+                                class="w-8 h-8 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center"
+                            >
+                                <CheckCircleIcon
+                                    class="w-4 h-4 text-orange-600"
+                                />
+                            </div>
+                            <span class="text-sm font-medium text-slate-700"
+                                >Compliance</span
+                            >
+                        </Link>
                     </div>
-                    <span class="text-sm font-medium text-slate-700 text-center"
-                        >Properties</span
-                    >
-                </Link>
-
-                <Link
-                    :href="route('admin.transactions.index')"
-                    class="flex flex-col items-center p-4 bg-white rounded-2xl border border-neutral-200 hover:border-purple-300 hover:shadow-md transition-all group"
-                >
-                    <div
-                        class="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-xl flex items-center justify-center mb-3 transition-colors"
-                    >
-                        <CreditCardIcon class="w-6 h-6 text-purple-600" />
-                    </div>
-                    <span class="text-sm font-medium text-slate-700 text-center"
-                        >Transactions</span
-                    >
-                </Link>
-
-                <Link
-                    :href="route('admin.reports.dashboard')"
-                    class="flex flex-col items-center p-4 bg-white rounded-2xl border border-neutral-200 hover:border-orange-300 hover:shadow-md transition-all group"
-                >
-                    <div
-                        class="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-xl flex items-center justify-center mb-3 transition-colors"
-                    >
-                        <EyeIcon class="w-6 h-6 text-orange-600" />
-                    </div>
-                    <span class="text-sm font-medium text-slate-700 text-center"
-                        >Reports</span
-                    >
-                </Link>
-
-                <Link
-                    :href="route('admin.compliance.index')"
-                    class="flex flex-col items-center p-4 bg-white rounded-2xl border border-neutral-200 hover:border-red-300 hover:shadow-md transition-all group"
-                >
-                    <div
-                        class="w-12 h-12 bg-red-100 group-hover:bg-red-200 rounded-xl flex items-center justify-center mb-3 transition-colors"
-                    >
-                        <CheckCircleIcon class="w-6 h-6 text-red-600" />
-                    </div>
-                    <span class="text-sm font-medium text-slate-700 text-center"
-                        >Compliance</span
-                    >
-                </Link>
-
-                <Link
-                    :href="route('admin.activity.index')"
-                    class="flex flex-col items-center p-4 bg-white rounded-2xl border border-neutral-200 hover:border-indigo-300 hover:shadow-md transition-all group"
-                >
-                    <div
-                        class="w-12 h-12 bg-indigo-100 group-hover:bg-indigo-200 rounded-xl flex items-center justify-center mb-3 transition-colors"
-                    >
-                        <ClockIcon class="w-6 h-6 text-indigo-600" />
-                    </div>
-                    <span class="text-sm font-medium text-slate-700 text-center"
-                        >Activity Audit</span
-                    >
-                </Link>
+                </div>
             </div>
         </div>
     </ModernDashboardLayout>

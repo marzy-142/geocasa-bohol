@@ -18,7 +18,7 @@ class Property extends Model
     ];
 
     const STATUSES = [
-        'available', 'reserved', 'sold', 'under_negotiation', 'off_market'
+        'available', 'reserved', 'sold', 'under_negotiation', 'off_market', 'pending_renewal'
     ];
 
     // Bohol-specific locations/municipalities
@@ -41,8 +41,10 @@ class Property extends Model
         'coordinates_lng', 'road_access', 'water_source', 'electricity_available',
         'internet_available', 'nearby_landmarks', 'zoning_classification',
         'images', 'documents', 'is_featured', 'broker_id', 'client_id',
-        // Add these to the existing fillable array
+        // Virtual tour fields
         'virtual_tour_images', 'has_virtual_tour', 'gis_data', 'tour_hotspots',
+        // Expiry tracking fields
+        'last_updated_at', 'expiry_date', 'reminder_sent_at', 'renewal_required', 'renewed_at',
     ];
     
     // Add these to the existing casts array
@@ -64,11 +66,32 @@ class Property extends Model
         'gis_data' => 'array',
         'virtual_tour_images' => 'array',
         'has_virtual_tour' => 'boolean',
-        'tour_hotspots' => 'array'
+        'tour_hotspots' => 'array',
+        // Expiry tracking casts
+        'last_updated_at' => 'datetime',
+        'expiry_date' => 'datetime',
+        'reminder_sent_at' => 'datetime',
+        'renewal_required' => 'boolean',
+        'renewed_at' => 'datetime'
+    ];
+
+    // Append computed attributes to JSON serialization
+    protected $appends = [
+        'formatted_total_price',
+        'formatted_area',
+        'formatted_price_per_sqm',
+        'main_image',
+        'google_maps_link',
+        'full_address'
     ];
 
     // Relationships
     public function broker()
+    {
+        return $this->belongsTo(User::class, 'broker_id');
+    }
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'broker_id');
     }
@@ -99,9 +122,35 @@ class Property extends Model
         return $query->where('status', 'available');
     }
 
+    public function scopePubliclyVisible($query)
+    {
+        return $query->whereNotIn('status', ['pending_renewal']);
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->where('expiry_date', '<', now())
+                    ->where('status', '!=', 'pending_renewal');
+    }
+
+    public function scopeNeedsReminder($query)
+    {
+        return $query->where('expiry_date', '<=', now()->addDays(7))
+                    ->where('status', 'available')
+                    ->where(function($q) {
+                        $q->whereNull('reminder_sent_at')
+                          ->orWhere('reminder_sent_at', '<', now()->subDays(7));
+                    });
+    }
+
     public function scopeFeatured($query)
     {
         return $query->where('is_featured', true);
+    }
+
+    public function scopePendingRenewal($query)
+    {
+        return $query->where('status', 'pending_renewal');
     }
 
     public function scopeByType($query, $type)
@@ -141,6 +190,11 @@ class Property extends Model
         return '₱' . number_format($this->total_price, 2);
     }
 
+    public function getPriceAttribute()
+    {
+        return $this->total_price;
+    }
+
     public function getFormattedAreaAttribute()
     {
         if ($this->lot_area_hectares >= 1) {
@@ -177,5 +231,67 @@ class Property extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    // Expiry Management Methods
+    public function setExpiryDate($days = 90)
+    {
+        $this->update([
+            'expiry_date' => now()->addDays($days),
+            'last_updated_at' => now(),
+            'renewal_required' => false,
+            'reminder_sent_at' => null
+        ]);
+    }
+
+    public function markAsExpired()
+    {
+        $this->update([
+            'status' => 'pending_renewal',
+            'renewal_required' => true
+        ]);
+    }
+
+    public function renewListing($days = 90)
+    {
+        $this->update([
+            'status' => 'available',
+            'expiry_date' => now()->addDays($days),
+            'last_updated_at' => now(),
+            'renewal_required' => false,
+            'reminder_sent_at' => null
+        ]);
+    }
+
+    public function markReminderSent()
+    {
+        $this->update(['reminder_sent_at' => now()]);
+    }
+
+    public function isExpired()
+    {
+        return $this->expiry_date && $this->expiry_date->isPast();
+    }
+
+    public function needsReminder()
+    {
+        if (!$this->expiry_date || $this->status !== 'available') {
+            return false;
+        }
+
+        $reminderThreshold = now()->addDays(7);
+        $lastReminderThreshold = now()->subDays(7);
+
+        return $this->expiry_date <= $reminderThreshold && 
+               (!$this->reminder_sent_at || $this->reminder_sent_at < $lastReminderThreshold);
+    }
+
+    public function getDaysUntilExpiryAttribute()
+    {
+        if (!$this->expiry_date) {
+            return null;
+        }
+        
+        return now()->diffInDays($this->expiry_date, false);
     }
 }

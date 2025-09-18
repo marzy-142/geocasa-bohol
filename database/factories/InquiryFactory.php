@@ -35,6 +35,7 @@ class InquiryFactory extends Factory
             'inquiry_type' => $this->faker->randomElement(['general', 'viewing', 'purchase', 'information']),
             'property_id' => Property::factory(),
             'client_id' => $this->faker->optional()->randomElement([null, \App\Models\Client::factory()]),
+            'assigned_broker_id' => null, // Will be set explicitly when needed
             'status' => $this->faker->randomElement(['new', 'contacted', 'scheduled', 'completed', 'closed']),
             'contacted_at' => $this->faker->optional()->dateTimeBetween('-1 month', 'now'),
             'scheduled_at' => $this->faker->optional()->dateTimeBetween('now', '+1 month'),

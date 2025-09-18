@@ -3,19 +3,30 @@
     "type": "module",
     "scripts": {
         "build": "vite build && vite build --ssr",
-        "dev": "vite"
+        "dev": "vite",
+        "test": "vitest",
+        "test:ui": "vitest --ui",
+        "test:coverage": "vitest --coverage",
+        "test:backend": "php artisan test"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.3",
+        "@testing-library/jest-dom": "^6.8.0",
+        "@testing-library/vue": "^8.1.0",
         "@vitejs/plugin-vue": "^5.0.0",
+        "@vitest/coverage-v8": "^3.2.4",
+        "@vitest/ui": "^3.2.4",
         "@vue/server-renderer": "^3.4.0",
+        "@vue/test-utils": "^2.4.6",
         "autoprefixer": "^10.4.12",
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
+        "jsdom": "^26.1.0",
         "laravel-vite-plugin": "^1.0",
         "postcss": "^8.4.31",
         "tailwindcss": "^3.2.1",
         "vite": "^6.0",
+        "vitest": "^3.2.4",
         "vue": "^3.4.0"
     },
     "dependencies": {
@@ -25,7 +36,9 @@
         "@vitejs/plugin-vue": "^5.2.1",
         "date-fns": "^4.1.0",
         "laravel-echo": "^2.2.0",
+        "leaflet": "^1.9.4",
         "pusher-js": "^8.4.0",
-        "vue": "^3.5.0"
+        "vue": "^3.5.0",
+        "vue-leaflet": "^0.1.0"
     }
 }

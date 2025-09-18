@@ -1,0 +1,88 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for public/build/assets/FileUpload-Dcb1uhBD.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">public/build/assets</a> FileUpload-Dcb1uhBD.js</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import{o,h as i,b as r,a as V,q as F,e as S,t as m,l as p,n as B,d as f,u as v,F as _,i as T,z as A}from"./app-Bwbmud97.js";import{r as q}from"./DocumentIcon-Dm9yrTTK.js";import{r as U}from"./XMarkIcon-BvEjh4IS.js";import{r as E}from"./ExclamationTriangleIcon-BiFMORQ4.js";function j(s,C){return o(),i("svg",{xmlns:"http://www.w3.org/2000/svg",fill:"none",viewBox:"0 0 24 24","stroke-width":"1.5",stroke:"currentColor","aria-hidden":"true","data-slot":"icon"},[r("path",{"stroke-linecap":"round","stroke-linejoin":"round",d:"M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"})])}const G={class:"space-y-2"},I={class:"block text-sm font-semibold text-neutral-700"},W={key:0,class:"text-red-500 ml-1"},H=["accept","multiple"],O={key:0,class:"text-center"},J={class:"text-xs text-neutral-500"},K={key:1,class:"space-y-2"},Z={class:"flex-shrink-0"},Q={class:"flex-1 min-w-0"},R={class:"text-sm font-medium text-neutral-900 truncate"},X={class:"text-xs text-neutral-500"},Y=["onClick"],ee={key:0,class:"text-center pt-2"},te={key:0,class:"flex items-center gap-2 text-sm text-red-600"},le={key:0,class:"mt-2"},re={class:"bg-red-50 border border-red-200 rounded-lg p-3"},se={class:"flex items-start"},ae={class:"flex-1"},oe={class:"text-sm text-red-700"},ie={key:0,class:"mt-2"},ne={class:"text-xs text-red-700 list-disc list-inside space-y-1"},pe={__name:"FileUpload",props:{modelValue:{type:[File,Array,null],default:null},label:{type:String,required:!0},accept:{type:String,default:"*"},error:{type:String,default:null},required:{type:Boolean,default:!1},multiple:{type:Boolean,default:!1},maxSize:{type:Number,default:5*1024*1024}},emits:["update:modelValue","validation-error"],setup(s,{emit:C}){const a=s,n=C,h=V(null),x=V(!1),d=V(null),y=F(()=&gt;a.multiple?Array.isArray(a.modelValue)?a.modelValue:[]:a.modelValue?[a.modelValue]:[]),g=F(()=&gt;a.accept==="*"?[]:a.accept.split(",").map(l=&gt;l.trim().toLowerCase())),b=l=&gt;{if(l===0)return"0 Bytes";const e=1024,t=["Bytes","KB","MB","GB"],u=Math.floor(Math.log(l)/Math.log(e));return parseFloat((l/Math.pow(e,u)).toFixed(2))+" "+t[u]},k=l=&gt;{if(d.value=null,l.size&gt;a.maxSize){const e=`File size (${b(l.size)}) exceeds maximum allowed size of ${b(a.maxSize)}`;return d.value=e,n("validation-error",e),!1}if(g.value.length&gt;0){const e="."+l.name.split(".").pop().toLowerCase(),t=l.type.toLowerCase();if(!g.value.some(c=&gt;c.startsWith(".")?c===e:c.includes("/")?t===c||t.startsWith(c.replace("*","")):!1)){const c=`File type not allowed. Please upload: ${g.value.join(", ")}`;return d.value=c,n("validation-error",c),!1}}return!0},M=l=&gt;{const e=Array.from(l.target.files);if(a.multiple){const t=e.filter(u=&gt;k(u));n("update:modelValue",t)}else{const t=e[0];t&amp;&amp;k(t)?n("update:modelValue",t):t||n("update:modelValue",null)}},$=l=&gt;{l.preventDefault(),x.value=!1;const e=Array.from(l.dataTransfer.files);if(a.multiple){const t=e.filter(u=&gt;k(u));n("update:modelValue",t)}else{const t=e[0];t&amp;&amp;k(t)&amp;&amp;n("update:modelValue",t)}},L=(l=null)=&gt;{if(d.value=null,a.multiple)if(l!==null){const e=[...y.value];e.splice(l,1),n("update:modelValue",e)}else n("update:modelValue",[]);else n("update:modelValue",null);h.value&amp;&amp;(h.value.value="")},N=l=&gt;{l.preventDefault(),x.value=!0},P=()=&gt;{x.value=!1},z=()=&gt;{var l;(l=h.value)==null||l.click()},w=F(()=&gt;a.error||d.value),D=l=&gt;{if(!l)return[];const e=[],t=l.toLowerCase();return(t.includes("format")||t.includes("mimes"))&amp;&amp;(e.push("Convert your file to JPG, PNG, or PDF format"),e.push("Ensure the file extension matches the actual file type")),(t.includes("size")||t.includes("exceed"))&amp;&amp;(e.push("Compress your image using online tools or image editors"),e.push("Try taking a new photo with lower resolution"),e.push("Use PDF format for documents to reduce file size")),(t.includes("invalid")||t.includes("corrupted"))&amp;&amp;(e.push("Try uploading a different file"),e.push("Ensure the file is not corrupted or damaged"),e.push("Take a new clear photo of your document")),(t.includes("upload failed")||t.includes("server error"))&amp;&amp;(e.push("Check your internet connection and try again"),e.push("Wait a moment and retry the upload"),e.push("Contact support if the problem persists")),e};return(l,e)=&gt;(o(),i(_,null,[r("div",G,[r("label",I,[S(m(s.label)+" ",1),s.required?(o(),i("span",W,"*")):p("",!0)]),r("div",{onDrop:$,onDragover:N,onDragleave:P,onClick:z,class:B(["relative border-2 border-dashed rounded-2xl p-6 transition-all duration-200 cursor-pointer",x.value?"border-primary-400 bg-primary-50":y.value.length&gt;0?"border-green-300 bg-green-50":w.value?"border-red-300 bg-red-50":"border-neutral-300 hover:border-primary-300 hover:bg-primary-50"])},[r("input",{ref_key:"fileInput",ref:h,type:"file",accept:s.accept,multiple:s.multiple,onChange:M,class:"absolute inset-0 w-full h-full opacity-0 cursor-pointer"},null,40,H),y.value.length===0?(o(),i("div",O,[f(v(j),{class:B(["w-12 h-12 mx-auto mb-4",w.value?"text-red-400":"text-neutral-400"])},null,8,["class"]),e[0]||(e[0]=r("div",{class:"text-sm text-neutral-600 mb-2"},[r("span",{class:"font-medium text-primary-600"},"Click to upload"),S(" or drag and drop ")],-1)),r("div",J,m(s.accept==="*"?"Any file type":g.value.map(t=&gt;t.replace(".","").toUpperCase()).join(", "))+" (Max "+m(b(s.maxSize))+")"+m(s.multiple?", Multiple files allowed":""),1)])):(o(),i("div",K,[(o(!0),i(_,null,T(y.value,(t,u)=&gt;(o(),i("div",{key:u,class:"flex items-center g</span></span>ap-4 p-2 bg-white rounded-lg border"},[r("div",Z,[f(v(q),{class:"w-8 h-8 text-primary-500"})]),r("div",Q,[r("div",R,m(t.name),1),r("div",X,m(b(t.size)),1)]),r("button",{type:"button",onClick:A(c=&gt;L(s.multiple?u:null),["stop"]),class:"flex-shrink-0 p-1 text-neutral-400 hover:text-red-500 transition-colors"},[f(v(U),{class:"w-5 h-5"})],8,Y)]))),128)),s.multiple?(o(),i("div",ee,[r("button",{type:"button",onClick:A(z,["stop"]),class:"text-sm text-primary-600 hover:text-primary-700 font-medium"}," Add more files ")])):p("",!0)]))],34),w.value?(o(),i("div",te,[f(v(E),{class:"w-4 h-4 flex-shrink-0"}),r("span",null,m(w.value),1)])):p("",!0)]),s.error||d.value?(o(),i("div",le,[r("div",re,[r("div",se,[f(v(E),{class:"w-5 h-5 text-red-400 mt-0.5 mr-2 flex-shrink-0"}),r("div",ae,[e[2]||(e[2]=r("p",{class:"text-sm font-medium text-red-800 mb-1"}," File Upload Error ",-1)),r("p",oe,m(s.error||d.value),1),D(s.error||d.value)?(o(),i("div",ie,[e[1]||(e[1]=r("p",{class:"text-xs font-medium text-red-800 mb-1"},"Suggestions:",-1)),r("ul",ne,[(o(!0),i(_,null,T(D(s.error||d.value),t=&gt;(o(),i("li",{key:t},m(t),1))),128))])])):p("",!0)])])])])):p("",!0)],64))}};export{pe as _};</span>
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2025-09-11T15:42:07.474Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    

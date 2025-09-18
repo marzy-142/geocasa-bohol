@@ -169,6 +169,7 @@ class PropertyControllerTest extends TestCase
         ];
 
         $response = $this->actingAs($broker)
+                         ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class)
                          ->put("/broker/properties/{$property->id}", $updateData);
 
         $response->assertRedirect()

@@ -171,7 +171,7 @@
                         <div
                             :class="[
                                 'inline-block px-4 py-2 rounded-lg max-w-md',
-                                message.sender_id === $page.props.auth.user.id
+                                message.sender_id === page.props.auth.user.id
                                     ? 'bg-blue-600 text-white ml-auto'
                                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white',
                             ]"
@@ -254,7 +254,7 @@
 
 <script setup>
 import { ref, onMounted, nextTick, watch } from "vue";
-import { router, Link } from "@inertiajs/vue3";
+import { router, Link, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import {
     ArrowLeftIcon,
@@ -270,6 +270,8 @@ const props = defineProps({
     conversation: Object,
     messages: Array,
 });
+
+const page = usePage();
 
 const messages = ref(props.messages || []);
 const newMessage = ref("");

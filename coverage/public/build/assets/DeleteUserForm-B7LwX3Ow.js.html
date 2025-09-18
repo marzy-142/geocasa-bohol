@@ -1,0 +1,88 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for public/build/assets/DeleteUserForm-B7LwX3Ow.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">public/build/assets</a> DeleteUserForm-B7LwX3Ow.js</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import{o as p,h as _,U as g,a as f,C as x,b as t,d as o,w as n,O as b,e as i,u as r,j as v,n as k}from"./app-Bwbmud97.js";import{_ as C}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{_ as $,a as h,b as D}from"./TextInput-DKdFxRDW.js";import{_ as U}from"./Modal-CHnd4hen.js";import{_ as V}from"./SecondaryButton-JiknU65L.js";const B={},A={class:"inline-flex items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 active:bg-red-700"};function E(c,a){return p(),_("button",A,[g(c.$slots,"default")])}const m=C(B,[["render",E]]),N={class:"space-y-6"},O={class:"p-6"},P={class:"mt-6"},S={class:"mt-6 flex justify-end"},M={__name:"DeleteUserForm",setup(c){const a=f(!1),l=f(null),s=x({password:""}),y=()=&gt;{a.value=!0,b(()=&gt;l.value.focus())},u=()=&gt;{s.delete(route("profile.destroy"),{preserveScroll:!0,onSuccess:()=&gt;d(),onError:()=&gt;l.value.focus(),onFinish:()=&gt;s.reset()})},d=()=&gt;{a.value=!1,s.clearErrors(),s.reset()};return(j,e)=&gt;(p(),_("section",N,[e[6]||(e[6]=t("header",null,[t("h2",{class:"text-lg font-medium text-gray-900"}," Delete Account "),t("p",{class:"mt-1 text-sm text-gray-600"}," Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain. ")],-1)),o(m,{onClick:y},{default:n(()=&gt;e[1]||(e[1]=[i("Delete Account")])),_:1}),o(U,{show:a.value,onClose:d},{default:n(()=&gt;[t("div",O,[e[4]||(e[4]=t("h2",{class:"text-lg font-medium text-gray-900"}," Are you sure you want to delete your account? ",-1)),e[5]||(e[5]=t("p",{class:"mt-1 text-sm text-gray-600"}," Once your account is deleted, all of </span></span>its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account. ",-1)),t("div",P,[o($,{for:"password",value:"Password",class:"sr-only"}),o(h,{id:"password",ref_key:"passwordInput",ref:l,modelValue:r(s).password,"onUpdate:modelValue":e[0]||(e[0]=w=&gt;r(s).password=w),type:"password",class:"mt-1 block w-3/4",placeholder:"Password",onKeyup:v(u,["enter"])},null,8,["modelValue"]),o(D,{message:r(s).errors.password,class:"mt-2"},null,8,["message"])]),t("div",S,[o(V,{onClick:d},{default:n(()=&gt;e[2]||(e[2]=[i(" Cancel ")])),_:1}),o(m,{class:k(["ms-3",{"opacity-25":r(s).processing}]),disabled:r(s).processing,onClick:u},{default:n(()=&gt;e[3]||(e[3]=[i(" Delete Account ")])),_:1},8,["class","disabled"])])])]),_:1},8,["show"])]))}};export{M as default};</span>
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2025-09-11T15:42:07.474Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    

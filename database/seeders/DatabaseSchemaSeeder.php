@@ -26,6 +26,7 @@ class DatabaseSchemaSeeder extends Seeder
             'role' => 'admin',
             'is_approved' => true,
             'email_verified_at' => now(),
+            'prc_id' => 'ADMIN-00000001',
         ]);
 
         // Create approved brokers
@@ -38,6 +39,7 @@ class DatabaseSchemaSeeder extends Seeder
             'approved_by' => $admin->id,
             'approved_at' => now(),
             'email_verified_at' => now(),
+            'prc_id' => 'PRC-11111111',
         ]);
 
         $broker2 = User::create([
@@ -49,6 +51,7 @@ class DatabaseSchemaSeeder extends Seeder
             'approved_by' => $admin->id,
             'approved_at' => now(),
             'email_verified_at' => now(),
+            'prc_id' => 'PRC-22222222',
         ]);
 
         // Create pending broker
@@ -59,6 +62,7 @@ class DatabaseSchemaSeeder extends Seeder
             'role' => 'broker',
             'is_approved' => false,
             'email_verified_at' => now(),
+            'prc_id' => 'PRC-33333333',
         ]);
 
         // Create regular client user
@@ -69,6 +73,7 @@ class DatabaseSchemaSeeder extends Seeder
             'role' => 'client',
             'is_approved' => true,
             'email_verified_at' => now(),
+            'prc_id' => 'CLIENT-00000001',
         ]);
 
         // Create GeoCasa Bohol sample properties

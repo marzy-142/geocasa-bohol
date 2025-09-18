@@ -6,11 +6,11 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Inquiry;
 use App\Models\Transaction;
+use App\Events\MessageSent;
+use App\Notifications\MessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use App\Events\MessageSent;
 
 class ConversationController extends Controller
 {
@@ -26,7 +26,8 @@ class ConversationController extends Controller
             ->with([
                 'latestMessage.sender',
                 'inquiry.property',
-                'transaction.property'
+                'transaction.property',
+                'participantUsers'
             ])
             ->orderBy('last_message_at', 'desc')
             ->paginate(20);
@@ -34,7 +35,10 @@ class ConversationController extends Controller
         // Add unread count for each conversation
         $conversations->getCollection()->transform(function ($conversation) use ($user) {
             $conversation->unread_count = $conversation->getUnreadCountForUser($user->id);
-            $conversation->participants_data = $conversation->participantUsers();
+            // Ensure participants relationship is loaded
+            if (!$conversation->relationLoaded('participantUsers')) {
+                $conversation->load('participantUsers');
+            }
             return $conversation;
         });
 
@@ -69,10 +73,9 @@ class ConversationController extends Controller
         $conversation->load([
             'inquiry.property',
             'transaction.property.broker',
-            'transaction.client'
+            'transaction.client',
+            'participantUsers'
         ]);
-
-        $conversation->participants_data = $conversation->participantUsers();
 
         return Inertia::render('Messages/Show', [
             'conversation' => $conversation,
@@ -122,13 +125,25 @@ class ConversationController extends Controller
 
         $message->load('sender');
 
-        // Broadcast the message to other participants
+        // Broadcast the message
         broadcast(new MessageSent($message))->toOthers();
 
-        return response()->json([
-            'message' => $message,
-            'success' => true,
-        ]);
+        // Send notifications to other participants
+        $otherParticipants = $conversation->participants()->where('users.id', '!=', $user->id)->get();
+        
+        foreach ($otherParticipants as $participant) {
+            $participant->notify(new MessageNotification($message));
+        }
+
+        // Return JSON for API requests, redirect for web requests
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'message' => $message->load(['conversation', 'sender']),
+                'success' => true
+            ]);
+        }
+
+        return back()->with('success', 'Message sent successfully.');
     }
 
     /**
@@ -229,7 +244,7 @@ class ConversationController extends Controller
     /**
      * Mark conversation as read
      */
-    public function markAsRead(Conversation $conversation)
+    public function markAsRead(Request $request, Conversation $conversation)
     {
         $user = Auth::user();
         
@@ -239,6 +254,11 @@ class ConversationController extends Controller
 
         $conversation->markAsReadForUser($user->id);
 
-        return response()->json(['success' => true]);
+        // Return JSON for API requests, redirect for web requests
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Conversation marked as read.');
     }
 }

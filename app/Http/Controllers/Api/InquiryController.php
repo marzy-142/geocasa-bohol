@@ -20,8 +20,28 @@ class InquiryController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
+        
+        // Get or create client record
+        $client = Client::where('user_id', $user->id)
+            ->orWhere('email', $user->email)
+            ->first();
+            
+        if (!$client) {
+            $client = Client::create([
+                'name' => $user->name,
+                'email' => $user->email,
+                'user_id' => $user->id,
+            ]);
+        } elseif (!$client->user_id) {
+            $client->update(['user_id' => $user->id]);
+        }
+        
         $query = Inquiry::with(['property', 'property.user'])
-            ->where('user_id', Auth::id());
+            ->where(function ($q) use ($user, $client) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('client_id', $client->id);
+            });
 
         // Apply filters
         if ($request->has('status')) {

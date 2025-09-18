@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from "@inertiajs/vue3";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import ModernInput from "@/Components/ModernInput.vue";
 import ModernButton from "@/Components/ModernButton.vue";
 import FileUpload from "@/Components/FileUpload.vue";
@@ -19,6 +19,13 @@ import {
     ExclamationTriangleIcon,
     BuildingOfficeIcon,
 } from "@heroicons/vue/24/outline";
+
+const props = defineProps({
+    inquiryData: {
+        type: Object,
+        default: null,
+    },
+});
 
 const showPassword = ref(false);
 const showPasswordConfirmation = ref(false);
@@ -49,6 +56,53 @@ const form = useForm({
     privacy_policy_accepted: false,
     password: "",
     password_confirmation: "",
+});
+
+// Simple toast notification system
+const showToast = (message, type = "success") => {
+    // Create toast element
+    const toast = document.createElement("div");
+    toast.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+        type === "success"
+            ? "bg-green-500 text-white"
+            : type === "error"
+            ? "bg-red-500 text-white"
+            : "bg-blue-500 text-white"
+    }`;
+    toast.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <div class="flex-1 text-sm">${message}</div>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Auto remove after 6 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 6000);
+};
+
+// Auto-populate form with inquiry data if available
+onMounted(() => {
+    if (props.inquiryData) {
+        form.name = props.inquiryData.name || "";
+        form.email = props.inquiryData.email || "";
+        form.phone = props.inquiryData.phone || "";
+
+        // Show a helpful message to the user
+        showToast(
+            `We've pre-filled your details from your inquiry about "${props.inquiryData.property_title}". You can modify them if needed.`,
+            "success"
+        );
+    }
 });
 
 // Client-side validation rules
@@ -148,12 +202,7 @@ const handleFileValidationError = (field, error) => {
     };
 
     // Show toast notification for immediate feedback
-    if (window.toast) {
-        window.toast.error(`Upload failed: ${error}`, {
-            duration: 5000,
-            position: "top-right",
-        });
-    }
+    showToast(`Upload failed: ${error}`, "error");
 };
 
 // Enhanced form submission with better error handling
@@ -165,14 +214,12 @@ const submit = () => {
     if (!validateForm()) {
         // Show summary of validation errors
         const errorCount = Object.keys(clientValidationErrors.value).length;
-        if (window.toast && errorCount > 0) {
-            window.toast.error(
-                `Please fix ${errorCount} validation error${
+        if (errorCount > 0) {
+            showToast(
+                `Please fix ${errorCount} error${
                     errorCount > 1 ? "s" : ""
                 } before submitting.`,
-                {
-                    duration: 4000,
-                }
+                "error"
             );
         }
         return;
@@ -184,24 +231,12 @@ const submit = () => {
             Object.keys(errors).forEach((field) => {
                 if (field.includes("file") && errors[field]) {
                     // Show specific file upload error notification
-                    if (window.toast) {
-                        window.toast.error(
-                            `File Upload Error: ${errors[field]}`,
-                            {
-                                duration: 6000,
-                                position: "top-right",
-                            }
-                        );
-                    }
+                    showToast(`File Upload Error: ${errors[field]}`, "error");
                 }
             });
         },
         onSuccess: () => {
-            if (window.toast) {
-                window.toast.success("Registration submitted successfully!", {
-                    duration: 3000,
-                });
-            }
+            showToast("Registration submitted successfully!", "success");
         },
     });
 };

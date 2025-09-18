@@ -3,23 +3,23 @@
         <div class="space-y-6">
             <!-- Header Section -->
             <div
-                class="bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg p-6 text-white"
+                class="bg-gradient-to-r from-blue-600 to-teal-600 rounded-md p-4 text-white"
             >
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-3xl font-bold">Property Management</h1>
-                        <p class="text-blue-100 mt-2">
+                        <h1 class="text-2xl font-bold">Property Management</h1>
+                        <p class="text-blue-100 mt-1 text-sm">
                             Manage land properties in GeoCasa Bohol
                         </p>
                     </div>
                     <Link
                         v-if="canCreateProperty"
-                        :href="route('properties.create')"
-                        class="bg-white text-blue-600 hover:bg-blue-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
+                        :href="route('broker.properties.create')"
+                        class="bg-white text-blue-600 hover:bg-blue-50 font-semibold py-2 px-4 rounded-md transition-colors duration-200 shadow-sm"
                     >
                         <span class="flex items-center">
                             <svg
-                                class="w-5 h-5 mr-2"
+                                class="w-4 h-4 mr-2"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -38,25 +38,25 @@
             </div>
 
             <!-- Filters Section -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <div class="bg-white rounded-md shadow-sm p-4">
+                <h3 class="text-base font-semibold text-gray-900 mb-3">
                     Search & Filter Properties
                 </h3>
 
                 <!-- Primary Filters -->
                 <div
-                    class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4"
+                    class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-3"
                 >
                     <input
                         v-model="filters.search"
                         type="text"
                         placeholder="Search properties..."
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @input="filterProperties"
                     />
                     <select
                         v-model="filters.type"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @change="filterProperties"
                     >
                         <option value="">All Types</option>
@@ -66,7 +66,7 @@
                     </select>
                     <select
                         v-model="filters.municipality"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @change="filterProperties"
                     >
                         <option value="">All Municipalities</option>
@@ -80,7 +80,7 @@
                     </select>
                     <select
                         v-model="filters.status"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @change="filterProperties"
                     >
                         <option value="">All Statuses</option>
@@ -96,36 +96,36 @@
                         v-model="filters.min_price"
                         type="number"
                         placeholder="Min Price (₱)"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @input="filterProperties"
                     />
                     <input
                         v-model="filters.max_price"
                         type="number"
                         placeholder="Max Price (₱)"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @input="filterProperties"
                     />
                 </div>
 
                 <!-- Secondary Filters -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <input
                         v-model="filters.min_area"
                         type="number"
                         placeholder="Min Area (sqm)"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @input="filterProperties"
                     />
                     <input
                         v-model="filters.max_area"
                         type="number"
                         placeholder="Max Area (sqm)"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         @input="filterProperties"
                     />
                     <label
-                        class="flex items-center space-x-2 bg-gray-50 rounded-lg px-4 py-2"
+                        class="flex items-center space-x-2 bg-gray-50 rounded-md px-3 py-1.5"
                     >
                         <input
                             v-model="filters.utilities"
@@ -141,57 +141,57 @@
             </div>
 
             <!-- Properties Grid -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900">
+            <div class="bg-white rounded-md shadow-sm p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-base font-semibold text-gray-900">
                         Properties ({{ properties.total || 0 }})
                     </h3>
                 </div>
 
                 <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
                     <div
                         v-for="property in properties.data"
                         :key="property.id"
-                        class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-200 border border-gray-200 hover:border-blue-300"
+                        class="bg-white rounded-md shadow-sm overflow-hidden hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-blue-300"
                     >
                         <div class="relative">
                             <img
                                 :src="property.main_image"
                                 :alt="property.title"
-                                class="w-full h-48 object-cover"
+                                class="w-full h-40 object-cover"
                             />
                             <div
                                 v-if="property.is_featured"
-                                class="absolute top-3 left-3 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg"
+                                class="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm"
                             >
                                 ⭐ Featured
                             </div>
                             <div
-                                class="absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-bold text-white shadow-lg"
+                                class="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold text-white shadow-sm"
                                 :class="getStatusColor(property.status)"
                             >
                                 {{ formatStatus(property.status) }}
                             </div>
                             <div
                                 v-if="property.type === 'beachfront'"
-                                class="absolute bottom-3 left-3 bg-blue-500 text-white px-3 py-1 rounded-full text-xs shadow-lg"
+                                class="absolute bottom-2 left-2 bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs shadow-sm"
                             >
                                 🏖️ Beachfront
                             </div>
                         </div>
-                        <div class="p-5">
+                        <div class="p-3">
                             <h3
-                                class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2"
+                                class="text-base font-semibold text-gray-900 mb-1.5 line-clamp-2"
                             >
                                 {{ property.title }}
                             </h3>
                             <p
-                                class="text-gray-600 text-sm mb-3 flex items-center"
+                                class="text-gray-600 text-xs mb-2 flex items-center"
                             >
                                 <svg
-                                    class="w-4 h-4 mr-1"
+                                    class="w-3 h-3 mr-1"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -211,20 +211,20 @@
                                 </svg>
                                 {{ property.municipality }}, Bohol
                             </p>
-                            <div class="mb-4">
-                                <p class="text-2xl font-bold text-green-600">
+                            <div class="mb-3">
+                                <p class="text-lg font-bold text-green-600">
                                     {{ property.formatted_total_price }}
                                 </p>
-                                <p class="text-sm text-gray-500">
+                                <p class="text-xs text-gray-500">
                                     {{ property.formatted_price_per_sqm }}/sqm
                                 </p>
                             </div>
                             <div
-                                class="flex justify-between text-sm text-gray-500 mb-4"
+                                class="flex justify-between text-xs text-gray-500 mb-2"
                             >
                                 <span class="flex items-center">
                                     <svg
-                                        class="w-4 h-4 mr-1"
+                                        class="w-3 h-3 mr-1"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -240,7 +240,7 @@
                                 </span>
                                 <span class="flex items-center">
                                     <svg
-                                        class="w-4 h-4 mr-1"
+                                        class="w-3 h-3 mr-1"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -257,60 +257,63 @@
                             </div>
 
                             <!-- Utilities Icons -->
-                            <div class="flex flex-wrap gap-2 mb-4">
+                            <div class="flex flex-wrap gap-1 mb-2">
                                 <span
                                     v-if="property.road_access"
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800"
+                                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-green-100 text-green-800"
                                 >
-                                    🛣️ Road Access
+                                    🛣️ Road
                                 </span>
                                 <span
                                     v-if="property.electricity_available"
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800"
+                                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-yellow-100 text-yellow-800"
                                 >
-                                    ⚡ Electricity
+                                    ⚡ Power
                                 </span>
                                 <span
                                     v-if="property.water_source"
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
+                                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-100 text-blue-800"
                                 >
                                     💧 Water
                                 </span>
                                 <span
                                     v-if="property.internet_available"
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800"
+                                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-purple-100 text-purple-800"
                                 >
-                                    📶 Internet
+                                    📶 Net
                                 </span>
                             </div>
 
                             <div class="flex justify-between items-center">
                                 <Link
                                     :href="
-                                        route('properties.show', property.slug)
+                                        route(
+                                            'broker.properties.show',
+                                            property.slug
+                                        )
                                     "
-                                    class="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200"
+                                    class="text-blue-600 hover:text-blue-800 font-medium text-xs transition-colors duration-200"
                                 >
                                     View Details →
                                 </Link>
                                 <div
                                     v-if="canEditProperty(property)"
-                                    class="flex space-x-3"
+                                    class="flex space-x-2"
                                 >
                                     <Link
                                         :href="
                                             route(
-                                                'properties.edit',
+                                                'broker.properties.edit',
                                                 property.slug
                                             )
                                         "
-                                        class="text-green-600 hover:text-green-800 text-sm font-medium transition-colors duration-200"
+                                        class="text-green-600 hover:text-green-800 text-xs font-medium transition-colors duration-200"
                                     >
                                         Edit
                                     </Link>
                                     <button
                                         @click="deleteProperty(property)"
-                                        class="text-red-600 hover:text-red-800 text-sm font-medium transition-colors duration-200"
+                                        class="text-red-600 hover:text-red-800 text-xs font-medium transition-colors duration-200"
                                     >
                                         Delete
                                     </button>
@@ -323,22 +326,22 @@
                 <!-- No Results -->
                 <div
                     v-if="properties.data.length === 0"
-                    class="text-center py-16"
+                    class="text-center py-12"
                 >
-                    <div class="text-gray-400 text-6xl mb-4">🏞️</div>
-                    <h3 class="text-xl font-medium text-gray-900 mb-2">
+                    <div class="text-gray-400 text-4xl mb-3">🏞️</div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">
                         No properties found
                     </h3>
-                    <p class="text-gray-500 mb-6">
+                    <p class="text-gray-500 mb-4 text-sm">
                         Try adjusting your search filters or add a new property.
                     </p>
                     <Link
                         v-if="canCreateProperty"
-                        :href="route('properties.create')"
-                        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                        :href="route('broker.properties.create')"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm"
                     >
                         <svg
-                            class="w-5 h-5 mr-2"
+                            class="w-4 h-4 mr-2"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -357,7 +360,7 @@
                 <!-- Pagination -->
                 <div
                     v-if="properties.links && properties.data.length > 0"
-                    class="mt-8 border-t border-gray-200 pt-6"
+                    class="mt-6 border-t border-gray-200 pt-4"
                 >
                     <Pagination
                         :links="properties.links"
@@ -370,13 +373,13 @@
 
             <!-- Bohol Inspiration Section -->
             <div
-                class="bg-gradient-to-r from-green-400 to-blue-500 rounded-lg p-6 text-white"
+                class="bg-gradient-to-r from-green-400 to-blue-500 rounded-md p-4 text-white"
             >
                 <div class="text-center">
-                    <h3 class="text-2xl font-bold mb-2">
+                    <h3 class="text-lg font-bold mb-1">
                         🏝️ Discover Bohol's Beauty
                     </h3>
-                    <p class="text-green-100">
+                    <p class="text-green-100 text-sm">
                         From pristine beaches to rolling hills, find your
                         perfect piece of paradise in Bohol
                     </p>
@@ -405,16 +408,16 @@ const page = usePage();
 
 // Initialize filters with proper defaults
 const filters = ref({
-    search: props.filters.search || '',
-    type: props.filters.type || '',
-    municipality: props.filters.municipality || '',
-    status: props.filters.status || '',
-    min_price: props.filters.min_price || '',
-    max_price: props.filters.max_price || '',
-    min_area: props.filters.min_area || '',
-    max_area: props.filters.max_area || '',
+    search: props.filters.search || "",
+    type: props.filters.type || "",
+    municipality: props.filters.municipality || "",
+    status: props.filters.status || "",
+    min_price: props.filters.min_price || "",
+    max_price: props.filters.max_price || "",
+    min_area: props.filters.min_area || "",
+    max_area: props.filters.max_area || "",
     utilities: props.filters.utilities || false,
-    featured: props.filters.featured || false
+    featured: props.filters.featured || false,
 });
 
 const canCreateProperty = computed(() => {
@@ -457,24 +460,24 @@ const filterProperties = debounce(() => {
     const cleanFilters = Object.fromEntries(
         Object.entries(filters.value).filter(([key, value]) => {
             // Keep boolean false values, but remove empty strings and null/undefined
-            return value !== '' && value !== null && value !== undefined;
+            return value !== "" && value !== null && value !== undefined;
         })
     );
-    
-    router.get(route("properties.index"), cleanFilters, {
+
+    router.get(route("broker.properties.index"), cleanFilters, {
         preserveState: true,
         replace: true,
         preserveScroll: true,
         onSuccess: () => {
             // Ensure filters stay in sync after successful request
-            console.log('Filters applied successfully:', cleanFilters);
-        }
+            console.log("Filters applied successfully:", cleanFilters);
+        },
     });
 }, 300);
 
 const deleteProperty = (property) => {
     if (confirm("Are you sure you want to delete this land property?")) {
-        router.delete(route("properties.destroy", property.slug));
+        router.delete(route("broker.properties.destroy", property.slug));
     }
 };
 </script>

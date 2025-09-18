@@ -57,3 +57,30 @@ Schedule::command('compliance:monitor --type=all')
     ->at('01:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Schedule follow-up reminders
+Schedule::command('reminders:follow-up')
+    ->hourly()
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Schedule daily follow-up reminder summary
+Schedule::command('reminders:follow-up')
+    ->daily()
+    ->at('09:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Schedule property renewal reminders (daily at 8:00 AM)
+Schedule::command('property:send-renewal-reminders')
+    ->daily()
+    ->at('08:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Schedule auto-expire listings (daily at 6:00 AM)
+Schedule::command('property:auto-expire')
+    ->daily()
+    ->at('06:00')
+    ->withoutOverlapping()
+    ->runInBackground();

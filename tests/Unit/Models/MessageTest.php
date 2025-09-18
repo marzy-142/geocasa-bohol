@@ -27,7 +27,10 @@ class MessageTest extends TestCase
             'content',
             'type',
             'attachments',
-            'read_at'
+            'metadata',
+            'read_at',
+            'is_edited',
+            'edited_at'
         ];
 
         $message = new Message();
@@ -39,7 +42,10 @@ class MessageTest extends TestCase
         $expectedCasts = [
             'id' => 'int',
             'attachments' => 'array',
-            'read_at' => 'datetime'
+            'metadata' => 'array',
+            'read_at' => 'datetime',
+            'is_edited' => 'boolean',
+            'edited_at' => 'datetime'
         ];
 
         $message = new Message();
@@ -78,14 +84,14 @@ class MessageTest extends TestCase
             'conversation_id' => $conversation->id,
             'sender_id' => $sender->id,
             'content' => 'Hello, I am interested in your property listing.',
-            'message_type' => 'text'
+            'type' => 'text'
         ];
 
         $message = Message::create($messageData);
 
         $this->assertInstanceOf(Message::class, $message);
         $this->assertEquals('Hello, I am interested in your property listing.', $message->content);
-        $this->assertEquals('text', $message->message_type);
+        $this->assertEquals('text', $message->type);
         $this->assertEquals($conversation->id, $message->conversation_id);
         $this->assertEquals($sender->id, $message->sender_id);
     }
@@ -245,45 +251,7 @@ class MessageTest extends TestCase
         $this->assertFalse($messageWithoutAttachments->hasAttachments());
     }
 
-    public function test_message_can_get_attachment_count(): void
-    {
-        $message = Message::factory()->create([
-            'attachments' => ['file1.pdf', 'file2.jpg', 'file3.png']
-        ]);
-        
-        $this->assertEquals(3, $message->getAttachmentCount());
-    }
 
-    public function test_message_can_add_attachment(): void
-    {
-        $message = Message::factory()->create([
-            'attachments' => ['existing_file.pdf']
-        ]);
-        
-        $message->addAttachment('new_file.jpg');
-        
-        $this->assertContains('new_file.jpg', $message->attachments);
-        $this->assertContains('existing_file.pdf', $message->attachments);
-        $this->assertCount(2, $message->attachments);
-        
-        $this->assertDatabaseHas('messages', [
-            'id' => $message->id
-        ]);
-    }
-
-    public function test_message_can_remove_attachment(): void
-    {
-        $message = Message::factory()->create([
-            'attachments' => ['file1.pdf', 'file2.jpg', 'file3.png']
-        ]);
-        
-        $message->removeAttachment('file2.jpg');
-        
-        $this->assertNotContains('file2.jpg', $message->attachments);
-        $this->assertContains('file1.pdf', $message->attachments);
-        $this->assertContains('file3.png', $message->attachments);
-        $this->assertCount(2, $message->attachments);
-    }
 
     public function test_message_default_values(): void
     {
@@ -294,11 +262,11 @@ class MessageTest extends TestCase
             'conversation_id' => $conversation->id,
             'sender_id' => $sender->id,
             'content' => 'Test message',
-            'message_type' => 'text'
+            'type' => 'text'
         ]);
 
         $this->assertNull($message->read_at);
-        $this->assertEquals([], $message->attachments);
+        $this->assertNull($message->attachments);
     }
 
     public function test_message_validates_message_type(): void

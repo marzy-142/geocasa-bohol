@@ -27,6 +27,26 @@ class InquiryController extends Controller
         // Role-based filtering
         if ($user->role === 'broker') {
             $query->forBroker($user->id);
+        } elseif ($user->role === 'client') {
+            // Get or create client record
+            $client = Client::where('user_id', $user->id)
+                ->orWhere('email', $user->email)
+                ->first();
+                
+            if (!$client) {
+                $client = Client::create([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'user_id' => $user->id,
+                ]);
+            } elseif (!$client->user_id) {
+                $client->update(['user_id' => $user->id]);
+            }
+            
+            $query->where(function ($q) use ($user, $client) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('client_id', $client->id);
+            });
         }
         
         // Apply filters
@@ -104,7 +124,27 @@ class InquiryController extends Controller
         
         // Check access permissions
         if ($user->role === 'broker') {
-            if ($inquiry->property->broker_id !== $user->id) {
+            if ($inquiry->assigned_broker_id !== $user->id) {
+                abort(403);
+            }
+        } elseif ($user->role === 'client') {
+            // Get or create client record
+            $client = Client::where('user_id', $user->id)
+                ->orWhere('email', $user->email)
+                ->first();
+                
+            if (!$client) {
+                $client = Client::create([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'user_id' => $user->id,
+                ]);
+            } elseif (!$client->user_id) {
+                $client->update(['user_id' => $user->id]);
+            }
+            
+            // Check if client can access this inquiry
+            if ($inquiry->user_id !== $user->id && $inquiry->client_id !== $client->id) {
                 abort(403);
             }
         }
@@ -130,7 +170,7 @@ class InquiryController extends Controller
         
         // Check access permissions
         if ($user->role === 'broker') {
-            if ($inquiry->property->broker_id !== $user->id) {
+            if ($inquiry->assigned_broker_id !== $user->id) {
                 abort(403);
             }
         }
@@ -166,7 +206,7 @@ class InquiryController extends Controller
         
         // Check access permissions
         if ($user->role === 'broker') {
-            if ($inquiry->property->broker_id !== $user->id) {
+            if ($inquiry->assigned_broker_id !== $user->id) {
                 abort(403);
             }
         }
@@ -185,13 +225,14 @@ class InquiryController extends Controller
             'scheduled_at' => 'nullable|date',
         ]);
         
-        // Verify property access for brokers
-        if ($user->role === 'broker') {
-            $property = Property::findOrFail($validated['property_id']);
-            if ($property->broker_id !== $user->id) {
-                abort(403);
-            }
-        }
+        // Verify property access for brokers - this check can be removed since we now use assigned_broker_id
+        // The broker assigned to handle the inquiry may be different from the property owner
+        // if ($user->role === 'broker') {
+        //     $property = Property::findOrFail($validated['property_id']);
+        //     if ($property->broker_id !== $user->id) {
+        //         abort(403);
+        //     }
+        // }
         
         // Set timestamps based on status changes
         if ($validated['status'] === 'contacted' && $inquiry->status !== 'contacted') {

@@ -20,7 +20,7 @@ class ReportsController extends Controller
     {
         $stats = [
             'total_brokers' => User::where('role', 'broker')->count(),
-            'active_brokers' => User::where('role', 'broker')->active()->count(),
+            'active_brokers' => User::where('role', 'broker')->where('is_approved', true)->where('application_status', 'approved')->active()->count(),
             'total_properties' => Property::count(),
             'active_properties' => Property::where('status', 'active')->count(),
             'total_inquiries' => Inquiry::count(),
@@ -145,7 +145,7 @@ class ReportsController extends Controller
             });
             
         // Recent property listings
-        $recentProperties = Property::with('user')
+        $recentProperties = Property::with('broker')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
@@ -159,14 +159,14 @@ class ReportsController extends Controller
             });
             
         // Recent inquiries
-        $recentInquiries = Inquiry::with(['user', 'property'])
+        $recentInquiries = Inquiry::with(['client', 'property'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
             ->map(function ($inquiry) {
                 return [
                     'type' => 'inquiry',
-                    'description' => "New inquiry from {$inquiry->user->name}",
+                    'description' => "New inquiry from " . ($inquiry->client ? $inquiry->client->name : 'Anonymous'),
                     'created_at' => $inquiry->created_at,
                     'inquiry' => $inquiry
                 ];
@@ -201,8 +201,8 @@ class ReportsController extends Controller
     {
         return [
             'total_brokers' => User::where('role', 'broker')->count(),
-            'active_brokers' => User::where('role', 'broker')->where('status', 'active')->count(),
-            'pending_brokers' => User::where('role', 'broker')->where('status', 'pending')->count(),
+            'active_brokers' => User::where('role', 'broker')->where('is_approved', true)->where('application_status', 'approved')->count(),
+            'pending_brokers' => User::where('role', 'broker')->where('is_approved', false)->whereIn('application_status', ['pending', 'under_review'])->count(),
             'avg_response_rate' => 85.5,
         ];
     }

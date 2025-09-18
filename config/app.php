@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Featured Properties Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the maximum number of properties that a broker
+    | can feature at any given time. This helps keep the featured section
+    | curated and manageable.
+    |
+    */
+
+    'max_featured_properties' => env('MAX_FEATURED_PROPERTIES', 5),
+
 ];

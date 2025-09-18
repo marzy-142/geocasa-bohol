@@ -29,6 +29,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'prc_id' => fake()->numerify('PRC-########'),
         ];
     }
 
@@ -41,4 +42,25 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function broker(): static
+{
+    return $this->state(fn (array $attributes) => [
+        'role' => 'broker',
+        'is_approved' => true,
+        'application_status' => 'approved',
+        'approved_at' => now(),
+        'prc_id' => fake()->numerify('PRC-########'),
+    ]);
+}
+
+public function client(): static
+{
+    return $this->state(fn (array $attributes) => [
+        'role' => 'client',
+        'is_approved' => true,
+    ]);
+}
+
+    
 }

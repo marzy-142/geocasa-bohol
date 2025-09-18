@@ -15,47 +15,47 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
             // Property basic info
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'property_type' => 'required|in:house,lot,commercial,apartment,condo',
-            'listing_type' => 'required|in:sale,rent',
-            'status' => 'required|in:available,sold,rented,under_negotiation',
-            
-            // Location
+            'type' => 'required|in:residential_lot,agricultural_land,commercial_lot,industrial_lot,beachfront,mountain_view,farm_land,subdivision_lot,titled_land,raw_land',
+            'municipality' => 'required|string|max:100',
+            'barangay' => 'required|string|max:100',
             'address' => 'required|string|max:500',
-            'city' => 'required|string|max:100',
-            'province' => 'required|string|max:100',
-            'postal_code' => 'nullable|string|max:10',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            'coordinates_lat' => 'nullable|numeric|between:-90,90',
+            'coordinates_lng' => 'nullable|numeric|between:-180,180',
+            'status' => 'required|in:available,sold,reserved,under_negotiation',
             
             // Property details
-            'bedrooms' => 'nullable|integer|min:0|max:20',
-            'bathrooms' => 'nullable|integer|min:0|max:20',
-            'lot_area_sqm' => 'nullable|numeric|min:0',
-            'floor_area_sqm' => 'nullable|numeric|min:0',
+            'lot_area_sqm' => 'required|numeric|min:0',
             'lot_area_hectares' => 'nullable|numeric|min:0',
-            'year_built' => 'nullable|integer|min:1800|max:' . (date('Y') + 5),
-            'parking_spaces' => 'nullable|integer|min:0|max:20',
+            'price_per_sqm' => 'required|numeric|min:0',
+            'total_price' => 'required|numeric|min:0',
+            'title_type' => 'required|string|max:100',
+            'title_number' => 'required|string|max:100',
+            'zoning_classification' => 'required|string|max:100',
             
-            // Features
-            'features' => 'nullable|array|max:30',
-            'features.*' => 'string|max:100',
+            // Amenities (boolean fields)
+            'road_access' => 'boolean',
+            'electricity_available' => 'boolean',
+            'water_source' => 'boolean',
+            'internet_available' => 'boolean',
+            
+            // Additional fields
+            'nearby_landmarks' => 'nullable|array',
+            'nearby_landmarks.*' => 'string|max:255',
+            'google_maps_link' => 'nullable|url|max:500',
+            'additional_notes' => 'nullable|string|max:1000',
+            'is_featured' => 'boolean',
+            
+            // Virtual tour fields
+            'has_virtual_tour' => 'boolean',
+            'gis_data' => 'nullable|string',
+            'tour_hotspots' => 'nullable|string',
             
             // Files with enhanced validation
             'images' => 'nullable|array|max:10',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB per image
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             
-            'documents' => 'nullable|array|max:5',
-            'documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120', // 5MB per document
-            
-            // Virtual tour
             'virtual_tour_images' => 'nullable|array|max:20',
-            'virtual_tour_images.*' => 'image|mimes:jpeg,png,jpg|max:5120', // 5MB per tour image
-            'has_virtual_tour' => 'boolean',
-            'tour_hotspots' => 'nullable|json',
-            
-            // GIS data
-            'gis_data' => 'nullable|json',
+            'virtual_tour_images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
             
             // Client assignment
             'client_id' => 'nullable|exists:clients,id',

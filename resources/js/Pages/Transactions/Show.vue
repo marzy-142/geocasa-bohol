@@ -352,8 +352,8 @@ const canUpdateStatus = () => {
                                     <a
                                         :href="
                                             route(
-                                                'properties.show',
-                                                transaction.property.id
+                                                'broker.properties.show',
+                                                transaction.property.slug
                                             )
                                         "
                                         class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"

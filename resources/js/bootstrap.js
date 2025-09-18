@@ -11,20 +11,27 @@ window.Pusher = Pusher;
 
 // Get CSRF token safely with fallback
 const getCSRFToken = () => {
-    return (
-        document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute("content") ||
-        document.querySelector('input[name="_token"]')?.value ||
-        window.Laravel?.csrfToken ||
-        ""
-    );
+    const metaToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute("content");
+    const inputToken = document.querySelector('input[name="_token"]')?.value;
+    const laravelToken = window.Laravel?.csrfToken;
+
+    console.log("CSRF Token sources:", {
+        metaToken: metaToken ? "found" : "not found",
+        inputToken: inputToken ? "found" : "not found",
+        laravelToken: laravelToken ? "found" : "not found",
+    });
+
+    return metaToken || inputToken || laravelToken || "";
 };
 
 const csrfToken = getCSRFToken();
 
 if (!csrfToken) {
     console.warn("⚠️ CSRF token not found. WebSocket authentication may fail.");
+} else {
+    console.log("✅ CSRF token found for broadcasting auth");
 }
 
 // Check if required environment variables are available
@@ -50,35 +57,37 @@ window.Echo = new Echo({
         },
     },
     authEndpoint: "/broadcasting/auth",
-    // Add retry logic for failed connections
     cluster: import.meta.env.VITE_REVERB_APP_CLUSTER,
 });
 
-// Enhanced connection event listeners
+// Add debugging for Echo connection
 window.Echo.connector.pusher.connection.bind("connected", () => {
-    console.log("✅ Reverb connected successfully");
+    console.log("✅ Echo WebSocket connected successfully");
 });
 
 window.Echo.connector.pusher.connection.bind("error", (error) => {
-    console.error("❌ Reverb connection error:", error);
-    // Log additional debugging info
-    console.log("CSRF Token:", csrfToken ? "Present" : "Missing");
-    console.log("Auth endpoint:", "/broadcasting/auth");
+    console.error("❌ Echo WebSocket connection error:", error);
+    if (error.error && error.error.data && error.error.data.code === 4004) {
+        console.error(
+            "🔐 Authentication failed - check CSRF token and user session"
+        );
+    }
 });
 
 window.Echo.connector.pusher.connection.bind("disconnected", () => {
-    console.log("🔌 Reverb disconnected");
+    console.warn("⚠️ Echo WebSocket disconnected");
 });
 
 window.Echo.connector.pusher.connection.bind("unavailable", () => {
-    console.error("❌ Reverb connection unavailable");
+    console.warn("⚠️ Echo WebSocket unavailable");
 });
 
-// Add authentication error handling
+// Handle authentication errors specifically
 window.Echo.connector.pusher.connection.bind("pusher:error", (error) => {
-    if (error.error && error.error.data && error.error.data.code === 4004) {
+    console.error("❌ Pusher error:", error);
+    if (error.data && error.data.code === 4004) {
         console.error(
-            "❌ WebSocket authentication failed (403). Check if user is logged in and CSRF token is valid."
+            "🔐 Broadcasting authentication failed - user may not be logged in or CSRF token is invalid"
         );
     }
 });

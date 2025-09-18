@@ -203,7 +203,7 @@ const formatCurrency = (value) => {
             >
                 <div>
                     <h1 class="text-3xl font-bold text-neutral-900 mb-2">
-                        👤 Broker Management
+                        Broker Management
                     </h1>
                     <p class="text-neutral-600">
                         Complete broker lifecycle management and performance

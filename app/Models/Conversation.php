@@ -71,6 +71,14 @@ class Conversation extends Model
     }
 
     /**
+     * Alias for participantUsers for backward compatibility
+     */
+    public function participants(): BelongsToMany
+    {
+        return $this->participantUsers();
+    }
+
+    /**
      * Get participants from JSON field as User models (for backward compatibility)
      */
     public function getParticipantUsersFromJson()
@@ -95,6 +103,9 @@ class Conversation extends Model
         if (!in_array($userId, $participants)) {
             $participants[] = $userId;
             $this->update(['participants' => $participants]);
+            
+            // Also add to pivot table
+            $this->participantUsers()->syncWithoutDetaching([$userId]);
         }
     }
 
@@ -106,6 +117,9 @@ class Conversation extends Model
         $participants = $this->participants ?? [];
         $participants = array_values(array_filter($participants, fn($id) => $id !== $userId));
         $this->update(['participants' => $participants]);
+        
+        // Also remove from pivot table
+        $this->participantUsers()->detach($userId);
     }
 
     /**
@@ -149,12 +163,19 @@ class Conversation extends Model
         $participants = [$inquiry->client_id ?? null, $inquiry->property->broker_id ?? null];
         $participants = array_filter($participants); // Remove null values
 
-        return self::create([
+        $conversation = self::create([
             'title' => "Inquiry: {$inquiry->property->title}",
             'type' => 'inquiry',
             'inquiry_id' => $inquiry->id,
             'participants' => array_values($participants),
         ]);
+
+        // Sync participants to pivot table
+        if (!empty($participants)) {
+            $conversation->participantUsers()->attach($participants);
+        }
+
+        return $conversation;
     }
 
     /**
@@ -165,12 +186,19 @@ class Conversation extends Model
         $participants = [$transaction->client_id, $transaction->broker_id];
         $participants = array_filter($participants); // Remove null values
 
-        return self::create([
+        $conversation = self::create([
             'title' => "Transaction: {$transaction->property->title}",
             'type' => 'transaction',
             'transaction_id' => $transaction->id,
             'participants' => array_values($participants),
         ]);
+
+        // Sync participants to pivot table
+        if (!empty($participants)) {
+            $conversation->participantUsers()->attach($participants);
+        }
+
+        return $conversation;
     }
 
     /**
@@ -178,7 +206,13 @@ class Conversation extends Model
      */
     public function scopeForUser($query, int $userId)
     {
-        return $query->whereJsonContains('participants', $userId);
+        return $query->where(function ($q) use ($userId) {
+            // Check both JSON participants field and pivot table
+            $q->whereJsonContains('participants', $userId)
+              ->orWhereHas('participantUsers', function ($subQuery) use ($userId) {
+                  $subQuery->where('user_id', $userId);
+              });
+        });
     }
 
     /**

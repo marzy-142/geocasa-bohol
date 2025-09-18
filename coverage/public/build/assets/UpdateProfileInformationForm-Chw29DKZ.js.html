@@ -1,0 +1,88 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for public/build/assets/UpdateProfileInformationForm-Chw29DKZ.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">public/build/assets</a> UpdateProfileInformationForm-Chw29DKZ.js</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import{R as g,C as x,h as n,b as a,d as o,u as t,e as r,w as m,f as V,S as _,l as c,_ as b,z as k,o as u,P as h}from"./app-Bwbmud97.js";import{a as p,b as v,_ as y}from"./TextInput-DKdFxRDW.js";import{P as w}from"./PrimaryButton-D93Jlhpj.js";import"./_plugin-vue_export-helper-DlAUqK2U.js";const S={key:0},P={class:"mt-2 text-sm text-gray-800"},B={class:"mt-2 text-sm font-medium text-green-600"},N={class:"flex items-center gap-4"},C={key:0,class:"text-sm text-gray-600"},I={__name:"UpdateProfileInformationForm",props:{mustVerifyEmail:{type:Boolean},status:{type:String}},setup(d){const l=g().props.auth.user,s=x({name:l.name,email:l.email});return(f,e)=&gt;(u(),n("section",null,[e[6]||(e[6]=a("header",null,[a("h2",{class:"text-lg font-medium text-gray-900"}," Profile Information "),a("p",{class:"mt-1 text-sm text-gray-600"}," Update your account's profile information and email address. ")],-1)),a("form",{onSubmit:e[2]||(e[2]=k(i=&gt;t(s).patch(f.route("profile.update")),["prevent"])),class:"mt-6 space-y-6"},[a("div",null,[o(y,{for:"name",value:"Name"}),o(p,{id:"name",type:"text",class:"mt-1 block w-full",modelValue:t(s).name,"onUpdate:modelValue":e[0]||(e[0]=i=&gt;t(s).name=i),required:"",autofocus:"",autocomplete:"name"},null,8,["modelValue"]),o(v,{class:"mt-2",message:t(s).errors.name},null,8,["message"])]),a("div",null,[o(y,{for:"email",value:"Email"}),o(p,{id:"email",type:"email",class:"mt-1 block w-full",modelValue:t(s).email,"onUpdate:modelValue":e[1]||(e[1]=i=&gt;t(s).email=i),required:"",autocomplete:"username"},null,8,["modelValue"]),o(v,{class:"mt-2",message:t(s).errors.email},null,8,["message"])]),d.mustVerifyE</span></span>mail&amp;&amp;t(l).email_verified_at===null?(u(),n("div",S,[a("p",P,[e[4]||(e[4]=r(" Your email address is unverified. ")),o(t(h),{href:f.route("verification.send"),method:"post",as:"button",class:"rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"},{default:m(()=&gt;e[3]||(e[3]=[r(" Click here to re-send the verification email. ")])),_:1},8,["href"])]),V(a("div",B," A new verification link has been sent to your email address. ",512),[[_,d.status==="verification-link-sent"]])])):c("",!0),a("div",N,[o(w,{disabled:t(s).processing},{default:m(()=&gt;e[5]||(e[5]=[r("Save")])),_:1},8,["disabled"]),o(b,{"enter-active-class":"transition ease-in-out","enter-from-class":"opacity-0","leave-active-class":"transition ease-in-out","leave-to-class":"opacity-0"},{default:m(()=&gt;[t(s).recentlySuccessful?(u(),n("p",C," Saved. ")):c("",!0)]),_:1})])],32)]))}};export{I as default};</span>
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2025-09-11T15:42:07.474Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    

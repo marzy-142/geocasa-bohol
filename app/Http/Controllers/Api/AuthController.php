@@ -15,6 +15,7 @@ use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\FileSecurityService;
+use App\Services\InquiryLinkingService;
 
 class AuthController extends Controller
 {
@@ -46,9 +47,13 @@ class AuthController extends Controller
             'broker_license_path' => $brokerLicensePath,
         ]);
 
+        // Link existing inquiries and clients to the new user
+        $inquiryLinkingService = app(InquiryLinkingService::class);
+        $linkingResult = $inquiryLinkingService->linkExistingInquiriesToUser($user);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
+        $responseData = [
             'success' => true,
             'message' => 'User registered successfully',
             'data' => [
@@ -56,7 +61,14 @@ class AuthController extends Controller
                 'token' => $token,
                 'token_type' => 'Bearer'
             ]
-        ], Response::HTTP_CREATED);
+        ];
+
+        // Add linking information to response if any inquiries were linked
+        if ($linkingResult['linked_inquiries'] > 0 || $linkingResult['linked_clients'] > 0) {
+            $responseData['inquiry_linking'] = $linkingResult;
+        }
+
+        return response()->json($responseData, Response::HTTP_CREATED);
     }
 
     /**

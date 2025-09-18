@@ -412,7 +412,7 @@ const formatPropertyType = (type) => {
                                     ></div>
                                     <span class="text-xs text-neutral-600">
                                         {{
-                                            property.has_electricity
+                                            property.electricity_available
                                                 ? "Power"
                                                 : "No Power"
                                         }}
@@ -424,7 +424,7 @@ const formatPropertyType = (type) => {
                                     ></div>
                                     <span class="text-xs text-neutral-600">
                                         {{
-                                            property.has_water
+                                            property.water_source
                                                 ? "Water"
                                                 : "No Water"
                                         }}

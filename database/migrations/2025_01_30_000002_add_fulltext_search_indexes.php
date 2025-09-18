@@ -21,10 +21,14 @@ return new class extends Migration
         // Skip transactions table - search_index already exists
         
         // Seller requests table - for seller request search
-        DB::statement('ALTER TABLE seller_requests ADD FULLTEXT search_index (seller_name, seller_email, property_description, city)');
+        if (Schema::hasTable('seller_requests')) {
+            DB::statement('ALTER TABLE seller_requests ADD FULLTEXT search_index (seller_name, seller_email, property_description, city)');
+        }
         
         // Messages table - for message content search
-        DB::statement('ALTER TABLE messages ADD FULLTEXT search_index (content)');
+        if (Schema::hasTable('messages')) {
+            DB::statement('ALTER TABLE messages ADD FULLTEXT search_index (content)');
+        }
     }
 
     /**
@@ -34,32 +38,46 @@ return new class extends Migration
     {
         // Drop full-text search indexes
         
-        Schema::table('properties', function (Blueprint $table) {
-            $table->dropIndex('search_index');
-        });
+        if (Schema::hasTable('properties')) {
+            Schema::table('properties', function (Blueprint $table) {
+                $table->dropIndex('search_index');
+            });
+        }
         
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex('search_index');
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropIndex('search_index');
+            });
+        }
         
-        Schema::table('clients', function (Blueprint $table) {
-            $table->dropIndex('search_index');
-        });
+        if (Schema::hasTable('clients')) {
+            Schema::table('clients', function (Blueprint $table) {
+                $table->dropIndex('search_index');
+            });
+        }
         
-        Schema::table('inquiries', function (Blueprint $table) {
-            $table->dropIndex('search_index');
-        });
+        if (Schema::hasTable('inquiries')) {
+            Schema::table('inquiries', function (Blueprint $table) {
+                $table->dropIndex('search_index');
+            });
+        }
         
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->dropIndex('search_index');
-        });
+        if (Schema::hasTable('transactions')) {
+            Schema::table('transactions', function (Blueprint $table) {
+                $table->dropIndex('search_index');
+            });
+        }
         
-        Schema::table('seller_requests', function (Blueprint $table) {
-            $table->dropIndex('search_index');
-        });
+        if (Schema::hasTable('seller_requests')) {
+            Schema::table('seller_requests', function (Blueprint $table) {
+                $table->dropIndex('search_index');
+            });
+        }
         
-        Schema::table('messages', function (Blueprint $table) {
-            $table->dropIndex('search_index');
-        });
+        if (Schema::hasTable('messages')) {
+            Schema::table('messages', function (Blueprint $table) {
+                $table->dropIndex('search_index');
+            });
+        }
     }
 };

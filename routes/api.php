@@ -24,6 +24,11 @@ Route::get('/test', function () {
     return response()->json(['message' => 'API is working']);
 });
 
+// Global search route (authenticated)
+Route::middleware(['auth:sanctum', 'api.rate.limit:30,1'])->group(function () {
+    Route::post('/search', [\App\Http\Controllers\Api\SearchController::class, 'search'])->name('api.search');
+});
+
 
 
 // Public API routes
@@ -120,4 +125,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('/broker-analytics', [\App\Http\Controllers\Api\ClientController::class, 'getBrokerAnalytics']);
         Route::get('/assignment-recommendations', [\App\Http\Controllers\Api\ClientController::class, 'getAssignmentRecommendations']);
     });
+    
+    // Reminder API routes
+    Route::get('/reminders', [\App\Http\Controllers\ReminderController::class, 'index']);
+    Route::get('/reminders/summary', [\App\Http\Controllers\ReminderController::class, 'summary']);
+    Route::get('/reminders/type/{type}', [\App\Http\Controllers\ReminderController::class, 'byType']);
+    Route::get('/reminders/high-priority', [\App\Http\Controllers\ReminderController::class, 'highPriority']);
+    Route::post('/reminders/acknowledge', [\App\Http\Controllers\ReminderController::class, 'acknowledge']);
+    Route::get('/reminders/preferences', [\App\Http\Controllers\ReminderController::class, 'preferences']);
+    Route::post('/reminders/preferences', [\App\Http\Controllers\ReminderController::class, 'updatePreferences']);
 });

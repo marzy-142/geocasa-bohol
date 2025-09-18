@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from "@inertiajs/vue3";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import ModernInput from "@/Components/ModernInput.vue";
 import ModernButton from "@/Components/ModernButton.vue";
 import GeoCasaLogo from "@/Components/GeoCasaLogo.vue";
@@ -11,9 +11,13 @@ import {
     EyeSlashIcon,
 } from "@heroicons/vue/24/outline";
 
-defineProps({
+const props = defineProps({
     canResetPassword: Boolean,
     status: String,
+    inquiryData: {
+        type: Object,
+        default: null,
+    },
 });
 
 const form = useForm({
@@ -23,6 +27,47 @@ const form = useForm({
 });
 
 const showPassword = ref(false);
+
+// Simple toast notification system
+const showToast = (message, type = "info") => {
+    // Create toast element
+    const toast = document.createElement("div");
+    toast.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+        type === "info" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
+    }`;
+    toast.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <div class="flex-1 text-sm">${message}</div>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Auto remove after 6 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 6000);
+};
+
+// Auto-populate email with inquiry data if available
+onMounted(() => {
+    if (props.inquiryData && props.inquiryData.email) {
+        form.email = props.inquiryData.email;
+
+        // Show a helpful message to the user
+        showToast(
+            `We've pre-filled your email from your inquiry about "${props.inquiryData.property_title}". Don't have an account? Register to continue.`,
+            "info"
+        );
+    }
+});
 
 const submit = () => {
     form.post(route("login"), {

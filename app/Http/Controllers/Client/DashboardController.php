@@ -19,8 +19,10 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
-        // Get or create client record
-        $client = Client::where('email', $user->email)->first();
+        // Get or create client record - check both user_id and email
+        $client = Client::where('user_id', $user->id)
+            ->orWhere('email', $user->email)
+            ->first();
         
         if (!$client) {
             // Find a default broker or the first available broker
@@ -53,23 +55,35 @@ class DashboardController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => null,
-                'broker_id' => $defaultBroker->id
+                'broker_id' => $defaultBroker->id,
+                'user_id' => $user->id
             ]);
+        } else {
+            // If client exists but doesn't have user_id, link it
+            if (!$client->user_id) {
+                $client->update(['user_id' => $user->id]);
+            }
         }
 
-        // Get client statistics
+        // Get client statistics - check both client_id and user_id
         $stats = [
             'savedProperties' => 0, // TODO: Implement saved properties feature
-            'activeInquiries' => Inquiry::where('client_id', $client->id)
-                ->where('status', 'pending')
+            'activeInquiries' => Inquiry::where(function($query) use ($client, $user) {
+                    $query->where('client_id', $client->id)
+                          ->orWhere('user_id', $user->id);
+                })
+                ->whereIn('status', ['new', 'pending'])
                 ->count(),
             'viewedProperties' => 0, // TODO: Implement property view tracking
             'favoriteAreas' => 0, // TODO: Implement favorite areas feature
         ];
 
-        // Get recent inquiries
+        // Get recent inquiries - check both client_id and user_id
         $recentInquiries = Inquiry::with(['property'])
-            ->where('client_id', $client->id)
+            ->where(function($query) use ($client, $user) {
+                $query->where('client_id', $client->id)
+                      ->orWhere('user_id', $user->id);
+            })
             ->latest()
             ->limit(5)
             ->get();

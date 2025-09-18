@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Http\Requests\BrokerRegistrationRequest;
 use App\Services\FileSecurityService;
+use App\Services\InquiryLinkingService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,21 @@ class RegisteredUserController extends Controller
 {
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        // Get inquiry data from session for auto-population
+        $inquiryData = session('inquiry_data');
+        
+        // Clear inquiry data older than 30 minutes to prevent stale data
+        if ($inquiryData && isset($inquiryData['timestamp'])) {
+            $thirtyMinutesAgo = now()->subMinutes(30)->timestamp;
+            if ($inquiryData['timestamp'] < $thirtyMinutesAgo) {
+                session()->forget('inquiry_data');
+                $inquiryData = null;
+            }
+        }
+        
+        return Inertia::render('Auth/Register', [
+            'inquiryData' => $inquiryData
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -102,9 +117,18 @@ class RegisteredUserController extends Controller
 
         $user = User::create($userData);
 
+        // Link existing inquiries and clients to the new user
+        $inquiryLinkingService = app(InquiryLinkingService::class);
+        $linkingResult = $inquiryLinkingService->linkExistingInquiriesToUser($user);
+
         event(new Registered($user));
 
         Auth::login($user);
+
+        // Add linking result to session for display
+        if ($linkingResult['linked_inquiries'] > 0 || $linkingResult['linked_clients'] > 0) {
+            session()->flash('inquiry_linking_success', $linkingResult['message']);
+        }
 
         // Redirect based on role and approval status
         if ($user->role === 'broker' && !$user->is_approved) {

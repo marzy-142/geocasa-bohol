@@ -24,6 +24,7 @@ class Client extends Model
         'preferred_area_max',
         'preferred_features',
         'broker_id',
+        'user_id',
         'source',
         'notes',
         'status',
@@ -96,6 +97,11 @@ class Client extends Model
     public function broker()
     {
         return $this->belongsTo(User::class, 'broker_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function inquiries()

@@ -812,7 +812,11 @@ const formatDate = (date) => {
                         <ModernButton
                             variant="outline"
                             size="sm"
-                            :href="route('admin.properties.index', { broker: broker.id })"
+                            :href="
+                                route('admin.properties.index', {
+                                    broker: broker.id,
+                                })
+                            "
                         >
                             View All
                         </ModernButton>
@@ -821,7 +825,7 @@ const formatDate = (date) => {
                             variant="outline"
                             size="sm"
                             class="w-full justify-start"
-                            :href="route('admin.broker-analytics-page')"
+                            :href="route('admin.reports.brokers')"
                         >
                             <ChartBarIcon class="w-4 h-4" />
                             View Analytics

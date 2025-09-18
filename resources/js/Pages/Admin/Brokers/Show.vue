@@ -273,7 +273,7 @@ const getActivityColor = (type) => {
                     </ModernButton>
                     <ModernButton
                         variant="primary"
-                        :href="route('admin.broker-analytics-page')"
+                        :href="route('admin.reports.brokers')"
                     >
                         <ChartBarIcon class="w-5 h-5" />
                         View Analytics
@@ -474,7 +474,11 @@ const getActivityColor = (type) => {
                         <ModernButton
                             variant="outline"
                             size="sm"
-                            :href="route('admin.properties.index', { broker: broker.id })"
+                            :href="
+                                route('admin.properties.index', {
+                                    broker: broker.id,
+                                })
+                            "
                         >
                             View All
                         </ModernButton>
@@ -550,7 +554,11 @@ const getActivityColor = (type) => {
                         <ModernButton
                             variant="outline"
                             size="sm"
-                            :href="route('admin.transactions.index', { broker: broker.id })"
+                            :href="
+                                route('admin.transactions.index', {
+                                    broker: broker.id,
+                                })
+                            "
                         >
                             View All
                         </ModernButton>

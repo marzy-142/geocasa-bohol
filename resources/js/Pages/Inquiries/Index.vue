@@ -294,129 +294,64 @@
                             </div>
                         </div>
 
-                        <!-- Connection Status -->
-                        <div class="flex items-center space-x-1">
-                            <div
-                                :class="[
-                                    'w-2 h-2 rounded-full',
-                                    isConnected
-                                        ? 'bg-green-400 animate-pulse'
-                                        : 'bg-red-400',
-                                ]"
-                            ></div>
-                            <span class="text-xs text-white/80">
-                                {{ isConnected ? "Live" : "Offline" }}
-                            </span>
+                        <!-- Inquiry Content -->
+                        <div class="space-y-3 mb-4">
+                            <!-- Contact Information -->
+                            <div class="text-sm text-gray-600">
+                                <p class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                    {{ inquiry.email }}
+                                </p>
+                                <p v-if="inquiry.phone" class="flex items-center mt-1">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-3.28a1 1 0 01-.948-.684l-1.498-4.493a1 1 0 01.502-1.21l2.257-1.13a11.042 11.042 0 00-5.516-5.516l-1.13 2.257a1 1 0 01-1.21.502L5.684 13.05A1 1 0 015 12.102V8.82a2 2 0 012-2z"></path>
+                                    </svg>
+                                    {{ inquiry.phone }}
+                                </p>
+                            </div>
+
+                            <!-- Property Information -->
+                            <div v-if="inquiry.property" class="text-sm">
+                                <p class="font-medium text-gray-900">{{ inquiry.property.title }}</p>
+                                <p class="text-gray-600">{{ inquiry.property.municipality }}, {{ inquiry.property.province }}</p>
+                                <p class="text-green-600 font-semibold" v-if="inquiry.property.price">
+                                    ₱{{ Number(inquiry.property.price).toLocaleString() }}
+                                </p>
+                            </div>
+
+                            <!-- Message Preview -->
+                            <div v-if="inquiry.message" class="text-sm">
+                                <p class="text-gray-700 line-clamp-2">{{ inquiry.message }}</p>
+                            </div>
+
+                            <!-- Inquiry Date -->
+                            <div class="text-xs text-gray-500">
+                                {{ formatDate(inquiry.created_at) }}
+                            </div>
                         </div>
 
-                        <!-- Notification Bell -->
-                        <div class="relative">
+                        <!-- Action Buttons -->
+                        <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+                            <Link
+                                :href="route('inquiries.show', inquiry.id)"
+                                class="flex-1 bg-blue-600 text-white text-center py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                            >
+                                View Details
+                            </Link>
                             <button
-                                @click="showNotifications = !showNotifications"
-                                class="relative p-2 text-white/80 hover:text-white"
+                                @click="openQuickResponse(inquiry)"
+                                class="flex-1 bg-green-600 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
                             >
-                                <svg
-                                    class="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                                    ></path>
-                                </svg>
-                                <span
-                                    v-if="notifications.length > 0"
-                                    class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
-                                >
-                                    {{
-                                        notifications.length > 9
-                                            ? "9+"
-                                            : notifications.length
-                                    }}
-                                </span>
+                                Quick Response
                             </button>
-
-                            <!-- Notifications Dropdown -->
-                            <div
-                                v-if="showNotifications"
-                                class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50"
+                            <Link
+                                :href="route('transactions.create', { inquiry_id: inquiry.id })"
+                                class="flex-1 bg-purple-600 text-white text-center py-2 px-3 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
                             >
-                                <div class="p-4 border-b">
-                                    <div
-                                        class="flex justify-between items-center"
-                                    >
-                                        <h3 class="font-semibold text-gray-900">
-                                            Notifications
-                                        </h3>
-                                        <button
-                                            @click="clearAllNotifications"
-                                            class="text-sm text-blue-600 hover:text-blue-800"
-                                        >
-                                            Clear All
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="max-h-64 overflow-y-auto">
-                                    <div
-                                        v-if="notifications.length === 0"
-                                        class="p-4 text-center text-gray-500"
-                                    >
-                                        No new notifications
-                                    </div>
-                                    <div
-                                        v-for="notification in notifications"
-                                        :key="notification.id"
-                                        class="p-4 border-b hover:bg-gray-50"
-                                    >
-                                        <div
-                                            class="flex justify-between items-start"
-                                        >
-                                            <div class="flex-1">
-                                                <p
-                                                    class="text-sm font-medium text-gray-900"
-                                                >
-                                                    {{ notification.message }}
-                                                </p>
-                                                <p
-                                                    class="text-xs text-gray-500 mt-1"
-                                                >
-                                                    {{
-                                                        formatTime(
-                                                            notification.timestamp
-                                                        )
-                                                    }}
-                                                </p>
-                                            </div>
-                                            <button
-                                                @click="
-                                                    dismissNotification(
-                                                        notification.id
-                                                    )
-                                                "
-                                                class="text-gray-400 hover:text-gray-600"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M6 18L18 6M6 6l12 12"
-                                                    ></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                Create Transaction
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -646,9 +581,46 @@ const toggleView = () => {
     viewMode.value = viewMode.value === "grid" ? "list" : "grid";
 };
 
-const quickRespond = (inquiry) => {
+const openQuickResponse = (inquiry) => {
     selectedInquiry.value = inquiry;
     showQuickResponseModal.value = true;
+};
+
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+const createTransaction = (inquiry) => {
+    // Navigate to transaction creation page with pre-populated inquiry data
+    router.visit(route('transactions.create'), {
+        method: 'get',
+        data: {
+            inquiry_id: inquiry.id,
+            client_id: inquiry.client_id,
+            property_id: inquiry.property_id,
+            client_name: inquiry.client?.name,
+            client_email: inquiry.client?.email,
+            client_phone: inquiry.client?.phone,
+            property_title: inquiry.property?.title,
+            property_address: inquiry.property?.address,
+            inquiry_message: inquiry.message
+        }
+    });
 };
 
 const sendQuickResponse = () => {

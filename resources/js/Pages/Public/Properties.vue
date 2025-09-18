@@ -332,7 +332,7 @@ watch(
                         <!-- Property Image -->
                         <div class="relative h-56 overflow-hidden">
                             <img
-                                :src="getImageUrl(property.images && property.images.length > 0 ? property.images[0] : null)"
+                                :src="getImageUrl(property.main_image)"
                                 :alt="property.title"
                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
