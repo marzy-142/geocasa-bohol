@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('clients', function (Blueprint $table) {
+            $table->timestamp('converted_at')->nullable()->after('updated_at');
+            $table->foreignId('converted_via_transaction_id')->nullable()->constrained('transactions')->onDelete('set null')->after('converted_at');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('clients', function (Blueprint $table) {
+            $table->dropForeign(['converted_via_transaction_id']);
+            $table->dropColumn(['converted_at', 'converted_via_transaction_id']);
+        });
+    }
+};
