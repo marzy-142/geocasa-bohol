@@ -466,12 +466,12 @@ const formatDate = (dateString) => {
 // Real-time updates
 onMounted(() => {
     if (window.Echo) {
-        window.Echo.private(`user.${props.auth?.user?.id}`).notification(
-            (notification) => {
-                // Refresh the page to show new notification
-                router.reload({ only: ["notifications"] });
-            }
-        );
+        window.Echo.private(
+            `App.Models.User.${props.auth?.user?.id}`
+        ).notification((notification) => {
+            // Refresh the page to show new notification
+            router.reload({ only: ["notifications"] });
+        });
     }
 });
 </script>

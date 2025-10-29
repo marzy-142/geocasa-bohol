@@ -230,11 +230,26 @@ watch(
                                 >
                                     <option value="">All Property Types</option>
                                     <option
-                                        v-for="type in types"
-                                        :key="type"
-                                        :value="type"
+                                        v-for="t in types"
+                                        :key="
+                                            typeof t === 'string'
+                                                ? t
+                                                : t.value ?? t.key ?? String(t)
+                                        "
+                                        :value="
+                                            typeof t === 'string'
+                                                ? t
+                                                : t.value ?? t.key ?? ''
+                                        "
                                     >
-                                        {{ type }}
+                                        {{
+                                            typeof t === "string"
+                                                ? formatPropertyType(t)
+                                                : t.label ||
+                                                  formatPropertyType(
+                                                      t.value ?? t.key ?? ""
+                                                  )
+                                        }}
                                     </option>
                                 </select>
 

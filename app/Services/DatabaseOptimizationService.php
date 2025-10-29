@@ -37,9 +37,6 @@ class DatabaseOptimizationService
                 'completedTransactions' => Transaction::where('broker_id', $brokerId)
                     ->where('status', 'completed')
                     ->count(),
-                'totalCommission' => Transaction::where('broker_id', $brokerId)
-                    ->where('status', 'completed')
-                    ->sum('commission_amount'),
             ];
         });
     }
@@ -73,7 +70,7 @@ class DatabaseOptimizationService
     public function getBrokerPerformance()
     {
         return Cache::remember('broker_performance', self::CACHE_DURATION, function () {
-            return User::where('role', 'broker')
+                return User::where('role', 'broker')
                 ->where('application_status', 'approved')
                 ->withCount([
                     'properties',
@@ -83,7 +80,12 @@ class DatabaseOptimizationService
                         $query->where('status', 'completed');
                     }
                 ])
-                ->withSum('transactions as total_commission', 'commission_amount')
+                    // Replace commission with total sales value; keep alias for compatibility
+                    ->withSum([
+                        'transactions as total_commission' => function ($query) {
+                            $query->where('status', 'finalized');
+                        }
+                    ], DB::raw('COALESCE(final_price, offered_price)'))
                 ->orderBy('completed_transactions_count', 'desc')
                 ->get();
         });
@@ -124,7 +126,10 @@ class DatabaseOptimizationService
                     'month' => $date->format('M Y'),
                     'inquiries' => $inquiriesQuery->count(),
                     'transactions' => $transactionsQuery->count(),
-                    'commission' => $transactionsQuery->where('status', 'completed')->sum('commission_amount'),
+                    // Use finalized sales value instead of commission; keep key name for compatibility
+                    'commission' => $transactionsQuery
+                        ->where('status', 'finalized')
+                        ->sum(DB::raw('COALESCE(final_price, offered_price)')),
                     'properties_added' => $propertiesQuery->count(),
                 ]);
             }

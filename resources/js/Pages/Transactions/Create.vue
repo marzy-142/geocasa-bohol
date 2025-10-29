@@ -29,7 +29,6 @@ const form = useForm({
     inquiry_id: "",
     broker_id: "",
     offered_price: "",
-    commission_rate: "",
     inquiry_date: "",
     broker_notes: "",
     status: "inquiry",
@@ -41,7 +40,6 @@ if (props.selectedInquiry) {
     form.client_id = props.selectedInquiry.client_id;
     form.inquiry_id = props.selectedInquiry.id;
     form.inquiry_date = new Date().toISOString().split("T")[0];
-    form.commission_rate = 0.05; // Default 5% commission
 }
 
 const submit = () => {
@@ -465,40 +463,6 @@ const formatDate = (date) => {
                                     class="text-red-600 text-sm mt-1"
                                 >
                                     {{ form.errors.offered_price }}
-                                </div>
-                            </div>
-
-                            <!-- Commission Rate -->
-                            <div>
-                                <label
-                                    for="commission_rate"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Commission Rate (%)</label
-                                >
-                                <div class="mt-1 relative rounded-md shadow-sm">
-                                    <input
-                                        v-model="form.commission_rate"
-                                        type="number"
-                                        id="commission_rate"
-                                        step="0.01"
-                                        min="0"
-                                        max="100"
-                                        class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="5.00"
-                                    />
-                                    <div
-                                        class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
-                                    >
-                                        <span class="text-gray-500 sm:text-sm"
-                                            >%</span
-                                        >
-                                    </div>
-                                </div>
-                                <div
-                                    v-if="form.errors.commission_rate"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.commission_rate }}
                                 </div>
                             </div>
 

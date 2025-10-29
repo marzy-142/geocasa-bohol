@@ -92,7 +92,7 @@ const setupRealtimeUpdates = () => {
     const user = page.props.auth.user;
 
     // Listen to client-specific channel for transaction updates
-    echoChannel = window.Echo.private(`user.${user.id}`)
+    echoChannel = window.Echo.private(`App.Models.User.${user.id}`)
         .listen("TransactionCreated", (e) => {
             if (
                 e.transaction.client_id === user.id ||
@@ -147,7 +147,7 @@ const cleanupRealtimeUpdates = () => {
             .stopListening("TransactionCreated")
             .stopListening("TransactionStatusUpdated")
             .stopListening("InquiryStatusUpdated");
-        window.Echo.leaveChannel(`user.${page.props.auth.user.id}`);
+        window.Echo.leaveChannel(`App.Models.User.${page.props.auth.user.id}`);
     }
 };
 
@@ -287,10 +287,14 @@ const getActivityColor = (type) => {
                 >
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-neutral-600 mb-1">
+                            <p
+                                class="text-sm font-medium text-neutral-600 mb-1"
+                            >
                                 Active Inquiries
                             </p>
-                            <p class="text-2xl font-semibold text-neutral-900 mb-1">
+                            <p
+                                class="text-2xl font-semibold text-neutral-900 mb-1"
+                            >
                                 {{ realtimeStats.activeInquiries }}
                             </p>
                             <p class="text-sm text-neutral-500">
@@ -320,10 +324,14 @@ const getActivityColor = (type) => {
                 >
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-neutral-600 mb-1">
+                            <p
+                                class="text-sm font-medium text-neutral-600 mb-1"
+                            >
                                 Total Budget
                             </p>
-                            <p class="text-2xl font-semibold text-neutral-900 mb-1">
+                            <p
+                                class="text-2xl font-semibold text-neutral-900 mb-1"
+                            >
                                 {{ formatCurrency(realtimeStats.totalBudget) }}
                             </p>
                             <p class="text-sm text-neutral-500">
@@ -744,8 +752,8 @@ const getActivityColor = (type) => {
 
                     <EmptyState
                         v-else
-                        title="No broker assigned"
-                        description="A qualified broker will be assigned to you soon to help with your property search."
+                        title="No broker assigned yet"
+                        description="Create an inquiry about a property to get connected with a qualified broker who will assist you with your property search."
                         :icon="UserGroupIcon"
                         variant="neutral"
                         size="md"

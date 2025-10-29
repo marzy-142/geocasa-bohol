@@ -146,7 +146,7 @@
                                     <dt
                                         class="text-sm font-medium text-gray-500 truncate"
                                     >
-                                        Total Commission
+                                        Total Sales Value
                                     </dt>
                                     <dd
                                         class="text-lg font-medium text-gray-900"
@@ -207,7 +207,7 @@
                 <!-- Commission Analytics -->
                 <div class="bg-white shadow rounded-lg p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">
-                        Commission Analytics
+                        Sales Value Analytics
                     </h3>
                     <div class="h-64">
                         <AnalyticsChart
@@ -259,7 +259,7 @@
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
-                                    Commission
+                                    Sales Value
                                 </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"

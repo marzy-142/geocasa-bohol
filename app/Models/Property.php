@@ -22,13 +22,18 @@ class Property extends Model
         'mountain_view', 
         'rice_field', 
         'coconut_plantation', 
-        'subdivision_lot', 
-        'titled_land', 
-        'tax_declared'
+        'subdivision_lot'
     ];
 
     const STATUSES = [
-        'available', 'reserved', 'sold', 'under_negotiation', 'off_market', 'pending_renewal'
+        'available', 
+        'pending',           // Offer accepted, deal in progress
+        'sold',              // Property sold
+        'archived',          // Removed from public view
+        'reserved', 
+        'under_negotiation', 
+        'off_market', 
+        'pending_renewal'
     ];
 
     // Bohol-specific locations/municipalities
@@ -56,7 +61,7 @@ class Property extends Model
         // Expiry tracking fields
         'last_updated_at', 'expiry_date', 'reminder_sent_at', 'renewal_required', 'renewed_at',
         // Sale fields
-        'sold_at', 'sold_price', 'sold_to_client_id', 'sold_via_transaction_id',
+        'pending_at', 'sold_at', 'archived_at', 'sold_price', 'sold_to_client_id', 'sold_via_transaction_id',
     ];
     
     // Add these to the existing casts array
@@ -86,7 +91,9 @@ class Property extends Model
         'renewal_required' => 'boolean',
         'renewed_at' => 'datetime',
         // Sale casts
+        'pending_at' => 'datetime',
         'sold_at' => 'datetime',
+        'archived_at' => 'datetime',
         'sold_price' => 'decimal:2',
     ];
 
@@ -239,6 +246,28 @@ class Property extends Model
     public function getFormattedPricePerSqmAttribute()
     {
     return '₱' . number_format((float) $this->price_per_sqm, 2);
+    }
+
+    public function getFormattedTypeAttribute()
+    {
+        return self::formatPropertyType($this->type);
+    }
+
+    public static function formatPropertyType($type)
+    {
+        $labels = [
+            'residential_lot' => 'Residential Lot',
+            'agricultural_land' => 'Agricultural Land',
+            'commercial_lot' => 'Commercial Lot',
+            'industrial_lot' => 'Industrial Lot',
+            'beachfront' => 'Beachfront',
+            'mountain_view' => 'Mountain View',
+            'rice_field' => 'Rice Field',
+            'coconut_plantation' => 'Coconut Plantation',
+            'subdivision_lot' => 'Subdivision Lot',
+        ];
+        
+        return $labels[$type] ?? ucwords(str_replace('_', ' ', $type));
     }
 
     public function getMainImageAttribute()
@@ -413,5 +442,162 @@ class Property extends Model
         }
         
         return now()->diffInDays($this->expiry_date, false);
+    }
+
+    // ==========================================
+    // Property Status Management Methods
+    // ==========================================
+
+    /**
+     * Mark property as pending (offer accepted)
+     */
+    public function markAsPending()
+    {
+        $this->update([
+            'status' => 'pending',
+            'pending_at' => now(),
+        ]);
+    }
+
+    /**
+     * Mark property as sold
+     */
+    public function markAsSold($soldPrice = null, $transactionId = null, $clientId = null)
+    {
+        $this->update([
+            'status' => 'sold',
+            'sold_at' => now(),
+            'sold_price' => $soldPrice ?? $this->total_price,
+            'sold_via_transaction_id' => $transactionId,
+            'sold_to_client_id' => $clientId,
+        ]);
+    }
+
+    /**
+     * Archive property (remove from public view)
+     */
+    public function archive()
+    {
+        $this->update([
+            'status' => 'archived',
+            'archived_at' => now(),
+        ]);
+    }
+
+    /**
+     * Check if property should be auto-archived (90 days after sold)
+     */
+    public function shouldBeArchived()
+    {
+        return $this->status === 'sold' 
+            && $this->sold_at 
+            && $this->sold_at->addDays(90)->isPast();
+    }
+
+    /**
+     * Get days since sold
+     */
+    public function getDaysSinceSoldAttribute()
+    {
+        if (!$this->sold_at) {
+            return null;
+        }
+        
+        return now()->diffInDays($this->sold_at);
+    }
+
+    // ==========================================
+    // Query Scopes for Status Filtering
+    // ==========================================
+
+    /**
+     * Scope: Only available properties
+     */
+
+    /**
+     * Scope: Only pending properties
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    /**
+     * Scope: Only sold properties
+     */
+    public function scopeSold($query)
+    {
+        return $query->where('status', 'sold');
+    }
+
+    /**
+     * Scope: Only archived properties
+     */
+    public function scopeArchived($query)
+    {
+        return $query->where('status', 'archived');
+    }
+
+    /**
+     * Scope: Active listings (available + pending)
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereIn('status', ['available', 'pending']);
+    }
+
+    /**
+     * Scope: Public listings (exclude archived)
+     */
+    public function scopePublic($query)
+    {
+        return $query->whereNotIn('status', ['archived', 'off_market']);
+    }
+
+    /**
+     * Scope: Recently sold (within last 6 months)
+     */
+    public function scopeRecentlySold($query)
+    {
+        return $query->where('status', 'sold')
+            ->where('sold_at', '>=', now()->subMonths(6));
+    }
+
+    /**
+     * Scope: Should be archived (sold > 90 days ago)
+     */
+    public function scopeShouldBeArchived($query)
+    {
+        return $query->where('status', 'sold')
+            ->where('sold_at', '<=', now()->subDays(90));
+    }
+
+    // ==========================================
+    // Status Check Methods
+    // ==========================================
+
+    public function isAvailable()
+    {
+        return $this->status === 'available';
+    }
+
+    public function isPending()
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isSold()
+    {
+        return $this->status === 'sold';
+    }
+
+    public function isArchived()
+    {
+        return $this->status === 'archived';
+    }
+
+    public function isActive()
+    {
+        return in_array($this->status, ['available', 'pending']);
     }
 }

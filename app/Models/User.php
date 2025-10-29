@@ -67,8 +67,23 @@ class User extends Authenticatable implements MustVerifyEmail
         'prc_verification_consent',
         // Broker statistics
         'finalized_transactions_count',
-        'total_commission_earned',
         'last_sale_date',
+        // Broker availability
+        'availability_status',
+        'max_concurrent_requests',
+        'auto_manage_availability',
+        // Broker directory settings
+        'show_in_directory',
+        'show_email_in_directory',
+        'show_phone_in_directory',
+        'accept_directory_inquiries',
+        'bio',
+        'specializations',
+        'service_areas',
+        'profile_image',
+        'website',
+        'facebook',
+        'linkedin',
     ];
 
     /**
@@ -98,8 +113,16 @@ class User extends Authenticatable implements MustVerifyEmail
             'privacy_policy_accepted' => 'boolean',
             'information_certified' => 'boolean', // New cast
             'prc_verification_consent' => 'boolean', // New cast
+            // Broker availability casts
+            'auto_manage_availability' => 'boolean',
+            // Broker directory casts
+            'show_in_directory' => 'boolean',
+            'show_email_in_directory' => 'boolean',
+            'show_phone_in_directory' => 'boolean',
+            'accept_directory_inquiries' => 'boolean',
+            'specializations' => 'array',
+            'service_areas' => 'array',
             // Broker statistics casts
-            'total_commission_earned' => 'decimal:2',
             'last_sale_date' => 'datetime',
         ];
     }
@@ -444,10 +467,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->clients()->active()->count();
     }
 
-    public function getTotalCommissionEarnedAttribute()
-    {
-        return $this->transactions()->finalized()->sum('commission_amount');
-    }
     public function canAccessBrokerDashboard(): bool
 {
     return $this->role === 'broker' && 

@@ -23,11 +23,12 @@ class SendMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Require content unless attachments are provided
             'content' => [
-                'nullable', // Changed from 'required' to 'nullable' for conversation creation
+                'required_without:attachments',
                 'string',
                 'min:1',
-                'max:5000', // Max 5000 characters
+                'max:2000',
                 function ($attribute, $value, $fail) {
                     // Only check spam if content is provided
                     if ($value && $this->containsSpam($value)) {
@@ -35,8 +36,8 @@ class SendMessageRequest extends FormRequest
                     }
                 },
             ],
-            'attachments' => 'nullable|array|max:5', // Max 5 attachments
-            'attachments.*' => 'file|max:10240', // Max 10MB per file
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:10240|mimetypes:image/jpeg,image/png,image/webp,application/pdf',
         ];
     }
 
@@ -47,9 +48,11 @@ class SendMessageRequest extends FormRequest
     {
         return [
             'content.required' => 'Message content cannot be empty.',
-            'content.max' => 'Message is too long. Maximum 5000 characters allowed.',
+            'content.required_without' => 'Enter a message or attach a file.',
+            'content.max' => 'Message is too long. Maximum 2000 characters allowed.',
             'attachments.max' => 'You can only attach up to 5 files.',
             'attachments.*.max' => 'Each file must be less than 10MB.',
+            'attachments.*.mimetypes' => 'Only JPG, PNG, WEBP images or PDF files are allowed.',
         ];
     }
 

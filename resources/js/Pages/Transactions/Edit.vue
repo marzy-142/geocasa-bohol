@@ -42,8 +42,6 @@ const form = useForm({
     broker_id: props.transaction.broker_id,
     offered_price: props.transaction.offered_price,
     final_price: props.transaction.final_price || "",
-    commission_rate: props.transaction.commission_rate,
-    commission_amount: props.transaction.commission_amount || "",
     contract_date: props.transaction.contract_date || "",
     closing_date: props.transaction.closing_date || "",
     notes: props.transaction.notes || "",
@@ -140,27 +138,6 @@ const selectedInquiry = computed(() => {
     return props.inquiries?.find((i) => i.id == form.inquiry_id);
 });
 
-// Enhanced commission calculation
-const calculateCommission = () => {
-    const price = form.final_price || form.offered_price;
-    if (price && form.commission_rate) {
-        form.commission_amount = ((price * form.commission_rate) / 100).toFixed(
-            2
-        );
-    }
-};
-
-// Watch for price changes to auto-calculate commission
-watch(
-    [
-        () => form.final_price,
-        () => form.offered_price,
-        () => form.commission_rate,
-    ],
-    () => {
-        calculateCommission();
-    }
-);
 
 const getStatusColor = (status) => {
     const colors = {
@@ -610,93 +587,6 @@ const getStatusIcon = (status) => {
                                                 />
                                                 {{ form.errors.final_price }}
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Commission Information -->
-                                    <div
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-6"
-                                    >
-                                        <!-- Commission Rate -->
-                                        <div>
-                                            <label
-                                                for="commission_rate"
-                                                class="block text-sm font-medium text-gray-700 mb-2"
-                                            >
-                                                Commission Rate (%) *
-                                            </label>
-                                            <div class="relative">
-                                                <input
-                                                    v-model="
-                                                        form.commission_rate
-                                                    "
-                                                    type="number"
-                                                    id="commission_rate"
-                                                    step="0.01"
-                                                    min="0"
-                                                    max="100"
-                                                    class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                    placeholder="5.00"
-                                                />
-                                                <div
-                                                    class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
-                                                >
-                                                    <span
-                                                        class="text-gray-500 sm:text-sm"
-                                                        >%</span
-                                                    >
-                                                </div>
-                                            </div>
-                                            <div
-                                                v-if="
-                                                    form.errors.commission_rate
-                                                "
-                                                class="text-red-600 text-sm mt-1 flex items-center"
-                                            >
-                                                <ExclamationTriangleIcon
-                                                    class="w-4 h-4 mr-1"
-                                                />
-                                                {{
-                                                    form.errors.commission_rate
-                                                }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Commission Amount (Auto-calculated) -->
-                                        <div>
-                                            <label
-                                                for="commission_amount"
-                                                class="block text-sm font-medium text-gray-700 mb-2"
-                                            >
-                                                Commission Amount
-                                            </label>
-                                            <div class="relative">
-                                                <div
-                                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                                                >
-                                                    <span
-                                                        class="text-gray-500 sm:text-sm"
-                                                        >₱</span
-                                                    >
-                                                </div>
-                                                <input
-                                                    v-model="
-                                                        form.commission_amount
-                                                    "
-                                                    type="number"
-                                                    id="commission_amount"
-                                                    step="0.01"
-                                                    class="pl-7 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
-                                                    placeholder="0.00"
-                                                    readonly
-                                                />
-                                            </div>
-                                            <p
-                                                class="text-xs text-gray-500 mt-1"
-                                            >
-                                                Auto-calculated based on final
-                                                price and commission rate
-                                            </p>
                                         </div>
                                     </div>
                                 </div>

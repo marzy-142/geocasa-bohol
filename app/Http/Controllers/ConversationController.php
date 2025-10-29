@@ -30,18 +30,14 @@ class ConversationController extends Controller
                 'transaction.property',
                 'participantUsers'
             ])
+            ->withCount([
+                'messages as unread_count' => function ($q) use ($user) {
+                    $q->where('sender_id', '!=', $user->id)
+                      ->whereNull('read_at');
+                }
+            ])
             ->orderBy('last_message_at', 'desc')
             ->paginate(20);
-
-        // Add unread count for each conversation
-        $conversations->getCollection()->transform(function ($conversation) use ($user) {
-            $conversation->unread_count = $conversation->getUnreadCountForUser($user->id);
-            // Ensure participants relationship is loaded
-            if (!$conversation->relationLoaded('participantUsers')) {
-                $conversation->load('participantUsers');
-            }
-            return $conversation;
-        });
 
         return Inertia::render('Messages/Index', [
             'conversations' => $conversations,
@@ -112,10 +108,12 @@ class ConversationController extends Controller
             }
         }
 
+        $sanitizedContent = isset($validated['content']) ? strip_tags($validated['content']) : '';
+
         $message = Message::create([
             'conversation_id' => $conversation->id,
             'sender_id' => $user->id,
-            'content' => $validated['content'],
+            'content' => $sanitizedContent,
             'type' => !empty($attachments) ? 'file' : 'text',
             'attachments' => $attachments,
         ]);
@@ -155,7 +153,8 @@ class ConversationController extends Controller
         
         // Check if user is authorized (broker of the property or the inquirer)
         $property = $inquiry->property;
-        if ($user->id !== $property->broker_id && $user->id !== $inquiry->client_id) {
+        $inquirerUserId = $inquiry->client?->user_id ?? $inquiry->user_id;
+        if ($user->id !== $property->broker_id && $user->id !== $inquirerUserId) {
             abort(403, 'You are not authorized to create a conversation for this inquiry.');
         }
 

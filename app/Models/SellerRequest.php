@@ -40,7 +40,6 @@ class SellerRequest extends Model
         'property_documents',
         'documents',
         'ownership_documents',
-        'preferred_contact_method',
         'availability',
         'urgency',
         'additional_notes',
@@ -56,6 +55,9 @@ class SellerRequest extends Model
         'property_id',
         'listed_at',
         'submission_date',
+        'assignment_method',
+        'assigned_at',
+        'wants_broker_selection',
     ];
 
     protected $casts = [
@@ -78,6 +80,8 @@ class SellerRequest extends Model
         'reviewed_at' => 'datetime',
         'listed_at' => 'datetime',
         'submission_date' => 'datetime',
+        'assigned_at' => 'datetime',
+        'wants_broker_selection' => 'boolean',
     ];
 
     protected $dates = ['deleted_at'];

@@ -725,31 +725,6 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Commission Info -->
-                        <div
-                            v-if="transaction.commission_amount"
-                            class="bg-blue-50 rounded-lg p-3 mb-4"
-                        >
-                            <div
-                                class="flex justify-between items-center text-sm"
-                            >
-                                <span class="text-blue-700 font-medium">
-                                    Commission ({{
-                                        (
-                                            transaction.commission_rate * 100
-                                        ).toFixed(1)
-                                    }}%)
-                                </span>
-                                <span class="font-bold text-blue-900">
-                                    {{
-                                        formatCurrency(
-                                            transaction.commission_amount
-                                        )
-                                    }}
-                                </span>
-                            </div>
-                        </div>
-
                         <!-- Actions -->
                         <div
                             class="flex justify-between items-center pt-4 border-t border-gray-100"

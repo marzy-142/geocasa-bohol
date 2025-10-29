@@ -137,8 +137,10 @@ const performSearch = async (query) => {
 
     try {
         // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
-        
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute("content");
+
         if (!csrfToken) {
             throw new Error("CSRF token not found");
         }
@@ -147,12 +149,12 @@ const performSearch = async (query) => {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Accept": "application/json",
+                Accept: "application/json",
                 "X-CSRF-TOKEN": csrfToken,
                 "X-Requested-With": "XMLHttpRequest",
             },
             body: JSON.stringify({ query: query.trim() }),
-            credentials: 'same-origin',
+            credentials: "same-origin",
         });
 
         if (!response.ok) {
@@ -169,7 +171,7 @@ const performSearch = async (query) => {
         searchError.value = error.message || "Search failed. Please try again.";
         searchResults.value = [];
         showSearchResults.value = false;
-        console.error('Search error:', error);
+        console.error("Search error:", error);
     } finally {
         searchLoading.value = false;
     }
@@ -213,13 +215,13 @@ const handleResultClick = (result) => {
     } else if (result.type === "transaction" && result.id) {
         window.location.href = route("transactions.show", result.id);
     }
-    
+
     // Clear search after navigation
     clearSearch();
 };
 
 // Preserve sidebar scroll position using localStorage
-const SIDEBAR_SCROLL_KEY = 'sidebar_scroll_position';
+const SIDEBAR_SCROLL_KEY = "sidebar_scroll_position";
 
 const saveSidebarScroll = () => {
     if (sidebarScrollRef.value) {
@@ -253,7 +255,9 @@ watch(sidebarScrollRef, (newVal) => {
         // Restore scroll when ref is available
         restoreSidebarScroll();
         // Add scroll listener
-        newVal.addEventListener('scroll', handleSidebarScroll, { passive: true });
+        newVal.addEventListener("scroll", handleSidebarScroll, {
+            passive: true,
+        });
     }
 });
 
@@ -265,7 +269,7 @@ onMounted(() => {
         passive: true,
     });
     document.addEventListener("touchend", handleTouchEnd, { passive: true });
-    
+
     // Restore scroll position on mount with multiple attempts
     setTimeout(() => restoreSidebarScroll(), 50);
     setTimeout(() => restoreSidebarScroll(), 200);
@@ -276,10 +280,13 @@ onUnmounted(() => {
     document.removeEventListener("keydown", handleKeydown);
     document.removeEventListener("touchstart", handleTouchStart);
     document.removeEventListener("touchend", handleTouchEnd);
-    
+
     // Remove scroll listener
     if (sidebarScrollRef.value) {
-        sidebarScrollRef.value.removeEventListener('scroll', handleSidebarScroll);
+        sidebarScrollRef.value.removeEventListener(
+            "scroll",
+            handleSidebarScroll
+        );
     }
 });
 
@@ -508,13 +515,17 @@ const navigationSections = computed(() => {
                         name: "List My Land for Sale",
                         href: route("client.seller-requests.create"),
                         icon: HomeModernIcon,
-                        current: route().current("client.seller-requests.create"),
+                        current: route().current(
+                            "client.seller-requests.create"
+                        ),
                     },
                     {
                         name: "My Listing Requests",
                         href: route("client.seller-requests.index"),
                         icon: ClipboardDocumentListIcon,
-                        current: route().current("client.seller-requests.index") || route().current("client.seller-requests.show"),
+                        current:
+                            route().current("client.seller-requests.index") ||
+                            route().current("client.seller-requests.show"),
                     },
                 ],
             },
@@ -636,7 +647,10 @@ const navigationSections = computed(() => {
                 </div>
 
                 <!-- Navigation -->
-                <nav ref="sidebarScrollRef" class="flex-1 px-6 py-6 overflow-y-auto sidebar-scroll">
+                <nav
+                    ref="sidebarScrollRef"
+                    class="flex-1 px-6 py-6 overflow-y-auto sidebar-scroll"
+                >
                     <div
                         v-for="(section, sectionIndex) in navigationSections"
                         :key="section.title"

@@ -50,9 +50,7 @@ class TransactionSeeder extends Seeder
             $offeredPrice = $basePrice * (0.85 + (rand(0, 30) / 100)); // 85-115% of base price
             $finalPrice = $status === 'finalized' ? $offeredPrice * (0.95 + (rand(0, 10) / 100)) : null;
             
-            // Commission calculations
-            $commissionRate = 0.03 + (rand(0, 50) / 1000); // 3-8%
-            $commissionAmount = $finalPrice ? $finalPrice * $commissionRate : null;
+            // Commission removed from system
             
             $transactions[] = [
                 'transaction_number' => 'TXN-' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
@@ -63,8 +61,6 @@ class TransactionSeeder extends Seeder
                 'status' => $status,
                 'offered_price' => round($offeredPrice, 2),
                 'final_price' => $finalPrice ? round($finalPrice, 2) : null,
-                'commission_rate' => $commissionRate,
-                'commission_amount' => $commissionAmount ? round($commissionAmount, 2) : null,
                 'broker_notes' => $this->generateTransactionNotes($status, $transactionType),
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
@@ -79,7 +75,7 @@ class TransactionSeeder extends Seeder
         $this->command->info("   • Total Transactions: " . count($transactions));
         $this->command->info("   • Finalized: " . collect($transactions)->where('status', 'finalized')->count());
         $this->command->info("   • Pending: " . collect($transactions)->where('status', 'pending')->count());
-        $this->command->info("   • Total Commission: ₱" . number_format(collect($transactions)->where('status', 'finalized')->sum('commission_amount'), 2));
+        $this->command->info("   • Total Sales Value: ₱" . number_format(collect($transactions)->where('status', 'finalized')->sum('final_price'), 2));
     }
 
     private function generateTransactionNotes($status, $type)
@@ -101,7 +97,7 @@ class TransactionSeeder extends Seeder
                 'Transaction completed successfully',
                 'All documents signed and processed',
                 'Property transfer completed',
-                'Commission earned - great work!',
+                'Sale completed - great work!',
             ],
             'cancelled' => [
                 'Client withdrew from transaction',

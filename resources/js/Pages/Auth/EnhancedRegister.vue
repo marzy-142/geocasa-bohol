@@ -288,8 +288,7 @@ const validateField = (fieldName, value) => {
                     } else if (inputDate > today) {
                         errors.birthdate = "Birthdate must be in the past";
                     } else if (inputDate > eighteenYearsAgo) {
-                        errors.birthdate =
-                            "You must be at least 18 years old";
+                        errors.birthdate = "You must be at least 18 years old";
                     }
                 }
             }
@@ -544,11 +543,9 @@ const validateStep = (stepNumber, forceValidation = false) => {
                     "password",
                     "password_confirmation",
                     ...(form.role === "broker" ? ["birthdate"] : []),
-                ].forEach(
-                    (field) => {
-                        fieldTouched.value[field] = true;
-                    }
-                );
+                ].forEach((field) => {
+                    fieldTouched.value[field] = true;
+                });
             }
 
             // Only validate fields that have been touched
@@ -811,7 +808,10 @@ const submit = () => {
                 });
             },
             onSuccess: (page) => {
-                showToast("Registration submitted successfully!", "success");
+                // Force a full page reload to preserve session and query params
+                window.location = route("verification.notice", {
+                    registered: 1,
+                });
             },
         });
     }
@@ -984,7 +984,10 @@ const getStepDescription = () => {
                                         :error="getFieldError('birthdate')"
                                         @input="
                                             (value) =>
-                                                handleFieldInput('birthdate', value)
+                                                handleFieldInput(
+                                                    'birthdate',
+                                                    value
+                                                )
                                         "
                                         required
                                     />

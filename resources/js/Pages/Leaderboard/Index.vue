@@ -87,7 +87,7 @@
 
                 <!-- Performance Metrics - Horizontal Layout -->
                 <div
-                    class="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-4xl mx-auto"
+                    class="grid grid-cols-1 md:grid-cols-2 gap-16 max-w-3xl mx-auto"
                 >
                     <!-- Total Sales -->
                     <div class="text-center">
@@ -123,25 +123,6 @@
                                 class="text-sm uppercase tracking-widest text-neutral-500 font-medium"
                             >
                                 Sales Value
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Commission -->
-                    <div class="text-center">
-                        <div class="mb-4">
-                            <div
-                                class="text-4xl font-light text-neutral-900 mb-2"
-                            >
-                                ₱{{ formatNumber(topBroker.total_commission) }}
-                            </div>
-                            <div
-                                class="w-12 h-px bg-neutral-300 mx-auto mb-4"
-                            ></div>
-                            <div
-                                class="text-sm uppercase tracking-widest text-neutral-500 font-medium"
-                            >
-                                Commission
                             </div>
                         </div>
                     </div>

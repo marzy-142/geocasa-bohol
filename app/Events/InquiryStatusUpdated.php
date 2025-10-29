@@ -38,10 +38,24 @@ class InquiryStatusUpdated implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel('inquiries'),
             new PrivateChannel('inquiry.' . $this->inquiry->id),
         ];
+
+        // Notify the client on their private channel if available
+        if (!empty($this->inquiry->client_id)) {
+            $channels[] = new PrivateChannel('client.' . $this->inquiry->client_id);
+        }
+
+        // Notify the assigned broker as well when available
+        $brokerId = $this->inquiry->assigned_broker_id
+            ?? ($this->inquiry->property->broker_id ?? null);
+        if (!empty($brokerId)) {
+            $channels[] = new PrivateChannel('broker.' . $brokerId);
+        }
+
+        return $channels;
     }
 
     /**

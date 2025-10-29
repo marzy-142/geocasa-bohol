@@ -22,7 +22,7 @@ class BrokerSellerAssignmentNotification extends Notification implements ShouldQ
     /**
      * Create a new notification instance.
      */
-    public function __construct(SellerRequest $sellerRequest, User $assignedBy, string $action = 'assigned')
+    public function __construct(SellerRequest $sellerRequest, ?User $assignedBy = null, string $action = 'assigned')
     {
         $this->sellerRequest = $sellerRequest;
         $this->assignedBy = $assignedBy;
@@ -68,7 +68,7 @@ class BrokerSellerAssignmentNotification extends Notification implements ShouldQ
             ->line('Name: ' . $this->sellerRequest->seller_name)
             ->line('Email: ' . $this->sellerRequest->seller_email)
             ->line('Phone: ' . ($this->sellerRequest->seller_phone ?? 'Not provided'))
-            ->line('Assigned by: ' . $this->assignedBy->name)
+            ->line('Assigned by: ' . ($this->assignedBy ? $this->assignedBy->name : 'System (Auto-assignment)'))
             ->action('View Seller Request', route('seller-requests.show', $this->sellerRequest->id))
             ->line('Please reach out to the seller as soon as possible to begin assisting them with their property listing.');
     }
@@ -84,7 +84,7 @@ class BrokerSellerAssignmentNotification extends Notification implements ShouldQ
             'seller_name' => $this->sellerRequest->seller_name,
             'property_title' => $this->sellerRequest->property_title,
             'asking_price' => $this->sellerRequest->asking_price,
-            'assigned_by' => $this->assignedBy->name,
+            'assigned_by' => $this->assignedBy ? $this->assignedBy->name : 'System',
             'action' => $this->action,
             'message' => 'Seller request "' . $this->sellerRequest->property_title . '" has been ' . $this->action . ' to you'
         ]);
@@ -104,8 +104,8 @@ class BrokerSellerAssignmentNotification extends Notification implements ShouldQ
             'property_title' => $this->sellerRequest->property_title,
             'property_location' => $this->sellerRequest->property_location,
             'asking_price' => $this->sellerRequest->asking_price,
-            'assigned_by' => $this->assignedBy->name,
-            'assigned_by_id' => $this->assignedBy->id,
+            'assigned_by' => $this->assignedBy ? $this->assignedBy->name : 'System',
+            'assigned_by_id' => $this->assignedBy ? $this->assignedBy->id : null,
             'action' => $this->action,
             'message' => 'Seller request "' . $this->sellerRequest->property_title . '" has been ' . $this->action . ' to you'
         ];

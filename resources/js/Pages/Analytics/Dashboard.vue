@@ -433,7 +433,7 @@
                                             <dt
                                                 class="text-sm font-medium text-gray-500 truncate"
                                             >
-                                                Total Commission
+                                                Total Sales Value
                                             </dt>
                                             <dd
                                                 class="text-lg font-medium text-gray-900"

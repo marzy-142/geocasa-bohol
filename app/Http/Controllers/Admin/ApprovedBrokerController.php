@@ -40,11 +40,6 @@ class ApprovedBrokerController extends Controller
                     $query->where('status', 'finalized');
                 }
             ])
-            ->withSum([
-                'transactions as total_commission' => function ($query) {
-                    $query->where('status', 'finalized');
-                }
-            ], 'commission_amount')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
         
@@ -79,7 +74,6 @@ class ApprovedBrokerController extends Controller
         // Get performance metrics
         $performanceMetrics = [
             'total_sales' => $broker->transactions()->where('status', 'finalized')->count(),
-            'total_commission' => $broker->transactions()->where('status', 'finalized')->sum('commission_amount'),
             'avg_days_to_close' => $broker->transactions()
                 ->whereNotNull('inquiry_date')
                 ->whereNotNull('finalized_date')

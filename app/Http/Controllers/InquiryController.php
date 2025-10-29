@@ -11,10 +11,12 @@ use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Events\InquiryStatusUpdated;
 use App\Events\NewInquiryReceived;
+use App\Mail\InquiryResponseMail;
 
 class InquiryController extends Controller
 {
@@ -290,11 +292,26 @@ class InquiryController extends Controller
         
         // Check if inquiry already has a transaction
         if ($inquiry->transaction) {
-            return back()->with('error', 'This inquiry has already been converted to a transaction.');
+            // Redirect to the existing transaction view instead of erroring out
+            return redirect()
+                ->route('transactions.show', $inquiry->transaction->id)
+                ->with('info', 'This inquiry already has a transaction.');
         }
         
-        DB::transaction(function () use ($inquiry, $user) {
-            // 1. Create transaction
+        $previousStatus = $inquiry->status;
+        
+        DB::transaction(function () use (&$inquiry, $user, $previousStatus) {
+            // 1. Auto-normalize inquiry status/timestamps
+            $update = [ 'status' => 'in transaction' ];
+            if (is_null($inquiry->responded_at)) {
+                $update['responded_at'] = now();
+            }
+            if ($previousStatus === 'new' && is_null($inquiry->contacted_at)) {
+                $update['contacted_at'] = now();
+            }
+            $inquiry->update($update);
+            
+            // 2. Create transaction
             $transaction = Transaction::create([
                 'inquiry_id' => $inquiry->id,
                 'property_id' => $inquiry->property_id,
@@ -303,12 +320,8 @@ class InquiryController extends Controller
                 'status' => 'initial_contact',
                 'transaction_number' => 'TXN-' . strtoupper(Str::random(10)),
                 'offered_price' => $inquiry->property->total_price ?? 0,
+                'inquiry_date' => $inquiry->created_at,
                 'client_engagement_score' => 50, // Default starting score
-            ]);
-            
-            // 2. Update inquiry status
-            $inquiry->update([
-                'status' => 'in transaction',
             ]);
             
             // 3. Find or create conversation for this inquiry
@@ -321,10 +334,17 @@ class InquiryController extends Controller
             
             // 4. Transition the conversation to transaction
             $conversation->transitionToTransaction($transaction);
-            
-            // 5. Notify client (system message already added by transitionToTransaction)
-            // Additional notification can be sent here if needed
         });
+        
+        // 5. Broadcast status change so client/broker UIs update immediately (after DB commit)
+        if ($previousStatus !== 'in transaction') {
+            broadcast(new InquiryStatusUpdated(
+                $inquiry->fresh(['property']),
+                $previousStatus,
+                'in transaction',
+                Auth::user()->name
+            ));
+        }
         
         return redirect()
             ->route('inquiries.show', $inquiry)
@@ -371,24 +391,72 @@ class InquiryController extends Controller
             'broker_response' => 'required|string',
             'status' => 'required|in:new,contacted,scheduled,completed,closed',
             'scheduled_at' => 'nullable|date',
+            'completion_outcome' => 'nullable|in:won,lost,no_response,other',
+            'completion_reason' => 'nullable|string|max:255',
+            'completion_notes' => 'nullable|string|max:2000',
         ]);
-        
-        $validated['responded_at'] = now();
-        
+
+        // Timestamps derived from action
+        $updateData = [
+            'broker_response' => $validated['broker_response'],
+            'status' => $validated['status'],
+            'responded_at' => now(),
+        ];
+
         if ($validated['status'] === 'contacted' && $inquiry->status !== 'contacted') {
-            $validated['contacted_at'] = now();
+            $updateData['contacted_at'] = now();
         }
-        
-        // Broadcast status change
+
+        if (!empty($validated['scheduled_at'])) {
+            $updateData['scheduled_at'] = $validated['scheduled_at'];
+        }
+
+        // When marking as completed, require an outcome for better reporting
+        if ($validated['status'] === 'completed' && empty($request->completion_outcome)) {
+            return redirect()->back()
+                ->withErrors(['completion_outcome' => 'Outcome is required when marking an inquiry as completed.'])
+                ->withInput();
+        }
+
+        // Apply completion fields when provided (for completed or closed)
+        if (in_array($validated['status'], ['completed', 'closed'])) {
+            if ($request->filled('completion_outcome')) {
+                $updateData['completion_outcome'] = $request->input('completion_outcome');
+            }
+            if ($request->filled('completion_reason')) {
+                $updateData['completion_reason'] = $request->input('completion_reason');
+            }
+            if ($request->filled('completion_notes')) {
+                $updateData['completion_notes'] = $request->input('completion_notes');
+            }
+        }
+
+        $inquiry->update($updateData);
+
+        // Send email notification to the client
+        try {
+            Mail::to($inquiry->email)->send(
+                new InquiryResponseMail(
+                    $inquiry->fresh(['property']),
+                    $validated['broker_response'],
+                    Auth::user()->name
+                )
+            );
+        } catch (\Exception $e) {
+            // Log the error but don't fail the response
+            \Log::error('Failed to send inquiry response email: ' . $e->getMessage());
+        }
+
+        // Broadcast status change with fresh state
         broadcast(new InquiryStatusUpdated(
-            $inquiry->fresh(['property']), 
-            $previousStatus, 
+            $inquiry->fresh(['property']),
+            $previousStatus,
             $inquiry->status,
             Auth::user()->name
         ));
-        
+
         return redirect()->route('inquiries.show', $inquiry)
-            ->with('success', 'Response sent successfully.');
+            ->with('success', 'Response sent successfully and client has been notified via email.');
     }
 
     /**

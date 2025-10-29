@@ -58,7 +58,10 @@ class PerformanceOptimizationService
                     'total_inquiries' => $broker->assignedInquiries()->count(),
                     'total_transactions' => $broker->transactions()->count(),
                     'finalized_transactions' => $broker->transactions()->where('status', 'finalized')->count(),
-                    'total_commission' => $broker->transactions()->where('status', 'finalized')->sum('commission_amount'),
+                    // Using total sales value instead of commission; keep key name for compatibility
+                    'total_commission' => $broker->transactions()
+                        ->where('status', 'finalized')
+                        ->sum(DB::raw('COALESCE(final_price, offered_price)')),
                     'success_rate' => $this->calculateBrokerSuccessRate($broker),
                     'avg_response_time' => $this->calculateBrokerResponseTime($broker),
                 ];
@@ -121,13 +124,15 @@ class PerformanceOptimizationService
     private function warmUpTransactionStats(): void
     {
         Cache::remember('transaction_stats', 600, function () { // 10 minutes
-            return [
+                return [
                 'total_transactions' => Transaction::count(),
                 'active_transactions' => Transaction::whereNotIn('status', ['finalized', 'cancelled'])->count(),
                 'finalized_transactions' => Transaction::where('status', 'finalized')->count(),
                 'cancelled_transactions' => Transaction::where('status', 'cancelled')->count(),
                 'total_value' => Transaction::where('status', 'finalized')->sum(DB::raw('COALESCE(final_price, offered_price)')),
-                'total_commission' => Transaction::where('status', 'finalized')->sum('commission_amount'),
+                    // Commission removed; keep key for compatibility but compute from sales value
+                    'total_commission' => Transaction::where('status', 'finalized')
+                        ->sum(DB::raw('COALESCE(final_price, offered_price)')),
                 'success_rate' => $this->calculateTransactionSuccessRate(),
                 'avg_deal_time' => $this->calculateAverageDealTime(),
                 'by_status' => Transaction::selectRaw('status, COUNT(*) as count')

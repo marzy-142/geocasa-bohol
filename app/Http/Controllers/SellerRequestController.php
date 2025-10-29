@@ -136,8 +136,45 @@ class SellerRequestController extends Controller
             'City View', 'Gated Community', 'Pet Friendly', 'Solar Panels'
         ];
 
+        // Get available verified brokers for selection
+        $availableBrokers = User::where('role', 'broker')
+            ->where('is_approved', true)
+            ->where('application_status', 'approved')
+            ->where('prc_verified', true)
+            ->whereNull('suspended_at')
+            ->select([
+                'id',
+                'name',
+                'brokerage_firm_name',
+                'city',
+                'years_experience',
+                'office_contact_number'
+            ])
+            ->withCount(['properties as active_listings' => function($q) {
+                $q->where('status', 'available');
+            }])
+            ->withCount(['assignedSellerRequests as pending_requests' => function($q) {
+                $q->whereIn('status', ['pending', 'under_review', 'approved']);
+            }])
+            ->orderBy('name')
+            ->get()
+            ->map(function($broker) {
+                return [
+                    'id' => $broker->id,
+                    'name' => $broker->name,
+                    'firm' => $broker->brokerage_firm_name,
+                    'location' => $broker->city,
+                    'experience' => $broker->years_experience,
+                    'active_listings' => $broker->active_listings,
+                    'workload' => $broker->pending_requests,
+                    'availability' => $broker->pending_requests < 5 ? 'Available' : 'Busy'
+                ];
+            });
+
         return Inertia::render('SellerRequests/Create', [
-            'availableFeatures' => $availableFeatures
+            'availableFeatures' => $availableFeatures,
+            'availableBrokers' => $availableBrokers,
+            'municipalities' => Property::BOHOL_MUNICIPALITIES,
         ]);
     }
 
@@ -154,6 +191,18 @@ class SellerRequestController extends Controller
             // Handle file uploads - SIMPLIFIED
             $storedFiles = $this->handleFileUploads($request);
             
+            // Determine assignment method and broker
+            $assignmentMethod = $validated['broker_selection_method'] ?? 'auto';
+            $preferredBrokerId = $validated['preferred_broker_id'] ?? null;
+            $assignedBrokerId = null;
+            $status = 'pending';
+
+            // If seller chose a broker manually
+            if ($assignmentMethod === 'manual' && $preferredBrokerId) {
+                $assignedBrokerId = $preferredBrokerId;
+                $status = 'assigned';
+            }
+
             // Create seller request
             $sellerRequest = SellerRequest::create([
                 'name' => $validated['name'],
@@ -172,20 +221,87 @@ class SellerRequestController extends Controller
                 'uploaded_images' => $storedFiles['uploaded_images'] ?? null,
                 'property_documents' => $storedFiles['property_documents'] ?? null,
                 'ownership_documents' => $storedFiles['ownership_documents'] ?? null,
-                'preferred_contact_method' => $validated['preferred_contact_method'],
                 'availability' => $validated['availability'] ?? null,
                 'urgency' => $validated['urgency'],
                 'additional_notes' => $validated['additional_notes'] ?? null,
                 'marketing_consent' => $validated['marketing_consent'] ?? false,
                 'newsletter_consent' => $validated['newsletter_consent'] ?? false,
                 'terms_accepted' => $validated['terms_accepted'],
-                'status' => 'pending',
+                'status' => $status,
+                'assigned_broker_id' => $assignedBrokerId,
+                'assignment_method' => $assignmentMethod,
+                'assigned_at' => $assignedBrokerId ? now() : null,
+                'wants_broker_selection' => $assignmentMethod === 'manual',
             ]);
+
+            // If auto-assignment, assign broker using smart algorithm
+            if ($assignmentMethod === 'auto') {
+                $broker = $this->autoAssignBroker($sellerRequest);
+                
+                if ($broker) {
+                    $sellerRequest->update([
+                        'assigned_broker_id' => $broker->id,
+                        'status' => 'assigned',
+                        'assigned_at' => now()
+                    ]);
+                    $assignedBrokerId = $broker->id;
+                }
+            }
+
+            // Notify assigned broker
+            if ($assignedBrokerId) {
+                $broker = User::find($assignedBrokerId);
+                if ($broker) {
+                    // Get the assigner (authenticated user or null for public submissions)
+                    $assignedBy = Auth::check() ? Auth::user() : null;
+                    
+                    // Send notification (works with or without authenticated user)
+                    $broker->notify(new BrokerSellerAssignmentNotification($sellerRequest, $assignedBy, 'assigned'));
+                }
+            }
+
+            // Send confirmation email to seller
+            try {
+                $assignedBroker = $assignedBrokerId ? User::find($assignedBrokerId) : null;
+                Mail::to($sellerRequest->email)->send(
+                    new \App\Mail\SellerRequestConfirmationMail($sellerRequest, $assignedBroker, $assignmentMethod)
+                );
+                
+                Log::info('Seller confirmation email sent', [
+                    'seller_request_id' => $sellerRequest->id,
+                    'seller_email' => $sellerRequest->email
+                ]);
+            } catch (\Exception $e) {
+                // Log error but don't fail the request
+                Log::error('Failed to send seller confirmation email', [
+                    'seller_request_id' => $sellerRequest->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
             
             DB::commit();
             
-            return redirect()->route('seller-requests.success')
-                ->with('success', 'Property submitted successfully!');
+            // Get broker details if assigned
+            $brokerData = null;
+            if ($assignedBrokerId) {
+                $assignedBroker = User::find($assignedBrokerId);
+                if ($assignedBroker) {
+                    $brokerData = [
+                        'name' => $assignedBroker->name,
+                        'brokerage_firm_name' => $assignedBroker->brokerage_firm_name,
+                        'office_contact_number' => $assignedBroker->office_contact_number,
+                        'city' => $assignedBroker->city,
+                        'province' => $assignedBroker->province,
+                        'years_experience' => $assignedBroker->years_experience,
+                    ];
+                }
+            }
+            
+            return Inertia::render('SellerRequests/Success', [
+                'sellerRequest' => $sellerRequest,
+                'assignedBroker' => $brokerData,
+                'assignmentMethod' => $assignmentMethod,
+            ]);
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -885,5 +1001,32 @@ class SellerRequestController extends Controller
         }
 
         return $filtered;
+    }
+
+    /**
+     * Smart auto-assignment algorithm
+     * Assigns broker based on location, workload, and experience
+     */
+    protected function autoAssignBroker(SellerRequest $sellerRequest): ?User
+    {
+        return User::where('role', 'broker')
+            ->where('is_approved', true)
+            ->where('application_status', 'approved')
+            ->where('prc_verified', true)
+            ->whereNull('suspended_at')
+            // Prefer brokers in same municipality
+            ->when($sellerRequest->city, function($q) use ($sellerRequest) {
+                $q->where('city', $sellerRequest->city);
+            })
+            // Consider current workload
+            ->withCount(['assignedSellerRequests as pending_count' => function($q) {
+                $q->whereIn('status', ['pending', 'under_review', 'approved']);
+            }])
+            // Prioritize less busy brokers
+            ->orderBy('pending_count', 'asc')
+            // Then by experience
+            ->orderBy('years_experience', 'desc')
+            // Get the best match
+            ->first();
     }
 }

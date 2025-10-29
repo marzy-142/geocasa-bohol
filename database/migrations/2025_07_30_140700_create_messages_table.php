@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('conversation_id')->constrained()->onDelete('cascade');
-            $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
+            // Nullable to support system messages
+            $table->foreignId('sender_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->text('content');
             $table->enum('type', ['text', 'file', 'system'])->default('text');
             $table->json('attachments')->nullable(); // File attachments

@@ -115,7 +115,8 @@ class PublicController extends Controller
                 $query->orderBy('is_featured', 'desc')->latest();
             });
 
-        $properties = $query->paginate(12)->withQueryString();
+    // Preserve existing query string in pagination links (compatible across Laravel versions)
+    $properties = $query->paginate(12)->appends($request->query());
 
         return Inertia::render('Public/Properties', [
             'properties' => $properties,
@@ -234,7 +235,7 @@ class PublicController extends Controller
 
         return back()->with('success', 'Your inquiry has been sent successfully! The broker will contact you soon.');
     }
-
+  
     /**
      * Store inquiry data in session for auth form auto-population
      */
@@ -281,25 +282,20 @@ class PublicController extends Controller
                 }
             ])
             ->withSum([
-                'transactions as total_commission' => function ($query) {
-                    $query->where('status', 'finalized');
-                }
-            ], 'commission_amount')
-            ->withSum([
                 'transactions as total_sales_value' => function ($query) {
                     $query->where('status', 'finalized');
                 }
             ], DB::raw('COALESCE(final_price, offered_price)'))
             ->get()
             ->map(function ($broker) {
-                $broker->total_commission = $broker->total_commission ?? 0;
                 $broker->total_sales_value = $broker->total_sales_value ?? 0;
                 // Map backend fields to frontend expected fields
                 $broker->total_properties = $broker->total_sales; // Properties sold
                 $broker->total_transactions = $broker->total_sales; // Happy clients (same as properties sold)
                 return $broker;
             })
-            ->sortByDesc('total_sales_value')
+            // Rank by total sales count (not commission)
+            ->sortByDesc('total_sales')
             ->take($limit)
             ->values();
     }

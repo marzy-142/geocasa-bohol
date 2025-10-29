@@ -2,6 +2,51 @@
     <Head :title="`Inquiry - ${inquiry.property?.title || 'Property'}`" />
 
     <ModernDashboardLayout>
+        <!-- Completed/Closed Banner (Client) -->
+        <div
+            v-if="['completed', 'closed'].includes(inquiry.status)"
+            class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4"
+        >
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-green-900 font-semibold">
+                        This inquiry is
+                        {{
+                            inquiry.status === "completed"
+                                ? "Completed"
+                                : "Closed"
+                        }}
+                        <span
+                            v-if="inquiry.completion_outcome"
+                            class="ml-2 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 uppercase"
+                            >{{ inquiry.completion_outcome }}</span
+                        >
+                    </p>
+                    <p
+                        v-if="inquiry.completion_reason"
+                        class="text-green-800 text-sm mt-1"
+                    >
+                        Reason: {{ inquiry.completion_reason }}
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <Link
+                        v-if="inquiry.transaction"
+                        :href="
+                            route('transactions.show', inquiry.transaction.id)
+                        "
+                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm"
+                        >View Transaction</Link
+                    >
+                    <Link
+                        v-else
+                        :href="route('client.broker')"
+                        class="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 px-3 py-1.5 rounded text-sm"
+                        >Message Broker</Link
+                    >
+                </div>
+            </div>
+        </div>
         <!-- Enhanced Header Section -->
         <div
             class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white mb-6"
@@ -399,33 +444,6 @@
                                 </div>
 
                                 <div
-                                    v-if="inquiry.preferred_contact_method"
-                                    class="bg-gray-50 rounded-lg p-6"
-                                >
-                                    <h4
-                                        class="font-semibold text-gray-900 mb-4 flex items-center"
-                                    >
-                                        <svg
-                                            class="w-5 h-5 mr-2 text-gray-400"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                                            ></path>
-                                        </svg>
-                                        Contact Preference
-                                    </h4>
-                                    <p class="text-gray-900 capitalize">
-                                        {{ inquiry.preferred_contact_method }}
-                                    </p>
-                                </div>
-
-                                <div
                                     v-if="inquiry.budget_range"
                                     class="bg-gray-50 rounded-lg p-6"
                                 >
@@ -508,28 +526,6 @@
                                 >
                                     <div>
                                         <label
-                                            for="preferred_contact_method"
-                                            class="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            Preferred Contact Method
-                                        </label>
-                                        <select
-                                            id="preferred_contact_method"
-                                            v-model="
-                                                form.preferred_contact_method
-                                            "
-                                            class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                        >
-                                            <option value="">
-                                                Select method
-                                            </option>
-                                            <option value="email">Email</option>
-                                            <option value="phone">Phone</option>
-                                            <option value="both">Both</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label
                                             for="budget_range"
                                             class="block text-sm font-medium text-gray-700 mb-1"
                                         >
@@ -562,7 +558,8 @@
 </template>
 
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, router } from "@inertiajs/vue3";
+import { onMounted, onUnmounted } from "vue";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 
@@ -573,7 +570,6 @@ const props = defineProps({
 
 const form = useForm({
     client_response: props.inquiry.client_response || "",
-    preferred_contact_method: props.inquiry.preferred_contact_method || "",
     budget_range: props.inquiry.budget_range || "",
 });
 
@@ -617,4 +613,24 @@ const getStatusLabel = (status) => {
     };
     return labels[status] || "Unknown";
 };
+
+// Real-time: refresh when broker updates this inquiry
+onMounted(() => {
+    if (window.Echo && props.client?.id) {
+        window.Echo.private(`client.${props.client.id}`).listen(
+            ".inquiry.status.updated",
+            (e) => {
+                if (e.inquiry_id === props.inquiry.id) {
+                    router.reload({ only: ["inquiry"] });
+                }
+            }
+        );
+    }
+});
+
+onUnmounted(() => {
+    if (window.Echo && props.client?.id) {
+        window.Echo.leaveChannel(`client.${props.client.id}`);
+    }
+});
 </script>

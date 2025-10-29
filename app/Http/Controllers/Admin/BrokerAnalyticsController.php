@@ -37,9 +37,6 @@ class BrokerAnalyticsController extends Controller
         // Get broker performance trends
         $performanceTrends = $this->getPerformanceTrends($timeRange, $brokerId);
         
-        // Get commission analytics
-        $commissionAnalytics = $this->getCommissionAnalytics($timeRange, $brokerId);
-        
         // Get property performance analytics
         $propertyAnalytics = $this->getPropertyAnalytics($timeRange, $brokerId);
         
@@ -50,7 +47,6 @@ class BrokerAnalyticsController extends Controller
             'overallStats' => $overallStats,
             'topBrokers' => $topBrokers,
             'performanceTrends' => $performanceTrends,
-            'commissionAnalytics' => $commissionAnalytics,
             'propertyAnalytics' => $propertyAnalytics,
             'clientAnalytics' => $clientAnalytics,
             'brokers' => $brokers,
@@ -90,9 +86,6 @@ class BrokerAnalyticsController extends Controller
         // Get broker's client analytics
         $clientAnalytics = $this->getBrokerClientAnalytics($broker, $timeRange);
         
-        // Get broker's commission analytics
-        $commissionAnalytics = $this->getBrokerCommissionAnalytics($broker, $timeRange);
-        
         // Get broker's activity timeline
         $activityTimeline = $this->getBrokerActivityTimeline($broker, $timeRange);
 
@@ -101,7 +94,6 @@ class BrokerAnalyticsController extends Controller
             'performanceMetrics' => $performanceMetrics,
             'propertyAnalytics' => $propertyAnalytics,
             'clientAnalytics' => $clientAnalytics,
-            'commissionAnalytics' => $commissionAnalytics,
             'activityTimeline' => $activityTimeline,
             'filters' => [
                 'time_range' => $timeRange,
@@ -132,10 +124,6 @@ class BrokerAnalyticsController extends Controller
             'total_transactions' => Transaction::whereIn('broker_id', $brokers->pluck('id'))
                 ->where('created_at', '>=', $startDate)
                 ->count(),
-            'total_commission' => Transaction::whereIn('broker_id', $brokers->pluck('id'))
-                ->where('status', 'finalized')
-                ->where('created_at', '>=', $startDate)
-                ->sum('commission_amount'),
             'avg_response_time' => $this->calculateAverageResponseTime($brokers, $timeRange),
             'conversion_rate' => $this->calculateConversionRate($brokers, $timeRange),
         ];
@@ -157,13 +145,7 @@ class BrokerAnalyticsController extends Controller
                     $query->where('created_at', '>=', $startDate);
                 },
             ])
-            ->withSum([
-                'transactions as recent_commission' => function ($query) use ($startDate) {
-                    $query->where('status', 'finalized')
-                          ->where('created_at', '>=', $startDate);
-                }
-            ], 'commission_amount')
-            ->orderByDesc('recent_commission')
+            ->orderByDesc('recent_transactions_count')
             ->limit(10)
             ->get()
             ->map(function ($broker) {
@@ -173,7 +155,6 @@ class BrokerAnalyticsController extends Controller
                     'email' => $broker->email,
                     'properties_count' => $broker->recent_properties_count,
                     'transactions_count' => $broker->recent_transactions_count,
-                    'commission' => $broker->recent_commission ?? 0,
                     'performance_score' => $this->calculatePerformanceScore($broker),
                 ];
             });
@@ -207,38 +188,12 @@ class BrokerAnalyticsController extends Controller
                 'transactions' => Transaction::whereIn('broker_id', $brokers)
                     ->whereBetween('created_at', [$date, $nextDate])
                     ->count(),
-                'commission' => Transaction::whereIn('broker_id', $brokers)
-                    ->where('status', 'finalized')
-                    ->whereBetween('created_at', [$date, $nextDate])
-                    ->sum('commission_amount'),
             ];
         }
 
         return $trends;
     }
 
-    /**
-     * Get commission analytics
-     */
-    private function getCommissionAnalytics($timeRange, $brokerId = null)
-    {
-        $startDate = Carbon::now()->subDays($timeRange);
-        $query = Transaction::where('status', 'finalized')
-            ->where('created_at', '>=', $startDate);
-
-        if ($brokerId) {
-            $query->where('broker_id', $brokerId);
-        }
-
-        $transactions = $query->get();
-
-        return [
-            'total_commission' => $transactions->sum('commission_amount'),
-            'avg_commission_per_transaction' => $transactions->avg('commission_amount'),
-            'commission_by_month' => $this->getCommissionByMonth($transactions),
-            'top_commission_brokers' => $this->getTopCommissionBrokers($timeRange, $brokerId),
-        ];
-    }
 
     /**
      * Get property analytics
@@ -299,7 +254,6 @@ class BrokerAnalyticsController extends Controller
         return [
             'properties_listed' => $broker->properties()->where('created_at', '>=', $startDate)->count(),
             'properties_sold' => $broker->properties()->where('status', 'sold')->where('created_at', '>=', $startDate)->count(),
-            'total_commission' => $broker->transactions()->where('status', 'finalized')->where('created_at', '>=', $startDate)->sum('commission_amount'),
             'avg_response_time' => $this->calculateBrokerResponseTime($broker, $timeRange),
             'client_satisfaction' => $this->calculateClientSatisfaction($broker, $timeRange),
             'conversion_rate' => $this->calculateBrokerConversionRate($broker, $timeRange),
@@ -338,20 +292,6 @@ class BrokerAnalyticsController extends Controller
         ];
     }
 
-    /**
-     * Get broker commission analytics
-     */
-    private function getBrokerCommissionAnalytics($broker, $timeRange)
-    {
-        $startDate = Carbon::now()->subDays($timeRange);
-        $transactions = $broker->transactions()->where('status', 'finalized')->where('created_at', '>=', $startDate)->get();
-
-        return [
-            'total' => $transactions->sum('commission_amount'),
-            'avg_per_transaction' => $transactions->avg('commission_amount'),
-            'by_month' => $this->getCommissionByMonth($transactions),
-        ];
-    }
 
     /**
      * Get broker activity timeline
@@ -432,38 +372,9 @@ class BrokerAnalyticsController extends Controller
         $score = 0;
         $score += ($broker->recent_properties_count ?? 0) * 2;
         $score += ($broker->recent_transactions_count ?? 0) * 5;
-        $score += (($broker->recent_commission ?? 0) / 1000) * 0.1;
         return min(100, max(0, $score));
     }
 
-    private function getCommissionByMonth($transactions)
-    {
-        return $transactions->groupBy(function ($transaction) {
-            return $transaction->created_at->format('Y-m');
-        })->map(function ($monthTransactions) {
-            return $monthTransactions->sum('commission_amount');
-        });
-    }
-
-    private function getTopCommissionBrokers($timeRange, $brokerId = null)
-    {
-        $startDate = Carbon::now()->subDays($timeRange);
-        $query = User::approvedBrokers();
-
-        if ($brokerId) {
-            $query->where('id', $brokerId);
-        }
-
-        return $query->withSum([
-            'transactions as total_commission' => function ($query) use ($startDate) {
-                $query->where('status', 'finalized')
-                      ->where('created_at', '>=', $startDate);
-            }
-        ], 'commission_amount')
-        ->orderByDesc('total_commission')
-        ->limit(5)
-        ->get();
-    }
 
     private function getPriceRangeDistribution($properties)
     {

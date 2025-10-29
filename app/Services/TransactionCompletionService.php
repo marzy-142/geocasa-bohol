@@ -56,7 +56,7 @@ class TransactionCompletionService
                 'client_id' => $transaction->client_id,
                 'broker_id' => $transaction->broker_id,
                 'final_price' => $transaction->final_price,
-                'commission_amount' => $transaction->commission_amount,
+                // commission removed
             ]);
 
             return [
@@ -166,16 +166,12 @@ class TransactionCompletionService
                 // Update broker's finalized transactions count
                 $broker->increment('finalized_transactions_count');
                 
-                // Update total commission earned
-                $broker->increment('total_commission_earned', $transaction->commission_amount ?? 0);
-                
                 // Update last sale date
                 $broker->update(['last_sale_date' => now()]);
 
                 Log::info('Broker statistics updated', [
                     'broker_id' => $broker->id,
                     'transaction_id' => $transaction->id,
-                    'commission_amount' => $transaction->commission_amount ?? 0,
                 ]);
 
                 return true;
@@ -206,8 +202,7 @@ class TransactionCompletionService
                 'broker_id' => $transaction->broker_id,
                 'sale_date' => now(),
                 'sale_price' => $transaction->final_price ?? $transaction->offered_price,
-                'commission_rate' => $transaction->commission_rate,
-                'commission_amount' => $transaction->commission_amount,
+                // commission fields removed
                 'property_type' => $transaction->property->type ?? 'unknown',
                 'property_location' => $transaction->property->municipality ?? 'unknown',
                 'transaction_duration_days' => $transaction->created_at->diffInDays(now()),
@@ -285,7 +280,6 @@ class TransactionCompletionService
             'client_name' => $transaction->client->name ?? 'Unknown Client',
             'broker_name' => $transaction->broker->name ?? 'Unknown Broker',
             'final_price' => $transaction->final_price ?? $transaction->offered_price,
-            'commission_amount' => $transaction->commission_amount,
             'completion_date' => now()->format('Y-m-d H:i:s'),
             'can_complete' => $this->canComplete($transaction),
         ];

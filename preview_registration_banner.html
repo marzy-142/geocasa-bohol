@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Email Verification Page - Visual Preview</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            @keyframes pulse-slow {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.85;
+                }
+            }
+            .animate-pulse-slow {
+                animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+        </style>
+    </head>
+    <body class="bg-gradient-to-br from-teal-50 via-white to-blue-50">
+        <div
+            class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+        >
+            <div class="max-w-md w-full space-y-8">
+                <!-- Header -->
+                <div class="text-center">
+                    <div class="flex justify-center mb-6">
+                        <div
+                            class="w-16 h-16 bg-gradient-to-br from-teal-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg"
+                        >
+                            <svg
+                                class="w-8 h-8 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">
+                        Verify Your Email
+                    </h2>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        Thanks for signing up! Please verify your email address
+                        to get started with GeoCasa Bohol.
+                    </p>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- THIS IS THE NEW REGISTRATION SUCCESS BANNER -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <div
+                    class="bg-blue-50 border-2 border-blue-300 rounded-xl p-5 animate-pulse-slow"
+                >
+                    <div class="flex items-start">
+                        <!-- Checkmark Icon -->
+                        <svg
+                            class="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+
+                        <div class="flex-1">
+                            <!-- Main Heading -->
+                            <p
+                                class="text-blue-800 font-semibold text-base mb-1"
+                            >
+                                Registration Complete! 🎉
+                            </p>
+
+                            <!-- Flash Message from Controller -->
+                            <p class="text-blue-700 text-sm leading-relaxed">
+                                Registration successful! Please check your email
+                                and click the verification link to complete your
+                                registration.
+                            </p>
+
+                            <!-- Additional Instructions -->
+                            <p class="text-blue-600 text-xs mt-2">
+                                Check your inbox and click the verification link
+                                to activate your account.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- END OF REGISTRATION SUCCESS BANNER -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+
+                <!-- Main Form Card -->
+                <div
+                    class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
+                >
+                    <!-- Email Instructions -->
+                    <div class="mb-6 text-center">
+                        <div
+                            class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                        >
+                            <svg
+                                class="w-6 h-6 text-teal-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                                />
+                            </svg>
+                        </div>
+                        <p class="text-gray-600 text-sm">
+                            We've sent a verification link to your email. Click
+                            the link to activate your account.
+                        </p>
+                    </div>
+
+                    <form class="space-y-6">
+                        <button
+                            type="submit"
+                            class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-200"
+                        >
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                />
+                            </svg>
+                            Resend Verification Email
+                        </button>
+                    </form>
+
+                    <!-- Actions -->
+                    <div class="mt-6 flex items-center justify-between">
+                        <button
+                            class="text-gray-600 hover:text-gray-700 text-sm font-medium transition-colors duration-200"
+                        >
+                            Use Different Account
+                        </button>
+                        <a
+                            href="#"
+                            class="text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors duration-200"
+                        >
+                            Need Help?
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                    <h3 class="text-gray-900 font-medium text-sm mb-2">
+                        Didn't receive the email?
+                    </h3>
+                    <ul class="text-gray-600 text-xs space-y-1">
+                        <li>• Check your spam or junk folder</li>
+                        <li>
+                            • Make sure you entered the correct email address
+                        </li>
+                        <li>• Try resending the verification email</li>
+                    </ul>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center">
+                    <p class="text-gray-500 text-xs">
+                        © 2024 GeoCasa Bohol. Your trusted real estate partner
+                        in Bohol.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Annotation Box -->
+        <div
+            style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border: 3px solid #3b82f6;
+                border-radius: 12px;
+                padding: 20px;
+                max-width: 350px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            "
+        >
+            <h3
+                style="
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #1e40af;
+                    margin-bottom: 12px;
+                "
+            >
+                🎯 Registration Success Banner
+            </h3>
+            <div style="font-size: 14px; color: #374151; line-height: 1.6">
+                <p style="margin-bottom: 8px">
+                    <strong>Location:</strong> Between the header and main form
+                </p>
+                <p style="margin-bottom: 8px">
+                    <strong>Background:</strong> Light blue (#eff6ff)
+                </p>
+                <p style="margin-bottom: 8px">
+                    <strong>Border:</strong> 2px solid blue (#93c5fd)
+                </p>
+                <p style="margin-bottom: 8px">
+                    <strong>Animation:</strong> Gentle pulsing (2s loop)
+                </p>
+                <p style="margin-bottom: 8px">
+                    <strong>Icon:</strong> Checkmark circle (blue)
+                </p>
+                <p style="margin-bottom: 8px">
+                    <strong>Heading:</strong> "Registration Complete! 🎉"
+                </p>
+                <p style="margin-bottom: 8px">
+                    <strong>Content:</strong> Flash message from server
+                </p>
+                <p style="margin-bottom: 0">
+                    <strong>Effect:</strong> Draws immediate attention!
+                </p>
+            </div>
+        </div>
+
+        <script>
+            // Add a note to console
+            console.log(
+                "%c✅ Registration Success Banner Preview",
+                "background: #3b82f6; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 14px;"
+            );
+            console.log(
+                "This is what users will see after completing registration!"
+            );
+            console.log(
+                "The blue banner with the checkmark icon appears AUTOMATICALLY when the flash message is present."
+            );
+        </script>
+    </body>
+</html>

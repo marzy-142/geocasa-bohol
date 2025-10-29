@@ -19,8 +19,6 @@ class Transaction extends Model
         'transaction_type',
         'offered_price',
         'final_price',
-        'commission_rate',
-        'commission_amount',
         'status',
         'inquiry_date',
         'first_contact_date',
@@ -48,8 +46,6 @@ class Transaction extends Model
     protected $casts = [
         'offered_price' => 'decimal:2',
         'final_price' => 'decimal:2',
-        'commission_rate' => 'decimal:4',
-        'commission_amount' => 'decimal:2',
         'inquiry_date' => 'datetime',
         'first_contact_date' => 'datetime',
         'viewing_date' => 'datetime',
@@ -202,10 +198,6 @@ class Transaction extends Model
         return $this->final_price ? '$' . number_format((float) $this->final_price, 0) : null;
     }
 
-    public function getFormattedCommissionAttribute()
-    {
-        return $this->commission_amount ? '$' . number_format((float) $this->commission_amount, 2) : null;
-    }
 
     public function getStatusLabelAttribute()
     {

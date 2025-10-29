@@ -39,11 +39,10 @@ class TransactionCompletedNotification extends Notification implements ShouldQue
         $isBroker = $notifiable->id === $this->transaction->broker_id;
         
         return (new MailMessage)
-            ->subject($isBroker ? 'Transaction Completed - Commission Earned!' : 'Property Purchase Completed!')
+            ->subject('Transaction Completed')
             ->greeting($isBroker ? 'Congratulations!' : 'Congratulations on your new property!')
             ->line($isBroker 
-                ? "You have successfully completed a transaction and earned a commission of " . 
-                  number_format($this->transaction->commission_amount ?? 0, 2) . " PHP."
+                ? "You have successfully completed a transaction."
                 : "Your property purchase has been completed successfully."
             )
             ->line("Transaction Details:")
@@ -68,13 +67,12 @@ class TransactionCompletedNotification extends Notification implements ShouldQue
             'type' => 'transaction_completed',
             'title' => $isBroker ? 'Transaction Completed!' : 'Property Purchase Completed!',
             'message' => $isBroker 
-                ? "You earned ₱" . number_format($this->transaction->commission_amount ?? 0, 2) . " commission!"
-                : "Your property purchase is complete!",
+                ? 'Transaction completed successfully.'
+                : 'Your property purchase is complete!',
             'transaction_id' => $this->transaction->id,
             'transaction_number' => $this->transaction->transaction_number,
             'property_title' => $this->transaction->property->title ?? 'Unknown Property',
             'final_price' => $this->transaction->final_price ?? $this->transaction->offered_price,
-            'commission_amount' => $this->transaction->commission_amount,
             'created_at' => now()->toISOString(),
         ]);
     }
@@ -92,12 +90,11 @@ class TransactionCompletedNotification extends Notification implements ShouldQue
             'transaction_number' => $this->transaction->transaction_number,
             'property_title' => $this->transaction->property->title ?? 'Unknown Property',
             'final_price' => $this->transaction->final_price ?? $this->transaction->offered_price,
-            'commission_amount' => $this->transaction->commission_amount,
             'is_broker' => $isBroker,
             'title' => $isBroker ? 'Transaction Completed!' : 'Property Purchase Completed!',
             'message' => $isBroker 
-                ? "You earned ₱" . number_format($this->transaction->commission_amount ?? 0, 2) . " commission!"
-                : "Your property purchase is complete!",
+                ? 'Transaction completed successfully.'
+                : 'Your property purchase is complete!',
         ];
     }
 }

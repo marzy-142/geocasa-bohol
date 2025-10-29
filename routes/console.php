@@ -105,3 +105,10 @@ Schedule::command('searches:notify')
     ->at('10:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Schedule auto-archive sold properties (daily at 3:00 AM)
+Schedule::command('properties:archive-sold')
+    ->daily()
+    ->at('03:00')
+    ->withoutOverlapping()
+    ->runInBackground();

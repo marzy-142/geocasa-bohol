@@ -4,7 +4,6 @@ namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Database\Seeders\DatabaseSchemaSeeder;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -13,6 +12,7 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(DatabaseSchemaSeeder::class);
+        // Seeder removed - tests use factories to create test data
+        // $this->seed(DatabaseSchemaSeeder::class);
     }
 }

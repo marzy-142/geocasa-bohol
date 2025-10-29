@@ -46,7 +46,6 @@ class PropertySoldNotification extends Notification implements ShouldQueue
             ->line("• Buyer: " . ($this->transaction->client->name ?? 'Unknown Client'))
             ->line("• Broker: " . ($this->transaction->broker->name ?? 'Unknown Broker'))
             ->line("• Sale Price: " . number_format(($this->transaction->final_price ?? $this->transaction->offered_price) ?? 0, 2) . " PHP")
-            ->line("• Commission: " . number_format($this->transaction->commission_amount ?? 0, 2) . " PHP")
             ->line("• Transaction Number: " . $this->transaction->transaction_number)
             ->line("• Completion Date: " . now()->format('F j, Y'))
             ->action('View Transaction Details', route('admin.transactions.show', $this->transaction->id))
@@ -67,7 +66,6 @@ class PropertySoldNotification extends Notification implements ShouldQueue
             'property_title' => $this->transaction->property->title ?? 'Unknown Property',
             'broker_name' => $this->transaction->broker->name ?? 'Unknown Broker',
             'final_price' => $this->transaction->final_price ?? $this->transaction->offered_price,
-            'commission_amount' => $this->transaction->commission_amount,
             'created_at' => now()->toISOString(),
         ]);
     }
@@ -86,7 +84,6 @@ class PropertySoldNotification extends Notification implements ShouldQueue
             'client_name' => $this->transaction->client->name ?? 'Unknown Client',
             'broker_name' => $this->transaction->broker->name ?? 'Unknown Broker',
             'final_price' => $this->transaction->final_price ?? $this->transaction->offered_price,
-            'commission_amount' => $this->transaction->commission_amount,
             'title' => 'Property Sold!',
             'message' => "Property '{$this->transaction->property->title}' sold for ₱" . number_format(($this->transaction->final_price ?? $this->transaction->offered_price) ?? 0, 2),
         ];

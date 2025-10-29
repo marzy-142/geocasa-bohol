@@ -42,6 +42,12 @@ use Inertia\Inertia;
 Route::get('/health', [HealthController::class, 'check'])->name('health.check');
 Route::get('/ping', [HealthController::class, 'ping'])->name('health.ping');
 
+// DEBUG: Test verification page with flash message (REMOVE AFTER TESTING)
+Route::get('/test-verification-banner', function() {
+    return \Inertia\Inertia::render('Auth/VerifyEmail')
+        ->with('success', 'Registration successful! Please check your email and click the verification link to complete your registration.');
+})->name('test.verification');
+
 // Public routes
 Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/browse-properties', [PublicController::class, 'properties'])->name('public.properties');
@@ -52,6 +58,13 @@ Route::post('/browse-properties/{property:slug}/inquire', [PublicController::cla
 Route::post('/store-inquiry-session', [PublicController::class, 'storeInquirySession'])
     ->name('public.store-inquiry-session')
     ->middleware('throttle:10,1'); // 10 requests per minute for session storage
+
+// Broker Directory routes (public)
+Route::get('/brokers', [App\Http\Controllers\BrokerDirectoryController::class, 'index'])->name('brokers.index');
+Route::get('/brokers/{id}', [App\Http\Controllers\BrokerDirectoryController::class, 'show'])->name('brokers.show');
+Route::post('/brokers/{id}/inquiry', [App\Http\Controllers\BrokerDirectoryController::class, 'sendInquiry'])
+    ->name('brokers.inquiry')
+    ->middleware('throttle:3,1'); // 3 inquiries per minute
 
 // Test route for 360 viewer
 Route::get('/test-360-viewer', function () {

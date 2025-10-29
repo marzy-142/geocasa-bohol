@@ -114,7 +114,6 @@ class InquiryController extends Controller
         
         $validated = $request->validate([
             'client_response' => 'nullable|string|max:1000',
-            'preferred_contact_method' => 'nullable|in:email,phone,both',
             'budget_range' => 'nullable|string|max:50'
         ]);
         
@@ -122,7 +121,6 @@ class InquiryController extends Controller
         
         return redirect()->back()->with('success', 'Inquiry updated successfully.');
     }
-
     /**
      * Show the form for creating a new inquiry
      */
@@ -173,7 +171,6 @@ class InquiryController extends Controller
             'property_id' => 'required|exists:properties,id',
             'message' => 'required|string|max:1000',
             'inquiry_type' => 'nullable|string|in:general,viewing,price,availability',
-            'preferred_contact_method' => 'nullable|string|in:email,phone',
             'budget_range' => 'nullable|string|max:255',
         ]);
 
@@ -204,7 +201,6 @@ class InquiryController extends Controller
             'phone' => $client->phone ?? '',
             'message' => $request->message,
             'inquiry_type' => $request->inquiry_type ?? 'general',
-            'preferred_contact_method' => $request->preferred_contact_method,
             'budget_range' => $request->budget_range,
             'status' => 'new',
         ]);
@@ -214,7 +210,13 @@ class InquiryController extends Controller
             $inquiry->update(['assigned_broker_id' => $client->broker_id]);
         }
 
-        return redirect()->route('client.inquiries.show', $inquiry)
-            ->with('success', 'Your inquiry has been submitted successfully!');
+        // Broadcast real-time event so broker views update immediately
+        // Ensure property relation is loaded for event payload
+        $inquiry->load('property');
+        broadcast(new \App\Events\NewInquiryReceived($inquiry));
+
+        return redirect()
+            ->route('client.inquiries.show', $inquiry)
+            ->with('success', 'Thanks! Your inquiry has been submitted. We sent you a confirmation email and your assigned broker will respond within 24–48 hours. You can track updates anytime in My Inquiries.');
     }
 }

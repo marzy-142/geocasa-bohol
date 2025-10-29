@@ -326,7 +326,10 @@ class PerformanceAnalyticsService
             'active_transactions' => $transactions->whereNotIn('status', ['finalized', 'cancelled'])->count(),
             'average_completion_days' => $this->calculateAverageCompletionDays($transactions),
             'success_rate' => $this->calculateSuccessRate($transactions),
-            'total_commission' => $transactions->sum('commission_amount'),
+            // Use total sales value instead of commission
+            'total_commission' => $transactions->sum(function($t){
+                return $t->final_price ?? $t->offered_price ?? 0;
+            }),
         ];
     }
 
@@ -409,7 +412,10 @@ class PerformanceAnalyticsService
             'completion_rate' => $this->calculateSuccessRate($transactions),
             'average_completion_time' => $this->calculateAverageCompletionDays($transactions),
             'transaction_volume_trend' => 'increasing',
-            'revenue_generated' => $transactions->sum('commission_amount'),
+            // Report revenue by sales value, not commission
+            'revenue_generated' => $transactions->sum(function($t){
+                return $t->final_price ?? $t->offered_price ?? 0;
+            }),
         ];
     }
 

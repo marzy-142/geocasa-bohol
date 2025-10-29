@@ -50,11 +50,6 @@ class TransactionFactory extends Factory
             'final_price' => function (array $attributes) {
                 return $this->faker->optional(0.7)->randomFloat(2, $attributes['offered_price'] * 0.9, $attributes['offered_price'] * 1.1);
             },
-            'commission_rate' => $this->faker->randomFloat(4, 0.01, 0.10), // 1% to 10%
-            'commission_amount' => function (array $attributes) {
-                $price = $attributes['final_price'] ?? $attributes['offered_price'];
-                return $price * $attributes['commission_rate'];
-            },
             'inquiry_date' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'first_contact_date' => $this->faker->optional()->dateTimeBetween('-6 months', 'now'),
             'viewing_date' => $this->faker->optional()->dateTimeBetween('-6 months', 'now'),

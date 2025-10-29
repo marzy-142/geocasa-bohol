@@ -59,10 +59,10 @@
                             <option value="">Select Type</option>
                             <option
                                 v-for="type in propertyTypes"
-                                :key="type"
-                                :value="type"
+                                :key="type.value"
+                                :value="type.value"
                             >
-                                {{ formatType(type) }}
+                                {{ type.label }}
                             </option>
                         </select>
                         <InputError class="mt-2" :message="form.errors.type" />
@@ -1058,17 +1058,15 @@ watch(
 
 // Keep in sync with App\Models\Property::TYPES
 const propertyTypes = [
-    "residential_lot",
-    "agricultural_land",
-    "commercial_lot",
-    "industrial_lot",
-    "beachfront",
-    "mountain_view",
-    "rice_field",
-    "coconut_plantation",
-    "subdivision_lot",
-    "titled_land",
-    "tax_declared",
+    { value: "residential_lot", label: "Residential Lot" },
+    { value: "agricultural_land", label: "Agricultural Land" },
+    { value: "commercial_lot", label: "Commercial Lot" },
+    { value: "industrial_lot", label: "Industrial Lot" },
+    { value: "beachfront", label: "Beachfront" },
+    { value: "mountain_view", label: "Mountain View" },
+    { value: "rice_field", label: "Rice Field" },
+    { value: "coconut_plantation", label: "Coconut Plantation" },
+    { value: "subdivision_lot", label: "Subdivision Lot" },
 ];
 
 const formatType = (type) =>

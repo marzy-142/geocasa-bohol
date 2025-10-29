@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Property;
 use App\Models\Transaction;
 use App\Models\Inquiry;
+use Illuminate\Support\Facades\DB;
 
 class VerifyAdminDataSync extends Command
 {
@@ -64,9 +65,12 @@ class VerifyAdminDataSync extends Command
 
         $brokers = User::where('role', 'broker')->where('is_approved', true)->get();
 
-        foreach ($brokers as $broker) {
+    foreach ($brokers as $broker) {
             $brokerTransactions = $broker->transactions()->where('status', 'finalized')->count();
-            $brokerCommission = $broker->transactions()->where('status', 'finalized')->sum('commission_amount');
+            // Commission removed; compute sales value instead for reporting
+            $brokerCommission = $broker->transactions()
+                ->where('status', 'finalized')
+                ->sum(DB::raw('COALESCE(final_price, offered_price)'));
             $brokerProperties = $broker->properties()->count();
             
             $this->line("Broker: {$broker->name}");
@@ -136,11 +140,14 @@ class VerifyAdminDataSync extends Command
         $this->info('6. 💰 COMMISSION CALCULATION ACCURACY');
         $this->info('------------------------------------');
 
-        $totalCommission = Transaction::where('status', 'finalized')->sum('commission_amount');
+        $totalCommission = Transaction::where('status', 'finalized')
+            ->sum(DB::raw('COALESCE(final_price, offered_price)'));
         $brokerCommissionSum = 0;
 
         foreach ($brokers as $broker) {
-            $brokerCommission = $broker->transactions()->where('status', 'finalized')->sum('commission_amount');
+            $brokerCommission = $broker->transactions()
+                ->where('status', 'finalized')
+                ->sum(DB::raw('COALESCE(final_price, offered_price)'));
             $brokerCommissionSum += $brokerCommission;
         }
 

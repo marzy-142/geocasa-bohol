@@ -314,6 +314,7 @@ const searchQuery = ref("");
 const showArchived = ref(false);
 const messagesContainer = ref(null);
 let echoListener = null;
+let currentChannelName = null;
 
 const unreadCount = computed(() => {
     const conversationsData = props.conversations.data || [];
@@ -473,17 +474,26 @@ const scrollToBottom = () => {
 const setupEchoListener = () => {
     // Remove existing listener if any
     if (echoListener) {
-        echoListener.stopListening();
+        try {
+            echoListener.stopListening();
+        } catch (e) {}
+        if (currentChannelName && window.Echo) {
+            try {
+                window.Echo.leave(currentChannelName);
+            } catch (e) {}
+        }
     }
 
     // Set up new listener for the selected conversation
     if (selectedConversation.value && window.Echo) {
-        echoListener = window.Echo.private(
-            `conversation.${selectedConversation.value.id}`
-        ).listen("MessageSent", (e) => {
-            messages.value.push(e.message);
-            scrollToBottom();
-        });
+        currentChannelName = `conversation.${selectedConversation.value.id}`;
+        echoListener = window.Echo.private(currentChannelName).listen(
+            "MessageSent",
+            (e) => {
+                messages.value.push(e.message);
+                scrollToBottom();
+            }
+        );
     }
 };
 
@@ -520,6 +530,14 @@ onMounted(() => {
 
     scrollToBottom();
     setupEchoListener();
+});
+
+onUnmounted(() => {
+    if (currentChannelName && window.Echo) {
+        try {
+            window.Echo.leave(currentChannelName);
+        } catch (e) {}
+    }
 });
 
 onUnmounted(() => {

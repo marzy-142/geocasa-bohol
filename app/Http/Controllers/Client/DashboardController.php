@@ -33,37 +33,16 @@ class DashboardController extends Controller
             ->first();
         
         if (!$client) {
-            // Find a default broker or the first available broker
-            $defaultBroker = User::where('role', 'broker')
-                ->where('is_approved', true)
-                ->first();
-            
-            if (!$defaultBroker) {
-                // If no approved brokers exist, create a placeholder or handle this case
-                // For now, we'll skip creating the client record and show limited dashboard
-                return Inertia::render('Client/Dashboard', [
-                    'stats' => [
-                        'savedProperties' => 0,
-                        'activeInquiries' => 0,
-                        'viewedProperties' => 0,
-                        'favoriteAreas' => 0,
-                    ],
-                    'recentInquiries' => [],
-                    'recommendedProperties' => Property::with(['broker'])
-                        ->where('status', 'available')
-                        ->where('is_featured', true)
-                        ->latest()
-                        ->limit(6)
-                        ->get(),
-                    'noBrokerAvailable' => true,
-                ]);
-            }
-            
+            // Create client record without auto-assigning a broker
+            // Brokers should only be assigned when:
+            // - Client makes an inquiry about a property
+            // - Admin manually assigns a broker
+            // - Client selects a broker from the directory
             $client = Client::create([
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => null,
-                'broker_id' => $defaultBroker->id,
+                'broker_id' => null, // Don't auto-assign broker
                 'user_id' => $user->id
             ]);
         } else {

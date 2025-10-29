@@ -55,25 +55,12 @@ class DashboardController extends Controller
                 }
             ])
             ->withSum([
-                'transactions as total_commission' => function ($query) {
-                    $query->where('status', 'finalized');
-                }
-            ], 'commission_amount')
-            ->withSum([
                 'transactions as total_sales_value' => function ($query) {
                     $query->where('status', 'finalized');
                 }
             ], DB::raw('COALESCE(final_price, offered_price)'))
             ->having('total_sales', '>', 0) // Only brokers with actual sales
-            ->get()
-            ->sortByDesc(function ($broker) {
-                // Primary: Commission, Secondary: Revenue, Tertiary: Sales Count
-                return [
-                    $broker->total_commission,
-                    $broker->total_sales_value,
-                    $broker->total_sales
-                ];
-            })
+            ->orderByDesc('total_sales')
             ->first();
 
         // Get pending broker applications

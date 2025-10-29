@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Notifications\TransactionStatusNotification;
 use App\Events\TransactionCreated;
 use App\Events\TransactionStatusUpdated;
@@ -197,13 +198,10 @@ class TransactionController extends Controller
             'client_id' => 'required|exists:clients,id',
             'inquiry_id' => 'nullable|exists:inquiries,id',
             'offered_price' => 'required|numeric|min:0',
-            'commission_rate' => 'required|numeric|min:0|max:1',
             'inquiry_date' => 'required|date',
             'broker_notes' => 'nullable|string',
         ]);
         
-        // Calculate commission amount
-        $validated['commission_amount'] = $validated['offered_price'] * $validated['commission_rate'];
         $validated['broker_id'] = $user->id;
         $validated['status'] = 'inquiry';
         
@@ -335,7 +333,6 @@ class TransactionController extends Controller
             'client_id' => 'required|exists:clients,id',
             'offered_price' => 'required|numeric|min:0',
             'final_price' => 'nullable|numeric|min:0',
-            'commission_rate' => 'required|numeric|min:0|max:1',
             'inquiry_date' => 'required|date',
             'first_contact_date' => 'nullable|date',
             'viewing_date' => 'nullable|date',
@@ -368,10 +365,6 @@ class TransactionController extends Controller
             }
         }
         
-        // Calculate commission amount based on final price or offered price
-        $price = $validated['final_price'] ?? $validated['offered_price'];
-        $validated['commission_amount'] = $price * $validated['commission_rate'];
-        
         // Auto-set finalized_date if status is finalized
         if ($newStatus === 'finalized' && !$validated['finalized_date']) {
             $validated['finalized_date'] = now();
@@ -379,7 +372,7 @@ class TransactionController extends Controller
         
         // Log field changes for audit
         $auditService = app(\App\Services\TransactionAuditService::class);
-        $oldValues = $transaction->only(['offered_price', 'final_price', 'commission_rate', 'broker_notes']);
+        $oldValues = $transaction->only(['offered_price', 'final_price', 'broker_notes']);
         
         $transaction->update($validated);
         
@@ -727,9 +720,7 @@ class TransactionController extends Controller
 
         // Financial statistics
         $totalValue = $query->where('status', 'finalized')->sum(DB::raw('COALESCE(final_price, offered_price)'));
-        $totalCommission = $query->where('status', 'finalized')->sum('commission_amount');
         $averageDealValue = $finalizedTransactions > 0 ? $totalValue / $finalizedTransactions : 0;
-        $averageCommission = $finalizedTransactions > 0 ? $totalCommission / $finalizedTransactions : 0;
 
         // Performance metrics
         $successRate = $totalTransactions > 0 ? round(($finalizedTransactions / $totalTransactions) * 100, 2) : 0;
@@ -752,11 +743,6 @@ class TransactionController extends Controller
                     $q->where('status', 'finalized')->whereBetween('created_at', [$dateFrom, $dateTo]);
                 }
             ])
-            ->withSum([
-                'transactions as total_commission' => function ($q) use ($dateFrom, $dateTo) {
-                    $q->where('status', 'finalized')->whereBetween('created_at', [$dateFrom, $dateTo]);
-                }
-            ], 'commission_amount')
             ->get()
             ->map(function ($broker) {
                 $broker->success_rate = $broker->total_transactions > 0 
@@ -787,9 +773,7 @@ class TransactionController extends Controller
             ],
             'financial_stats' => [
                 'total_value' => $totalValue,
-                'total_commission' => $totalCommission,
                 'average_deal_value' => round($averageDealValue, 2),
-                'average_commission' => round($averageCommission, 2),
             ],
             'performance_metrics' => [
                 'success_rate' => $successRate,
@@ -876,8 +860,7 @@ class TransactionController extends Controller
                 'Broker Email',
                 'Offered Price',
                 'Final Price',
-                'Commission Rate',
-                'Commission Amount',
+                'Sales Value',
                 'Inquiry Date',
                 'First Contact Date',
                 'Viewing Date',
@@ -905,8 +888,7 @@ class TransactionController extends Controller
                     $transaction->broker->email ?? 'N/A',
                     $transaction->offered_price,
                     $transaction->final_price ?? 'N/A',
-                    $transaction->commission_rate,
-                    $transaction->commission_amount,
+                    $transaction->final_price ?? $transaction->offered_price,
                     $transaction->inquiry_date?->format('Y-m-d H:i:s') ?? 'N/A',
                     $transaction->first_contact_date?->format('Y-m-d H:i:s') ?? 'N/A',
                     $transaction->viewing_date?->format('Y-m-d H:i:s') ?? 'N/A',

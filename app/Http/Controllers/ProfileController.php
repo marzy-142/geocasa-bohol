@@ -29,13 +29,35 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
+
+        // Keep Client record in sync so broker views reflect updates on refresh
+        if ($user->role === 'client') {
+            $client = \App\Models\Client::where('user_id', $user->id)
+                ->orWhere('email', $user->email)
+                ->first();
+
+            if ($client) {
+                $client->update([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'user_id' => $user->id,
+                ]);
+            } else {
+                \App\Models\Client::create([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'user_id' => $user->id,
+                ]);
+            }
+        }
 
         return Redirect::route('profile.edit');
     }

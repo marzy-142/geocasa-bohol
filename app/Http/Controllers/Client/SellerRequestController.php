@@ -57,7 +57,6 @@ class SellerRequestController extends Controller
             'contact_name' => 'required|string|max:255',
             'contact_email' => 'required|email|max:255',
             'contact_phone' => 'required|string|max:20',
-            'preferred_contact_method' => 'nullable|string|in:phone,email,both',
             'images.*' => 'nullable|image|max:5120', // 5MB max per image
             'documents.*' => 'nullable|file|mimes:pdf,doc,docx|max:10240', // 10MB max per document
         ]);
@@ -93,7 +92,7 @@ class SellerRequestController extends Controller
                 'name' => $validated['contact_name'],
                 'email' => $validated['contact_email'],
                 'phone' => $validated['contact_phone'],
-                'property_type' => 'titled_land', // Fixed as titled_land for ENUM compatibility
+                'property_type' => $validated['property_type'] ?? 'residential_lot', // Default to residential_lot
                 'property_title' => $propertyTitle,
                 'property_description' => $validated['description'] ?? 'Land for sale',
                 'address' => $validated['address'],
@@ -108,7 +107,6 @@ class SellerRequestController extends Controller
                 'contact_name' => $validated['contact_name'],
                 'contact_email' => $validated['contact_email'],
                 'contact_phone' => $validated['contact_phone'],
-                'preferred_contact_method' => $validated['preferred_contact_method'] ?? 'both',
                 'status' => 'pending',
                 'submission_date' => now(),
             ]);

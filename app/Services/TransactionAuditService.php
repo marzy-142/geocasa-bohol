@@ -288,8 +288,6 @@ class TransactionAuditService
         $fieldTypes = [
             'offered_price' => 'decimal',
             'final_price' => 'decimal',
-            'commission_rate' => 'decimal',
-            'commission_amount' => 'decimal',
             'status' => 'enum',
             'broker_notes' => 'text',
             'client_notes' => 'text',

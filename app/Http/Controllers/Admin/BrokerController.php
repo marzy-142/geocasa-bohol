@@ -20,7 +20,7 @@ class BrokerController extends Controller
     public function index(Request $request)
     {
         // Only show approved brokers in the main broker listing
-        $query = User::approvedBrokers()
+        $query = User::where('role', 'broker')
             ->with(['properties', 'clients', 'transactions'])
             ->withCount([
                 'properties',
@@ -28,12 +28,7 @@ class BrokerController extends Controller
                 'transactions as transactions_count' => function ($query) {
                     $query->where('status', 'finalized');
                 }
-            ])
-            ->withSum([
-                'transactions as total_commission' => function ($query) {
-                    $query->where('status', 'finalized');
-                }
-            ], 'commission_amount');
+            ]);
 
         // Apply filters
         if ($request->filled('search')) {
@@ -117,7 +112,6 @@ class BrokerController extends Controller
             'active_clients' => $broker->clients()->where('status', 'active')->count(),
             'total_transactions' => $broker->transactions()->count(),
             'completed_transactions' => $broker->transactions()->where('status', 'finalized')->count(),
-            'total_commission' => $broker->transactions()->where('status', 'finalized')->sum('commission_amount'),
             'avg_response_time' => $this->calculateAverageResponseTime($broker),
             'client_satisfaction' => $this->calculateClientSatisfaction($broker),
             'conversion_rate' => $this->calculateConversionRate($broker),

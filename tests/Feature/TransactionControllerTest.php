@@ -288,33 +288,6 @@ class TransactionControllerTest extends TestCase
         $response->assertSessionHasErrors(['amount']);
     }
 
-    public function test_transaction_can_calculate_commission(): void
-    {
-        $broker = User::factory()->create([
-            'role' => 'broker',
-            'is_approved' => true,
-            'application_status' => 'approved'
-        ]);
-        $client = User::factory()->create(['role' => 'client']);
-        $property = Property::factory()->create(['broker_id' => $broker->id]);
-
-        $transactionData = [
-            'property_id' => $property->id,
-            'client_id' => $client->id,
-            'transaction_type' => 'sale',
-            'amount' => 5000000,
-            'commission_rate' => 5.0
-        ];
-
-        $response = $this->actingAs($broker)->post('/broker/transactions', $transactionData);
-
-        $response->assertRedirect();
-
-        $transaction = Transaction::where('property_id', $property->id)->first();
-        $expectedCommission = 5000000 * 0.05; // 5% of 5,000,000
-        
-        $this->assertEquals($expectedCommission, $transaction->commission_amount);
-    }
 
     public function test_transaction_filters_by_status(): void
     {

@@ -317,7 +317,7 @@ const getTransactionStatusBadge = (status) => {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">
-                            Total Commission
+                            Total Sales Value
                         </p>
                         <p class="text-2xl font-bold text-gray-900">
                             {{
@@ -583,9 +583,7 @@ const getTransactionStatusBadge = (status) => {
                                 <span
                                     class="text-lg font-semibold text-gray-900"
                                 >
-                                    {{
-                                        analytics?.completed_transactions || 0
-                                    }}
+                                    {{ analytics?.completed_transactions || 0 }}
                                     deals
                                 </span>
                             </div>
@@ -610,7 +608,11 @@ const getTransactionStatusBadge = (status) => {
                         <ModernButton
                             variant="outline"
                             size="sm"
-                            :href="route('admin.transactions.index', { broker: broker.id })"
+                            :href="
+                                route('admin.transactions.index', {
+                                    broker: broker.id,
+                                })
+                            "
                         >
                             View All
                         </ModernButton>
@@ -648,9 +650,7 @@ const getTransactionStatusBadge = (status) => {
                                             {{ property.views || 0 }} views
                                         </span>
                                         <span class="text-xs text-gray-500">
-                                            {{
-                                                property.inquiries || 0
-                                            }}
+                                            {{ property.inquiries || 0 }}
                                             inquiries
                                         </span>
                                     </div>
@@ -744,10 +744,10 @@ const getTransactionStatusBadge = (status) => {
                                             }}
                                         </span>
                                         <span class="text-xs text-gray-500">
-                                            Commission:
+                                            Value:
                                             {{
                                                 formatCurrency(
-                                                    transaction.commission
+                                                    transaction.amount
                                                 )
                                             }}
                                         </span>

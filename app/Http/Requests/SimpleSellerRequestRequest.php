@@ -47,7 +47,6 @@ class SimpleSellerRequestRequest extends FormRequest
             'ownership_documents.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240',
             
             // Preferences
-            'preferred_contact_method' => 'required|in:email,phone,both',
             'availability' => 'nullable|string|max:500',
             'urgency' => 'required|in:low,medium,high,immediate',
             'additional_notes' => 'nullable|string|max:1000',
@@ -56,6 +55,10 @@ class SimpleSellerRequestRequest extends FormRequest
             'marketing_consent' => 'boolean',
             'newsletter_consent' => 'boolean',
             'terms_accepted' => 'required|accepted',
+            
+            // Broker selection
+            'broker_selection_method' => 'required|in:auto,manual',
+            'preferred_broker_id' => 'nullable|exists:users,id',
         ];
     }
 

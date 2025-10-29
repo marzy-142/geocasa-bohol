@@ -96,7 +96,13 @@ class Conversation extends Model
      */
     public function hasParticipant(int $userId): bool
     {
-        return in_array($userId, $this->participants ?? []);
+        // Check JSON participants field first
+        if (in_array($userId, $this->participants ?? [])) {
+            return true;
+        }
+
+        // Fallback to pivot table for robustness
+        return $this->participantUsers()->where('user_id', $userId)->exists();
     }
 
     /**

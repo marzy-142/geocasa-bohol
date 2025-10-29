@@ -95,8 +95,8 @@ class TransactionStatusNotification extends Notification implements ShouldQueue,
             ->line('**Client:** ' . $this->transaction->client->name);
 
         if ($this->transaction->status === 'finalized') {
-            $message->line('**Final Price:** ₱' . number_format($this->transaction->final_price ?? $this->transaction->offered_price))
-                ->line('**Commission:** ₱' . number_format($this->transaction->commission_amount))
+            $final = (float) (($this->transaction->final_price ?? $this->transaction->offered_price) ?? 0);
+            $message->line('**Final Price:** ₱' . number_format($final, 2))
                 ->line('Congratulations on completing this transaction!');
         }
 

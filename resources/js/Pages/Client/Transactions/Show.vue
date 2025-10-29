@@ -286,18 +286,6 @@
                                                 }}</span
                                             >
                                         </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-600"
-                                                >Commission:</span
-                                            >
-                                            <span class="font-medium"
-                                                >₱{{
-                                                    formatPrice(
-                                                        transaction.commission_amount
-                                                    )
-                                                }}</span
-                                            >
-                                        </div>
                                     </div>
                                 </div>
                             </div>

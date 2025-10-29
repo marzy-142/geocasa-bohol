@@ -18,8 +18,10 @@
                         <p
                             class="text-sm text-gray-600 dark:text-gray-400 mt-1"
                         >
-                            {{ conversation.participants?.length || 0 }} participants
-                            • {{ conversation.type }}
+                            {{
+                                conversation.participants?.length || 0
+                            }}
+                            participants • {{ conversation.type }}
                         </p>
                     </div>
                 </div>
@@ -174,8 +176,13 @@
                                     : 'justify-start',
                             ]"
                         >
-                            <span v-if="message.sender_id !== $page.props.auth.user.id">
-                                {{ message.sender?.name || 'Unknown' }} •
+                            <span
+                                v-if="
+                                    message.sender_id !==
+                                    $page.props.auth.user.id
+                                "
+                            >
+                                {{ message.sender?.name || "Unknown" }} •
                             </span>
                             <span class="ml-1">
                                 {{ formatTime(message.created_at) }}
@@ -200,7 +207,12 @@
                                     : 'bg-gray-500',
                             ]"
                         >
-                            {{ getInitials(message.sender?.name || $page.props.auth.user.name) }}
+                            {{
+                                getInitials(
+                                    message.sender?.name ||
+                                        $page.props.auth.user.name
+                                )
+                            }}
                         </div>
                     </div>
                 </div>
@@ -251,8 +263,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from "vue";
-import { router, Link } from "@inertiajs/vue3";
+import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { router, Link, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import {
     ArrowLeftIcon,
@@ -267,13 +279,16 @@ import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 const props = defineProps({
     conversation: {
         type: Object,
-        required: true
+        required: true,
     },
     messages: {
         type: Array,
-        default: () => []
+        default: () => [],
     },
 });
+
+const page = usePage();
+const currentUserId = page?.props?.auth?.user?.id;
 
 const messages = ref(props.messages || []);
 const newMessage = ref("");
@@ -284,7 +299,7 @@ const notificationPermission = ref(Notification.permission);
 
 // Request notification permission
 const requestNotificationPermission = async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
+    if ("Notification" in window && Notification.permission === "default") {
         const permission = await Notification.requestPermission();
         notificationPermission.value = permission;
     }
@@ -292,19 +307,25 @@ const requestNotificationPermission = async () => {
 
 // Show desktop notification
 const showDesktopNotification = (message) => {
-    if (Notification.permission === 'granted' && message.sender_id !== props.conversation.currentUser?.id) {
-        const notification = new Notification(message.sender?.name || 'New Message', {
-            body: message.content,
-            icon: '/logo.png',
-            badge: '/logo.png',
-            tag: `message-${message.id}`,
-        });
-        
+    if (
+        Notification.permission === "granted" &&
+        message.sender_id !== currentUserId
+    ) {
+        const notification = new Notification(
+            message.sender?.name || "New Message",
+            {
+                body: message.content,
+                icon: "/logo.png",
+                badge: "/logo.png",
+                tag: `message-${message.id}`,
+            }
+        );
+
         notification.onclick = () => {
             window.focus();
             notification.close();
         };
-        
+
         setTimeout(() => notification.close(), 5000);
     }
 };
@@ -380,13 +401,13 @@ const getInitials = (name) => {
 const formatTime = (timestamp) => {
     if (!timestamp) return "";
     const date = new Date(timestamp);
-    
+
     if (isToday(date)) {
-        return format(date, 'h:mm a');
+        return format(date, "h:mm a");
     } else if (isYesterday(date)) {
-        return 'Yesterday ' + format(date, 'h:mm a');
+        return "Yesterday " + format(date, "h:mm a");
     } else {
-        return format(date, 'MMM d, h:mm a');
+        return format(date, "MMM d, h:mm a");
     }
 };
 
@@ -395,7 +416,7 @@ const scrollToBottom = (smooth = true) => {
         if (messagesContainer.value) {
             messagesContainer.value.scrollTo({
                 top: messagesContainer.value.scrollHeight,
-                behavior: smooth ? 'smooth' : 'auto'
+                behavior: smooth ? "smooth" : "auto",
             });
         }
     });
@@ -405,17 +426,21 @@ watch(
     () => props.messages,
     (newMessages, oldMessages) => {
         messages.value = newMessages || [];
-        
+
         // Check if new message was added
-        if (newMessages && oldMessages && newMessages.length > oldMessages.length) {
+        if (
+            newMessages &&
+            oldMessages &&
+            newMessages.length > oldMessages.length
+        ) {
             const latestMessage = newMessages[newMessages.length - 1];
-            
+
             // Show notification for new messages from others
-            if (latestMessage.sender_id !== props.conversation.currentUser?.id) {
+            if (latestMessage.sender_id !== currentUserId) {
                 showDesktopNotification(latestMessage);
             }
         }
-        
+
         scrollToBottom();
     },
     { immediate: true }
@@ -424,7 +449,7 @@ watch(
 onMounted(() => {
     scrollToBottom(false); // Instant scroll on mount
     messageInput.value?.focus();
-    
+
     // Request notification permission
     requestNotificationPermission();
 
@@ -443,15 +468,25 @@ onMounted(() => {
             "MessageSent",
             (e) => {
                 messages.value.push(e.message);
-                
+
                 // Show notification for messages from others
-                if (e.message.sender_id !== props.conversation.currentUser?.id) {
+                if (e.message.sender_id !== currentUserId) {
                     showDesktopNotification(e.message);
                 }
-                
+
                 scrollToBottom();
             }
         );
+    }
+});
+
+onUnmounted(() => {
+    if (window.Echo && props.conversation.id) {
+        try {
+            window.Echo.leave(`conversation.${props.conversation.id}`);
+        } catch (e) {
+            // no-op
+        }
     }
 });
 </script>

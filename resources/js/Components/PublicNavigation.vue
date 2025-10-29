@@ -91,7 +91,9 @@ onUnmounted(() => {
                                 ? 'text-primary-600 font-semibold'
                                 : 'text-neutral-600 hover:text-primary-600',
                         ]"
-                        :aria-current="currentRoute === 'public.properties' ? 'page' : null"
+                        :aria-current="
+                            currentRoute === 'public.properties' ? 'page' : null
+                        "
                     >
                         Properties
                     </Link>
@@ -103,21 +105,27 @@ onUnmounted(() => {
                                 ? 'text-primary-600 font-semibold'
                                 : 'text-neutral-600 hover:text-primary-600',
                         ]"
-                        :aria-current="currentRoute === 'seller-requests.create' ? 'page' : null"
+                        :aria-current="
+                            currentRoute === 'seller-requests.create'
+                                ? 'page'
+                                : null
+                        "
                     >
                         Sell Property
                     </Link>
                     <Link
-                        :href="route('leaderboard.index')"
+                        :href="route('brokers.index')"
                         :class="[
                             'font-medium transition-colors',
-                            currentRoute === 'leaderboard.index'
+                            currentRoute === 'brokers.index'
                                 ? 'text-primary-600 font-semibold'
                                 : 'text-neutral-600 hover:text-primary-600',
                         ]"
-                        :aria-current="currentRoute === 'leaderboard.index' ? 'page' : null"
+                        :aria-current="
+                            currentRoute === 'brokers.index' ? 'page' : null
+                        "
                     >
-                        Top Broker
+                        Broker Directory
                     </Link>
                 </nav>
 

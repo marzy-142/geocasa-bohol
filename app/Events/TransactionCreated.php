@@ -71,8 +71,7 @@ class TransactionCreated implements ShouldBroadcast
                 'status_label' => $this->transaction->status_label,
                 'amount' => $this->transaction->amount,
                 'formatted_amount' => $this->transaction->formatted_amount,
-                'commission_amount' => $this->transaction->commission_amount,
-                'formatted_commission' => $this->transaction->formatted_commission,
+                // Commission removed from payload; use amount/final price for value displays
                 'created_at' => $this->transaction->created_at->toISOString(),
                 'property' => [
                     'id' => $this->transaction->property->id,

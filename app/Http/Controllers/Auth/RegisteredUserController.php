@@ -167,8 +167,10 @@ class RegisteredUserController extends Controller
         if (!$user->hasVerifiedEmail()) {
             // Redirect to email verification notice
             session()->forget('inquiry_data');
-            return redirect()->route('verification.notice')
-                ->with('success', 'Registration successful! Please check your email and click the verification link to complete your registration.');
+            // Flash the success message explicitly
+            session()->flash('success', 'Registration successful! Please check your email and click the verification link to complete your registration.');
+            // Pass the email as a query parameter for display
+            return redirect()->route('verification.notice', ['registered' => '1', 'email' => $user->email]);
         }
 
         // Email is verified - proceed with normal flow

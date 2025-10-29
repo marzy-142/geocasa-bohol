@@ -42,7 +42,8 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastAs(): string
     {
-        return 'message.sent';
+        // Match frontend listeners that use "MessageSent"
+        return 'MessageSent';
     }
 
     /**

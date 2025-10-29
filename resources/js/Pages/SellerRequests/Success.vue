@@ -6,6 +6,14 @@ const props = defineProps({
         type: Object,
         default: () => null,
     },
+    assignedBroker: {
+        type: Object,
+        default: () => null,
+    },
+    assignmentMethod: {
+        type: String,
+        default: 'auto',
+    },
 });
 
 const showDetails = ref(false);
@@ -100,6 +108,74 @@ onMounted(() => {
                 </div>
             </div>
 
+            <!-- Broker Assignment Info -->
+            <div v-if="assignedBroker" class="bg-gradient-to-r from-blue-50 to-indigo-50 overflow-hidden shadow-xl sm:rounded-lg mb-6 border-2 border-blue-200">
+                <div class="p-6 sm:px-20">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="flex items-center justify-center h-12 w-12 rounded-full bg-blue-600">
+                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900">
+                                Your Assigned Broker
+                            </h2>
+                            <p class="text-sm text-gray-600">
+                                {{ assignmentMethod === 'manual' ? 'You selected' : 'We matched you with' }} a verified professional
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-6 shadow-sm">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900">{{ assignedBroker.name }}</h3>
+                                <p v-if="assignedBroker.brokerage_firm_name" class="text-gray-600 mt-1">{{ assignedBroker.brokerage_firm_name }}</p>
+                                
+                                <div class="mt-4 space-y-2">
+                                    <div v-if="assignedBroker.office_contact_number" class="flex items-center text-sm text-gray-600">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                        </svg>
+                                        {{ assignedBroker.office_contact_number }}
+                                    </div>
+                                    <div v-if="assignedBroker.city" class="flex items-center text-sm text-gray-600">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        {{ assignedBroker.city }}, {{ assignedBroker.province }}
+                                    </div>
+                                    <div v-if="assignedBroker.years_experience" class="flex items-center text-sm text-gray-600">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                        {{ assignedBroker.years_experience }} years of experience
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Verified
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                            <p class="text-sm text-blue-800">
+                                <strong>{{ assignedBroker.name }}</strong> will contact you within 24 hours to discuss your property and next steps.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- What Happens Next -->
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg mb-6">
                 <div class="p-6 sm:px-20">
@@ -110,57 +186,58 @@ onMounted(() => {
                     <div class="space-y-4">
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100"
-                                >
-                                    <span
-                                        class="text-sm font-medium text-blue-600"
-                                        >1</span
-                                    >
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-green-100">
+                                    <svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
                                 </div>
                             </div>
                             <div class="ml-4">
                                 <h3 class="text-lg font-medium text-gray-900">
-                                    Review Process
+                                    Broker Assigned ✓
                                 </h3>
                                 <p class="text-gray-600">
-                                    Our team will review your property details
-                                    and documentation within 24-48 hours.
+                                    {{ assignedBroker ? assignedBroker.name + ' has been assigned to your property.' : 'A broker has been assigned to your property.' }}
                                 </p>
                             </div>
                         </div>
 
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100"
-                                >
-                                    <span
-                                        class="text-sm font-medium text-blue-600"
-                                        >2</span
-                                    >
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
+                                    <span class="text-sm font-medium text-blue-600">1</span>
                                 </div>
                             </div>
                             <div class="ml-4">
                                 <h3 class="text-lg font-medium text-gray-900">
-                                    Broker Assignment
+                                    Initial Contact
                                 </h3>
                                 <p class="text-gray-600">
-                                    We'll assign an experienced broker to handle
-                                    your property listing and marketing.
+                                    Your broker will reach out within 24 hours to introduce themselves and discuss your property goals.
                                 </p>
                             </div>
                         </div>
 
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100"
-                                >
-                                    <span
-                                        class="text-sm font-medium text-blue-600"
-                                        >3</span
-                                    >
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
+                                    <span class="text-sm font-medium text-blue-600">2</span>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">
+                                    Property Review
+                                </h3>
+                                <p class="text-gray-600">
+                                    Your broker will review your property details and may schedule a visit to assess the property.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
+                                    <span class="text-sm font-medium text-blue-600">3</span>
                                 </div>
                             </div>
                             <div class="ml-4">
@@ -168,30 +245,23 @@ onMounted(() => {
                                     Property Listing
                                 </h3>
                                 <p class="text-gray-600">
-                                    Once approved, your property will be listed
-                                    on our platform and marketing channels.
+                                    Once approved, your property will be professionally listed on our platform with photos and marketing materials.
                                 </p>
                             </div>
                         </div>
 
                         <div class="flex items-start">
                             <div class="flex-shrink-0">
-                                <div
-                                    class="flex items-center justify-center h-8 w-8 rounded-full bg-green-100"
-                                >
-                                    <span
-                                        class="text-sm font-medium text-green-600"
-                                        >4</span
-                                    >
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
+                                    <span class="text-sm font-medium text-blue-600">4</span>
                                 </div>
                             </div>
                             <div class="ml-4">
                                 <h3 class="text-lg font-medium text-gray-900">
-                                    Contact & Updates
+                                    Marketing & Showings
                                 </h3>
                                 <p class="text-gray-600">
-                                    We'll contact you via email or phone with
-                                    updates and potential buyer inquiries.
+                                    Your broker will market your property and coordinate showings with potential buyers.
                                 </p>
                             </div>
                         </div>

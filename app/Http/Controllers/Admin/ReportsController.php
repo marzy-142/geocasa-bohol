@@ -234,11 +234,6 @@ class ReportsController extends Controller
                     $query->where('status', 'finalized');
                 }
             ])
-            ->withSum([
-                'transactions as total_commission' => function ($query) {
-                    $query->where('status', 'finalized');
-                }
-            ], 'commission_amount')
             ->orderBy('properties_count', 'desc')
             ->limit(10)
             ->get();

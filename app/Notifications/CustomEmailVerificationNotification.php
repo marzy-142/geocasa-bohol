@@ -15,23 +15,10 @@ class CustomEmailVerificationNotification extends VerifyEmail
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail($notifiable): MailMessage
+    public function toMail($notifiable)
     {
-        $verificationUrl = $this->verificationUrl($notifiable);
-        $userName = $notifiable->name ?? 'Valued User';
-
-        return (new MailMessage)
-            ->subject('Complete Your GeoCasa Bohol Registration')
-            ->greeting("Welcome to GeoCasa Bohol, {$userName}!")
-            ->line('Thank you for choosing us as your real estate partner. We\'re excited to help you discover the perfect property in beautiful Bohol.')
-            ->line('To complete your registration and access our exclusive property listings, please verify your email address:')
-            ->action('Verify Email Address', $verificationUrl)
-            ->line('This verification link expires in 24 hours for your security.')
-            ->line('If you didn\'t create an account with GeoCasa Bohol, please ignore this email.')
-            ->salutation('Best regards,')
-            ->line('The GeoCasa Bohol Team')
-            ->line('Your trusted real estate partner in Bohol')
-            ->line('📧 support@geocasa-bohol.com | 🌐 www.geocasa-bohol.com');
+        // Use our custom Mailable instead of MailMessage
+        return new EmailVerificationMail($notifiable);
     }
 
     /**

@@ -379,7 +379,7 @@ const getHealthIndicatorColor = (status) => {
                                         }}
                                     </p>
                                     <p class="text-xs text-gray-500">
-                                        Commission
+                                        Sales Value
                                     </p>
                                 </div>
                                 <div class="text-center">

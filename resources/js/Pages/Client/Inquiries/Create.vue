@@ -36,12 +36,27 @@
         </div>
 
         <!-- Selected Property Preview -->
-        <div v-if="showPropertyDetails" class="bg-white rounded-lg shadow-sm border border-blue-200 p-6 mb-6">
+        <div
+            v-if="showPropertyDetails"
+            class="bg-white rounded-lg shadow-sm border border-blue-200 p-6 mb-6"
+        >
             <div class="flex items-start gap-4">
                 <div class="flex-shrink-0">
-                    <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white">
-                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    <div
+                        class="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white"
+                    >
+                        <svg
+                            class="w-12 h-12"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                            ></path>
                         </svg>
                     </div>
                 </div>
@@ -50,14 +65,19 @@
                         {{ showPropertyDetails.title }}
                     </h3>
                     <p class="text-sm text-gray-600 mb-2">
-                        {{ showPropertyDetails.type }} in {{ showPropertyDetails.municipality }}
+                        {{ showPropertyDetails.type }} in
+                        {{ showPropertyDetails.municipality }}
                     </p>
                     <p class="text-xl font-bold text-blue-600">
                         {{ formatPrice(showPropertyDetails.total_price) }}
                     </p>
-                    <div v-if="showPropertyDetails.broker" class="mt-3 pt-3 border-t border-gray-200">
+                    <div
+                        v-if="showPropertyDetails.broker"
+                        class="mt-3 pt-3 border-t border-gray-200"
+                    >
                         <p class="text-sm text-gray-600">
-                            <span class="font-medium">Broker:</span> {{ showPropertyDetails.broker.name }}
+                            <span class="font-medium">Broker:</span>
+                            {{ showPropertyDetails.broker.name }}
                         </p>
                     </div>
                 </div>
@@ -97,8 +117,13 @@
                                     }})
                                 </option>
                             </select>
-                            <p v-if="selectedProperty" class="mt-1 text-sm text-blue-600">
-                                Property pre-selected. To inquire about a different property, go back and select another one.
+                            <p
+                                v-if="selectedProperty"
+                                class="mt-1 text-sm text-blue-600"
+                            >
+                                Property pre-selected. To inquire about a
+                                different property, go back and select another
+                                one.
                             </p>
                             <div
                                 v-if="form.errors.property_id"
@@ -108,37 +133,17 @@
                             </div>
                         </div>
 
-                        <!-- Inquiry Type -->
-                        <div>
-                            <label
-                                for="inquiry_type"
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                            >
-                                Inquiry Type
-                            </label>
-                            <select
-                                id="inquiry_type"
-                                v-model="form.inquiry_type"
-                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            >
-                                <option value="general">General Inquiry</option>
-                                <option value="viewing">
-                                    Schedule Viewing
-                                </option>
-                                <option value="price">Price Information</option>
-                                <option value="availability">
-                                    Availability Check
-                                </option>
-                            </select>
-                        </div>
-
                         <!-- Message -->
                         <div>
                             <label
                                 for="message"
                                 class="block text-sm font-medium text-gray-700 mb-2"
                             >
-                                Your Message *
+                                Your Message <span class="text-red-500">*</span>
+                                <span
+                                    class="text-gray-500 font-normal text-xs ml-1"
+                                    >Be specific to get a faster response</span
+                                >
                             </label>
                             <textarea
                                 id="message"
@@ -148,6 +153,9 @@
                                 placeholder="Please describe what you'd like to know about this property..."
                                 required
                             ></textarea>
+                            <p class="mt-1 text-xs text-gray-500">
+                                {{ form.message.length }}/1000 characters
+                            </p>
                             <div
                                 v-if="form.errors.message"
                                 class="mt-1 text-sm text-red-600"
@@ -156,40 +164,74 @@
                             </div>
                         </div>
 
-                        <!-- Contact Preferences -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    for="preferred_contact_method"
-                                    class="block text-sm font-medium text-gray-700 mb-2"
+                        <!-- Budget (Optional) -->
+                        <div>
+                            <label
+                                for="budget_range"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Your Budget Range (Optional)
+                                <span
+                                    class="text-gray-500 font-normal text-xs ml-1"
+                                    >Helps broker show suitable options</span
                                 >
-                                    Preferred Contact Method
-                                </label>
-                                <select
-                                    id="preferred_contact_method"
-                                    v-model="form.preferred_contact_method"
-                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                >
-                                    <option value="">Select method</option>
-                                    <option value="email">Email</option>
-                                    <option value="phone">Phone</option>
-                                </select>
-                            </div>
+                            </label>
+                            <input
+                                id="budget_range"
+                                v-model="form.budget_range"
+                                type="text"
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="e.g., ₱5,000,000 - ₱7,000,000"
+                            />
+                            <p class="mt-1 text-xs text-gray-500">
+                                Optional: Share your budget to receive tailored
+                                recommendations
+                            </p>
+                        </div>
 
-                            <div>
-                                <label
-                                    for="budget_range"
-                                    class="block text-sm font-medium text-gray-700 mb-2"
+                        <!-- What Happens Next -->
+                        <div
+                            class="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                        >
+                            <div class="flex items-start">
+                                <svg
+                                    class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
                                 >
-                                    Budget Range
-                                </label>
-                                <input
-                                    id="budget_range"
-                                    v-model="form.budget_range"
-                                    type="text"
-                                    class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    placeholder="e.g., 5M - 7M"
-                                />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                                <div>
+                                    <h4
+                                        class="font-semibold text-blue-900 text-sm mb-1"
+                                    >
+                                        What happens after you submit?
+                                    </h4>
+                                    <ul
+                                        class="text-sm text-blue-800 space-y-1 list-disc list-inside"
+                                    >
+                                        <li>
+                                            Your inquiry will be sent to the
+                                            assigned broker
+                                        </li>
+                                        <li>
+                                            You will receive a confirmation
+                                            email
+                                        </li>
+                                        <li>
+                                            Expect a response within 24–48 hours
+                                        </li>
+                                        <li>
+                                            Track your inquiry in "My Inquiries"
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
 
@@ -232,11 +274,9 @@ const props = defineProps({
 
 const form = useForm({
     property_id: props.selectedProperty?.id || "",
-    message: props.selectedProperty 
+    message: props.selectedProperty
         ? `I am interested in ${props.selectedProperty.title}. Please provide more information.`
         : "",
-    inquiry_type: "general",
-    preferred_contact_method: "",
     budget_range: "",
 });
 
@@ -246,7 +286,7 @@ const showPropertyDetails = computed(() => {
         return props.selectedProperty;
     }
     if (form.property_id) {
-        return props.properties.find(p => p.id === form.property_id);
+        return props.properties.find((p) => p.id === form.property_id);
     }
     return null;
 });

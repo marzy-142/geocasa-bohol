@@ -29,7 +29,7 @@ const columns = [
     { key: "clients_count", label: "Clients", sortable: true },
     { key: "properties_count", label: "Properties", sortable: true },
     { key: "transactions_count", label: "Transactions", sortable: true },
-    { key: "total_commission", label: "Commission", sortable: true },
+    { key: "total_commission", label: "Sales Value", sortable: true },
     { key: "actions", label: "Actions", sortable: false },
 ];
 
@@ -42,8 +42,10 @@ const search = () => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' })
-        .format(value || 0);
+    return new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+    }).format(value || 0);
 };
 </script>
 
@@ -53,7 +55,9 @@ const formatCurrency = (value) => {
 
         <!-- Header -->
         <div class="mb-8">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div
+                class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+            >
                 <div>
                     <h1 class="text-3xl font-bold text-neutral-900 mb-2">
                         Approved Brokers
@@ -101,10 +105,7 @@ const formatCurrency = (value) => {
         </div>
 
         <!-- Brokers Table -->
-        <ModernTable
-            :columns="columns"
-            :data="approvedBrokers.data"
-        >
+        <ModernTable :columns="columns" :data="approvedBrokers.data">
             <!-- Broker Column -->
             <template #cell-name="{ item }">
                 <div class="flex items-center gap-3">
@@ -124,7 +125,7 @@ const formatCurrency = (value) => {
                 </div>
             </template>
 
-            <!-- Commission Column -->
+            <!-- Sales Value Column -->
             <template #cell-total_commission="{ item }">
                 <div class="text-sm text-gray-900">
                     {{ formatCurrency(item.total_commission) }}
@@ -150,11 +151,15 @@ const formatCurrency = (value) => {
         <div v-if="approvedBrokers.links" class="mt-6">
             <div class="flex items-center justify-between">
                 <div class="text-sm text-gray-700">
-                    Showing {{ approvedBrokers.from }} to {{ approvedBrokers.to }} of
+                    Showing {{ approvedBrokers.from }} to
+                    {{ approvedBrokers.to }} of
                     {{ approvedBrokers.total }} results
                 </div>
                 <div class="flex items-center gap-2">
-                    <template v-for="link in approvedBrokers.links" :key="link.label">
+                    <template
+                        v-for="link in approvedBrokers.links"
+                        :key="link.label"
+                    >
                         <component
                             :is="link.url ? 'Link' : 'span'"
                             :href="link.url"

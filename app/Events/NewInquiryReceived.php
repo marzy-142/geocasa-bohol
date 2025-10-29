@@ -32,19 +32,18 @@ class NewInquiryReceived implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        // Broadcast to the broker's private user channel
+        $channels = [new PrivateChannel('inquiries')];
+
+        // Also broadcast to the broker-specific channel when available
         $brokerId = $this->inquiry->property && $this->inquiry->property->broker_id
             ? $this->inquiry->property->broker_id
-            : null;
+            : ($this->inquiry->assigned_broker_id ?? null);
+
         if ($brokerId) {
-            return [
-                new PrivateChannel('user.' . $brokerId),
-            ];
+            $channels[] = new PrivateChannel('broker.' . $brokerId);
         }
-        // Fallback: broadcast to general inquiries channel if no broker
-        return [
-            new PrivateChannel('inquiries'),
-        ];
+
+        return $channels;
     }
 
     /**

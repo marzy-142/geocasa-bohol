@@ -21,7 +21,7 @@ class SellerRequestUploadRequest extends SecureFileUploadRequest
             // Property basic information with enhanced validation
             'property_title' => 'required|string|max:255|min:5',
             'property_description' => 'required|string|max:2000|min:20',
-            'property_type' => 'required|string|in:residential_lot,agricultural_land,commercial_lot,industrial_lot,beachfront,mountain_view,rice_field,coconut_plantation,subdivision_lot,titled_land,tax_declared',
+            'property_type' => 'required|string|in:residential_lot,agricultural_land,commercial_lot,industrial_lot,beachfront,mountain_view,rice_field,coconut_plantation,subdivision_lot',
             'asking_price' => 'required|numeric|min:50000|max:999999999', // Reasonable price range
             
             // Location with enhanced validation
@@ -45,7 +45,6 @@ class SellerRequestUploadRequest extends SecureFileUploadRequest
             'property_documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
             
             // Seller preferences with validation
-            'preferred_contact_method' => 'required|in:email,phone,both',
             'availability' => 'nullable|string|max:500',
             'urgency' => 'required|in:low,medium,high,immediate',
             
@@ -186,7 +185,6 @@ class SellerRequestUploadRequest extends SecureFileUploadRequest
             'ownership_documents.*.max' => 'Each ownership document must not exceed 10MB.',
             
             // Enhanced preference messages
-            'preferred_contact_method.required' => 'Please specify your preferred contact method.',
             'urgency.required' => 'Please specify the urgency level.',
             
             // Enhanced additional information messages
@@ -212,7 +210,6 @@ class SellerRequestUploadRequest extends SecureFileUploadRequest
             'lot_area' => 'lot area',
             'year_built' => 'year built',
             'parking_spaces' => 'parking spaces',
-            'preferred_contact_method' => 'preferred contact method',
             'additional_notes' => 'additional notes',
             'marketing_consent' => 'marketing consent',
             'newsletter_consent' => 'newsletter consent',

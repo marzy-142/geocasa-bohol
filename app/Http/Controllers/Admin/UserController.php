@@ -115,7 +115,6 @@ class UserController extends Controller
                 'totalProperties' => $user->properties()->count(),
                 'totalClients' => $user->clients()->count(),
                 'totalTransactions' => $user->transactions()->count(),
-                'totalCommission' => $user->transactions()->where('status', 'finalized')->sum('commission_amount'),
             ]
         ]);
     }

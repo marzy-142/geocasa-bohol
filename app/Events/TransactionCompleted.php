@@ -31,7 +31,6 @@ class TransactionCompleted implements ShouldBroadcast
             'client_name' => $transaction->client->name ?? 'Unknown Client',
             'broker_name' => $transaction->broker->name ?? 'Unknown Broker',
             'final_price' => $transaction->final_price ?? $transaction->offered_price,
-            'commission_amount' => $transaction->commission_amount,
             'completion_date' => now()->toISOString(),
         ];
     }

@@ -44,19 +44,12 @@ class LeaderboardController extends Controller
                     $query->where('status', 'finalized');
                     $this->applyPeriodFilter($query, $period);
                 }
-            ], DB::raw('COALESCE(final_price, offered_price)'))
-            ->withSum([
-                'transactions as total_commission' => function ($query) use ($period) {
-                    $query->where('status', 'finalized');
-                    $this->applyPeriodFilter($query, $period);
-                }
-            ], 'commission_amount');
+            ], DB::raw('COALESCE(final_price, offered_price)'));
 
         // Get the broker with the highest sales count
         $topBroker = $query->orderByDesc('total_sales')->first();
 
         if ($topBroker) {
-            $topBroker->total_commission = $topBroker->total_commission ?? 0;
             $topBroker->total_sales_value = $topBroker->total_sales_value ?? 0;
         }
 

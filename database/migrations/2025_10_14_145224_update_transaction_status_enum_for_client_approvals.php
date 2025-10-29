@@ -13,28 +13,33 @@ return new class extends Migration
     public function up(): void
     {
         // Update the status enum to include client-centric statuses
-        DB::statement("ALTER TABLE transactions MODIFY COLUMN status ENUM(
-            'inquiry',
-            'initial_contact', 
-            'property_viewing',
-            'offer_made',
-            'negotiation',
-            'offer_accepted',
-            'contract_signed',
-            'due_diligence',
-            'financing',
-            'closing_preparation',
-            'finalized',
-            'cancelled',
-            'client_approval_pending',
-            'client_review_required',
-            'client_rejected',
-            'client_approved',
-            'offer_client_review',
-            'contract_review',
-            'document_collection',
-            'client_final_approval'
-        ) DEFAULT 'inquiry'");
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE transactions MODIFY COLUMN status ENUM(
+                'inquiry',
+                'initial_contact', 
+                'property_viewing',
+                'offer_made',
+                'negotiation',
+                'offer_accepted',
+                'contract_signed',
+                'due_diligence',
+                'financing',
+                'closing_preparation',
+                'finalized',
+                'cancelled',
+                'client_approval_pending',
+                'client_review_required',
+                'client_rejected',
+                'client_approved',
+                'offer_client_review',
+                'contract_review',
+                'document_collection',
+                'client_final_approval'
+            ) DEFAULT 'inquiry'");
+        }
+        // SQLite doesn't support ENUM, uses TEXT with application-level validation
     }
 
     /**
@@ -42,20 +47,24 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert back to original enum values
-        DB::statement("ALTER TABLE transactions MODIFY COLUMN status ENUM(
-            'inquiry',
-            'initial_contact',
-            'property_viewing',
-            'offer_made',
-            'negotiation',
-            'offer_accepted',
-            'contract_signed',
-            'due_diligence',
-            'financing',
-            'closing_preparation',
-            'finalized',
-            'cancelled'
-        ) DEFAULT 'inquiry'");
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'mysql') {
+            // Revert back to original enum values
+            DB::statement("ALTER TABLE transactions MODIFY COLUMN status ENUM(
+                'inquiry',
+                'initial_contact',
+                'property_viewing',
+                'offer_made',
+                'negotiation',
+                'offer_accepted',
+                'contract_signed',
+                'due_diligence',
+                'financing',
+                'closing_preparation',
+                'finalized',
+                'cancelled'
+            ) DEFAULT 'inquiry'");
+        }
     }
 };

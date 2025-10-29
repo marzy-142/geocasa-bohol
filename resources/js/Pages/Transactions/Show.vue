@@ -511,43 +511,6 @@ onUnmounted(() => {
                                             />
                                         </div>
                                     </div>
-
-                                    <!-- Commission -->
-                                    <div class="bg-purple-50 rounded-lg p-4">
-                                        <div
-                                            class="flex items-center justify-between"
-                                        >
-                                            <div>
-                                                <p
-                                                    class="text-sm font-medium text-purple-600"
-                                                >
-                                                    Commission
-                                                </p>
-                                                <p
-                                                    class="text-lg font-bold text-purple-900"
-                                                >
-                                                    {{
-                                                        currentTransaction.commission_rate
-                                                    }}%
-                                                </p>
-                                                <p
-                                                    v-if="
-                                                        currentTransaction.commission_amount
-                                                    "
-                                                    class="text-sm text-purple-700"
-                                                >
-                                                    {{
-                                                        formatPrice(
-                                                            currentTransaction.commission_amount
-                                                        )
-                                                    }}
-                                                </p>
-                                            </div>
-                                            <ChartBarIcon
-                                                class="w-8 h-8 text-purple-400"
-                                            />
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>

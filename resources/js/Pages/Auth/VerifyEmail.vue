@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from "vue";
-import { Head, Link, useForm } from "@inertiajs/vue3";
+import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
 import ModernButton from "@/Components/ModernButton.vue";
 import {
     EnvelopeIcon,
@@ -12,7 +12,17 @@ const props = defineProps({
     status: {
         type: String,
     },
+    registered: {
+        type: String,
+        default: null,
+    },
+    email: {
+        type: String,
+        default: null,
+    },
 });
+
+const page = usePage();
 
 const form = useForm({});
 const resendCount = ref(0);
@@ -41,6 +51,33 @@ const verificationLinkSent = computed(
 const showSuccessMessage = computed(() => {
     return verificationLinkSent.value || form.wasSuccessful;
 });
+
+// Check for registration success flash message
+const registrationSuccess = computed(() => {
+    // Check flash message first
+    if (page.props.flash?.success) {
+        return page.props.flash.success;
+    }
+    // Fallback to query parameter
+    if (props.registered === "1") {
+        if (props.email) {
+            return `Registration successful! A verification email has been sent to ${props.email}. Please check your inbox and click the verification link to complete your registration.`;
+        }
+        return "Registration successful! Please check your email and click the verification link to complete your registration.";
+    }
+    return null;
+});
+const registrationError = computed(() => page.props.flash?.error);
+
+// Debug: Log flash messages (remove after testing)
+if (import.meta.env.DEV) {
+    console.log("=== VERIFICATION PAGE DEBUG ===");
+    console.log("Flash messages:", page.props.flash);
+    console.log("Registered query param:", props.registered);
+    console.log("Registration success computed:", registrationSuccess.value);
+    console.log("All page props:", page.props);
+    console.log("==============================");
+}
 </script>
 
 <template>
@@ -78,6 +115,48 @@ const showSuccessMessage = computed(() => {
                     Thanks for signing up! Please verify your email address to
                     get started with GeoCasa Bohol.
                 </p>
+            </div>
+
+            <!-- Registration Success Message -->
+            <div
+                v-if="registrationSuccess"
+                class="bg-blue-50 border-2 border-blue-300 rounded-xl p-5 animate-pulse-slow"
+            >
+                <div class="flex items-start">
+                    <CheckCircleIcon
+                        class="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                    />
+                    <div class="flex-1">
+                        <p class="text-blue-800 font-semibold text-base mb-1">
+                            Registration Complete! 🎉
+                        </p>
+                        <p class="text-blue-700 text-sm leading-relaxed">
+                            {{ registrationSuccess }}
+                        </p>
+                        <p class="text-blue-600 text-xs mt-2">
+                            Check your inbox and click the verification link to
+                            activate your account.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Error Message -->
+            <div
+                v-if="registrationError"
+                class="bg-red-50 border border-red-200 rounded-xl p-4"
+            >
+                <div class="flex items-center">
+                    <ExclamationTriangleIcon
+                        class="w-5 h-5 text-red-500 mr-3"
+                    />
+                    <div>
+                        <p class="text-red-700 text-sm font-medium">Error</p>
+                        <p class="text-red-600 text-xs mt-1">
+                            {{ registrationError }}
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <!-- Status Messages -->
@@ -232,3 +311,19 @@ const showSuccessMessage = computed(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.animate-pulse-slow {
+    animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-slow {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.85;
+    }
+}
+</style>

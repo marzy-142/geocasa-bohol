@@ -102,7 +102,7 @@
             />
 
             <DashboardCard
-                title="Commission Earned"
+                title="Sales Value"
                 :value="formatCurrency(stats?.totalCommission || 0)"
                 subtitle="This month"
                 :icon="CurrencyDollarIcon"

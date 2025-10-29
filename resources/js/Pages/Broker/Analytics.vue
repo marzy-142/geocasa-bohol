@@ -58,7 +58,7 @@
                         </div>
                         <div class="ml-4">
                             <p class="text-sm font-medium text-gray-600">
-                                Avg Commission
+                                Avg Sales Value
                             </p>
                             <p class="text-2xl font-bold text-gray-900">
                                 ₱{{
@@ -119,7 +119,7 @@
                                 <div
                                     class="w-3 h-3 bg-purple-500 rounded-full"
                                 ></div>
-                                <span class="text-gray-600">Commission</span>
+                                <span class="text-gray-600">Sales Value</span>
                             </div>
                         </div>
                     </div>
@@ -180,7 +180,7 @@
                                     <p
                                         class="text-sm font-medium text-purple-700"
                                     >
-                                        Total Commission
+                                        Total Sales Value
                                     </p>
                                     <p
                                         class="text-2xl font-bold text-purple-900"

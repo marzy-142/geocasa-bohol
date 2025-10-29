@@ -37,9 +37,13 @@ class VerifyBrokerDataConsistency extends Command
                 ];
             }
 
-            // Check commission calculations
-            $totalCommission = $broker->transactions()->where('status', 'finalized')->sum('commission_amount');
-            $oldCommission = $broker->transactions()->where('status', 'completed')->sum('commission_amount');
+            // Commission removed: compute totals using sales value instead
+            $totalCommission = $broker->transactions()
+                ->where('status', 'finalized')
+                ->sum(DB::raw('COALESCE(final_price, offered_price)'));
+            $oldCommission = $broker->transactions()
+                ->where('status', 'completed')
+                ->sum(DB::raw('COALESCE(final_price, offered_price)'));
 
             if ($oldCommission > 0) {
                 $issues[] = [
@@ -96,7 +100,8 @@ class VerifyBrokerDataConsistency extends Command
         $totalBrokers = User::approvedBrokers()->count();
         $totalFinalizedTransactions = Transaction::where('status', 'finalized')->count();
         $totalCompletedTransactions = Transaction::where('status', 'completed')->count();
-        $totalCommission = Transaction::where('status', 'finalized')->sum('commission_amount');
+        $totalCommission = Transaction::where('status', 'finalized')
+            ->sum(DB::raw('COALESCE(final_price, offered_price)'));
 
         $this->info("Total Approved Brokers: {$totalBrokers}");
         $this->info("Total Finalized Transactions: {$totalFinalizedTransactions}");
@@ -129,7 +134,7 @@ class VerifyBrokerDataConsistency extends Command
                 'transactions as total_commission' => function ($query) {
                     $query->where('status', 'finalized');
                 }
-            ], 'commission_amount')
+            ], DB::raw('COALESCE(final_price, offered_price)'))
             ->orderByDesc('total_commission')
             ->first();
 
@@ -138,7 +143,7 @@ class VerifyBrokerDataConsistency extends Command
         }
 
         if ($topBrokerByCommission) {
-            $this->info("Top Broker by Commission: {$topBrokerByCommission->name} (₱" . number_format($topBrokerByCommission->total_commission ?? 0, 2) . ")");
+            $this->info("Top Broker by Sales Value: {$topBrokerByCommission->name} (₱" . number_format($topBrokerByCommission->total_commission ?? 0, 2) . ")");
         }
 
         // Summary

@@ -39,7 +39,6 @@ class DashboardController extends Controller
             'totalClients' => $cachedStats['totalClients'],
             'activeInquiries' => $cachedStats['activeInquiries'],
             'completedTransactions' => $cachedStats['completedTransactions'],
-            'totalCommission' => $cachedStats['totalCommission'],
             'monthlyStats' => $this->getMonthlyStats($user),
             'recentActivity' => $this->getRecentActivity($user),
         ];
@@ -116,10 +115,6 @@ class DashboardController extends Controller
                 'transactions' => $user->transactions()
                     ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                     ->count(),
-                'commission' => $user->transactions()
-                    ->where('status', 'finalized')
-                    ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                    ->sum('commission_amount'),
                 'properties_added' => $user->properties()
                     ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                     ->count(),
@@ -155,9 +150,6 @@ class DashboardController extends Controller
                     $query->where('broker_id', $user->id);
                 })->count(),
                 'conversionRate' => $this->calculateConversionRate($user),
-                'averageCommission' => $user->transactions()
-                    ->where('status', 'finalized')
-                    ->avg('commission_amount'),
                 'topPerformingProperty' => $propertyStats->first(),
             ],
         ]);
@@ -178,7 +170,6 @@ class DashboardController extends Controller
                     $query->where('broker_id', $user->id);
                 })->count(),
                 'total_transactions' => $user->transactions()->count(),
-                'total_commission' => $user->transactions()->where('status', 'finalized')->sum('commission_amount'),
             ],
             'recent_transactions' => $user->transactions()
                 ->with(['property', 'client'])
@@ -208,7 +199,6 @@ class DashboardController extends Controller
                     $query->where('broker_id', $user->id);
                 })->where('created_at', '>=', $currentMonth)->count(),
                 'transactions' => $user->transactions()->where('created_at', '>=', $currentMonth)->count(),
-                'commission' => $user->transactions()->where('created_at', '>=', $currentMonth)->sum('commission_amount'),
             ],
             'previous' => [
                 'properties' => $user->properties()->whereBetween('created_at', [$lastMonth, $currentMonth])->count(),
@@ -216,7 +206,6 @@ class DashboardController extends Controller
                     $query->where('broker_id', $user->id);
                 })->whereBetween('created_at', [$lastMonth, $currentMonth])->count(),
                 'transactions' => $user->transactions()->whereBetween('created_at', [$lastMonth, $currentMonth])->count(),
-                'commission' => $user->transactions()->whereBetween('created_at', [$lastMonth, $currentMonth])->sum('commission_amount'),
             ],
         ];
     }
