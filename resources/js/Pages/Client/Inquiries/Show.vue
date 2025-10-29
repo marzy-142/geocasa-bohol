@@ -31,18 +31,34 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <Link
+                        v-if="inquiry.conversation"
+                        :href="
+                            route('conversations.show', inquiry.conversation.id)
+                        "
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                            ></path>
+                        </svg>
+                        Message Broker
+                    </Link>
+                    <Link
                         v-if="inquiry.transaction"
                         :href="
                             route('transactions.show', inquiry.transaction.id)
                         "
                         class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm"
                         >View Transaction</Link
-                    >
-                    <Link
-                        v-else
-                        :href="route('client.broker')"
-                        class="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 px-3 py-1.5 rounded text-sm"
-                        >Message Broker</Link
                     >
                 </div>
             </div>

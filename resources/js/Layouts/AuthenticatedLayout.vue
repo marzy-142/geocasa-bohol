@@ -77,6 +77,11 @@ const showingNavigationDropdown = ref(false);
                                             Profile
                                         </DropdownLink>
                                         <DropdownLink
+                                            :href="route('account.settings')"
+                                        >
+                                            Account Settings
+                                        </DropdownLink>
+                                        <DropdownLink
                                             :href="route('logout')"
                                             method="post"
                                             as="button"

@@ -1,6 +1,7 @@
 <script setup>
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import { Head, Link } from "@inertiajs/vue3";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import {
     UserGroupIcon,
     ClockIcon,
@@ -261,15 +262,12 @@ const getHealthIndicatorColor = (status) => {
                                 class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                             >
                                 <div class="flex items-center space-x-3">
-                                    <div
-                                        class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center"
-                                    >
-                                        <span
-                                            class="text-sm font-medium text-orange-600"
-                                        >
-                                            {{ broker.name.charAt(0) }}
-                                        </span>
-                                    </div>
+                                    <UserAvatar
+                                        v-if="broker"
+                                        :user="broker"
+                                        size="sm"
+                                        bg-color="orange"
+                                    />
                                     <div>
                                         <p
                                             class="text-sm font-medium text-gray-900"
@@ -339,15 +337,12 @@ const getHealthIndicatorColor = (status) => {
                     <div class="p-6">
                         <div v-if="topBroker" class="space-y-4">
                             <div class="flex items-center space-x-3">
-                                <div
-                                    class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center"
-                                >
-                                    <span
-                                        class="text-lg font-medium text-green-600"
-                                    >
-                                        {{ topBroker.name.charAt(0) }}
-                                    </span>
-                                </div>
+                                <UserAvatar
+                                    v-if="topBroker"
+                                    :user="topBroker"
+                                    size="md"
+                                    bg-color="green"
+                                />
                                 <div>
                                     <p class="font-medium text-gray-900">
                                         {{ topBroker.name }}

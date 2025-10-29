@@ -244,11 +244,12 @@
                             Listed by
                         </h4>
                         <div class="flex items-center space-x-3">
-                            <div
-                                class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                            >
-                                {{ property.broker.name.charAt(0) }}
-                            </div>
+                            <UserAvatar
+                                v-if="property.broker"
+                                :user="property.broker"
+                                size="lg"
+                                bg-color="purple"
+                            />
                             <div>
                                 <p class="font-medium text-gray-900">
                                     {{ property.broker.name }}
@@ -546,6 +547,7 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 

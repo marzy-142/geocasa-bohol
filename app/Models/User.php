@@ -84,6 +84,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'website',
         'facebook',
         'linkedin',
+        // Account settings fields
+        'avatar',
+        'notification_preferences',
+        'privacy_settings',
+        'is_active',
+        'deactivated_at',
+        'deactivation_reason',
     ];
 
     /**
@@ -124,6 +131,11 @@ class User extends Authenticatable implements MustVerifyEmail
             'service_areas' => 'array',
             // Broker statistics casts
             'last_sale_date' => 'datetime',
+            // Account settings casts
+            'notification_preferences' => 'array',
+            'privacy_settings' => 'array',
+            'is_active' => 'boolean',
+            'deactivated_at' => 'datetime',
         ];
     }
 

@@ -32,6 +32,8 @@ class BrokerDirectoryController extends Controller
                     'rank' => $index + 1,
                     'id' => $broker->id,
                     'name' => $broker->name,
+                    'avatar' => $broker->avatar,
+                    'avatar_url' => $broker->avatar ? asset('storage/' . $broker->avatar) . '?v=' . time() : null,
                     'brokerage_firm_name' => $broker->brokerage_firm_name,
                     'city' => $broker->city,
                     'finalized_transactions_count' => $broker->completed_sales,
@@ -55,6 +57,8 @@ class BrokerDirectoryController extends Controller
                 return [
                     'id' => $broker->id,
                     'name' => $broker->name,
+                    'avatar' => $broker->avatar,
+                    'avatar_url' => $broker->avatar ? asset('storage/' . $broker->avatar) . '?v=' . time() : null,
                     'brokerage_firm_name' => $broker->brokerage_firm_name,
                     'city' => $broker->city,
                     'province' => $broker->province,
@@ -101,6 +105,8 @@ class BrokerDirectoryController extends Controller
             'broker' => [
                 'id' => $broker->id,
                 'name' => $broker->name,
+                'avatar' => $broker->avatar,
+                'avatar_url' => $broker->avatar ? asset('storage/' . $broker->avatar) . '?v=' . time() : null,
                 'brokerage_firm_name' => $broker->brokerage_firm_name,
                 'city' => $broker->city,
                 'province' => $broker->province,

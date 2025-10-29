@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\User;
 use App\Models\Transaction;
 use App\Models\Conversation;
+use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -162,7 +163,8 @@ class InquiryController extends Controller
             'property:id,title,slug,address,municipality,total_price,broker_id',
             'property.broker:id,name,email',
             'client:id,name,email,phone',
-            'transaction:id,status,transaction_number'
+            'transaction:id,status,transaction_number',
+            'conversation:id,type,last_message_at'
         ]);
         
         return Inertia::render('Inquiries/Show', [
@@ -432,6 +434,20 @@ class InquiryController extends Controller
         }
 
         $inquiry->update($updateData);
+
+        // Create or get conversation for ongoing communication
+        $conversation = $inquiry->conversation;
+        if (!$conversation) {
+            $conversation = Conversation::createForInquiry($inquiry->fresh(['property', 'client']));
+            
+            // Create initial system message
+            Message::create([
+                'conversation_id' => $conversation->id,
+                'sender_id' => null,
+                'content' => "Conversation started. {$user->name} responded to the inquiry about {$inquiry->property->title}.",
+                'is_system_message' => true,
+            ]);
+        }
 
         // Send email notification to the client
         try {

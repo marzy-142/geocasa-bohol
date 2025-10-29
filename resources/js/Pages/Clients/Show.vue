@@ -319,16 +319,12 @@
                         </div>
                         <div class="p-6">
                             <div class="flex items-center space-x-3">
-                                <div
-                                    class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center"
-                                >
-                                    <span
-                                        class="text-blue-600 font-medium text-lg"
-                                        >{{
-                                            client.broker.name.charAt(0)
-                                        }}</span
-                                    >
-                                </div>
+                                <UserAvatar
+                                    v-if="client.broker"
+                                    :user="client.broker"
+                                    size="md"
+                                    bg-color="blue"
+                                />
                                 <div>
                                     <p class="font-medium text-gray-900">
                                         {{ client.broker.name }}
@@ -445,6 +441,7 @@
 import { computed } from "vue";
 import { usePage, router } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 
 const props = defineProps({
     client: {

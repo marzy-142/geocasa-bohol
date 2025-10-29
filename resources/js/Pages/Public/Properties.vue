@@ -8,6 +8,7 @@ import ModernButton from "@/Components/ModernButton.vue";
 import Pagination from "@/Components/Pagination.vue";
 import LoadingSkeleton from "@/Components/LoadingSkeleton.vue";
 import EmptyState from "@/Components/EmptyState.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import {
     MagnifyingGlassIcon,
     MapPinIcon,
@@ -521,7 +522,14 @@ watch(
                                 class="flex items-center justify-between pt-4 border-t border-neutral-100"
                             >
                                 <div class="flex items-center gap-3">
+                                    <UserAvatar
+                                        v-if="property.broker"
+                                        :user="property.broker"
+                                        size="sm"
+                                        bg-color="primary"
+                                    />
                                     <div
+                                        v-else
                                         class="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-500 rounded-full flex items-center justify-center"
                                     >
                                         <UserIcon class="w-4 h-4 text-white" />

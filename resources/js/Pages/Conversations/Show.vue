@@ -140,11 +140,12 @@
                 >
                     <!-- Avatar -->
                     <div class="flex-shrink-0">
-                        <div
-                            class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs"
-                        >
-                            {{ getInitials(message.sender?.name) }}
-                        </div>
+                        <UserAvatar
+                            v-if="message.sender"
+                            :user="message.sender"
+                            size="sm"
+                            bg-color="blue"
+                        />
                     </div>
 
                     <!-- Message Content -->
@@ -256,6 +257,7 @@
 import { ref, onMounted, nextTick, watch } from "vue";
 import { router, Link, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import {
     ArrowLeftIcon,
     ChatBubbleLeftRightIcon,

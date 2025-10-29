@@ -30,8 +30,17 @@ Inquiry Date: {{ $inquiry->created_at->format('F d, Y') }}
 Your Message: "{{ $inquiry->message }}"
 @endif
 
+@if($inquiry->conversation)
+Continue Conversation: {{ route('conversations.show', $inquiry->conversation->id) }}
+@endif
+
 @if($inquiry->property->slug)
-View Property Online: {{ route('properties.show', $inquiry->property->slug) }}
+@php($slug = $inquiry->property->slug)
+@if(\Illuminate\Support\Facades\Route::has('public.properties.show'))
+View Property Online: {{ route('public.properties.show', $slug) }}
+@else
+View Property Online: {{ url('/browse-properties/'.$slug) }}
+@endif
 @endif
 
 ---

@@ -577,21 +577,12 @@
                             </div>
                             <div class="px-6 py-4">
                                 <div class="flex items-center space-x-3">
-                                    <div class="flex-shrink-0">
-                                        <div
-                                            class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center"
-                                        >
-                                            <span
-                                                class="text-sm font-medium text-white"
-                                            >
-                                                {{
-                                                    getInitials(
-                                                        transaction.broker.name
-                                                    )
-                                                }}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <UserAvatar
+                                        v-if="transaction.broker"
+                                        :user="transaction.broker"
+                                        size="md"
+                                        bg-color="blue"
+                                    />
                                     <div class="flex-1 min-w-0">
                                         <p
                                             class="text-sm font-medium text-gray-900 truncate"
@@ -812,6 +803,7 @@
 import { ref, computed, onMounted } from "vue";
 import { Link, router } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 
 const props = defineProps({
     transaction: Object,

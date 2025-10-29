@@ -51,6 +51,28 @@
                 class="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
             >
                 <div class="flex flex-wrap gap-3">
+                    <Link
+                        v-if="inquiry.conversation"
+                        :href="
+                            route('conversations.show', inquiry.conversation.id)
+                        "
+                        class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                            ></path>
+                        </svg>
+                        Open Conversation
+                    </Link>
                     <button
                         v-if="can.respond && !showResponseForm"
                         @click="showResponseForm = true"

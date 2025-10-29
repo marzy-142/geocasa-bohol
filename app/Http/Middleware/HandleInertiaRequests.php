@@ -30,10 +30,18 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        
+        // Prepare user data with avatar_url (don't modify the model directly)
+        $userData = $user ? $user->toArray() : null;
+        if ($user && $user->avatar) {
+            $userData['avatar_url'] = asset('storage/' . $user->avatar) . '?v=' . time();
+        }
+        
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $userData,
             ],
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
@@ -44,8 +52,8 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             // Add notifications for authenticated users
-            'notifications' => $request->user() 
-                ? $request->user()->notifications()->latest()->limit(10)->get()
+            'notifications' => $user
+                ? $user->notifications()->latest()->limit(10)->get()
                 : [],
         ];
     }

@@ -18,9 +18,7 @@
                         <p
                             class="text-sm text-gray-600 dark:text-gray-400 mt-1"
                         >
-                            {{
-                                conversation.participants?.length || 0
-                            }}
+                            {{ conversation.participants?.length || 0 }}
                             participants • {{ conversation.type }}
                         </p>
                     </div>
@@ -199,21 +197,16 @@
                                 : 'order-1',
                         ]"
                     >
-                        <div
-                            :class="[
-                                'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold',
+                        <UserAvatar
+                            v-if="message.sender"
+                            :user="message.sender"
+                            size="sm"
+                            :bg-color="
                                 message.sender_id === $page.props.auth.user.id
-                                    ? 'bg-blue-600'
-                                    : 'bg-gray-500',
-                            ]"
-                        >
-                            {{
-                                getInitials(
-                                    message.sender?.name ||
-                                        $page.props.auth.user.name
-                                )
-                            }}
-                        </div>
+                                    ? 'blue'
+                                    : 'gray'
+                            "
+                        />
                     </div>
                 </div>
             </div>
@@ -266,6 +259,7 @@
 import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { router, Link, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import {
     ArrowLeftIcon,
     ChatBubbleLeftRightIcon,

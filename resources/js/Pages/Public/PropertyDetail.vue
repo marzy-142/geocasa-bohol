@@ -829,10 +829,17 @@
                             Listed by
                         </h3>
                         <div class="flex items-center mb-4">
+                            <UserAvatar
+                                v-if="property.broker"
+                                :user="property.broker"
+                                size="lg"
+                                bg-color="blue"
+                            />
                             <div
+                                v-else
                                 class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-lg"
                             >
-                                {{ property.broker?.name?.charAt(0) || "G" }}
+                                G
                             </div>
                             <div class="ml-3">
                                 <div class="font-medium text-gray-900">
@@ -1273,6 +1280,7 @@ import { Link, useForm, usePage } from "@inertiajs/vue3";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
 import PublicFooter from "@/Components/PublicFooter.vue";
 import VirtualTourViewer from "@/Components/VirtualTourViewer.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -1347,7 +1355,8 @@ const safeImages = computed(() => {
 // Prioritize the selected gallery image; fall back to main_image when gallery is empty
 const currentImage = computed(() => {
     if (safeImages.value && safeImages.value.length > 0) {
-        const imageAtIndex = safeImages.value[currentImageIndex.value] ?? safeImages.value[0];
+        const imageAtIndex =
+            safeImages.value[currentImageIndex.value] ?? safeImages.value[0];
         return getImageUrl(imageAtIndex);
     }
     // If no gallery images, use main_image (may be placeholder or valid URL)

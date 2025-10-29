@@ -38,6 +38,7 @@ import NotificationDropdown from "@/Components/NotificationDropdown.vue";
 import NotificationToast from "@/Components/NotificationToast.vue";
 import GeoCasaLogo from "@/Components/GeoCasaLogo.vue";
 import FlashMessage from "@/Components/FlashMessage.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 
 const page = usePage();
 const { isKeyboardUser, announce, generateId } = useAccessibility();
@@ -740,11 +741,12 @@ const navigationSections = computed(() => {
                         class="mb-6 p-4 bg-white rounded-2xl shadow-soft border border-neutral-100 transition-all duration-200 hover:shadow-soft-md"
                     >
                         <div class="flex items-center gap-3">
-                            <div
-                                class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm shadow-card"
-                            >
-                                {{ user?.name?.charAt(0).toUpperCase() }}
-                            </div>
+                            <UserAvatar
+                                v-if="user"
+                                :user="user"
+                                size="sm"
+                                class="shadow-card"
+                            />
                             <div class="flex-1 min-w-0">
                                 <div
                                     class="text-sm font-semibold text-neutral-900 truncate"
@@ -762,25 +764,25 @@ const navigationSections = computed(() => {
 
                     <!-- Settings Section -->
                     <div class="space-y-2 mb-4">
-                        <!-- Notification Settings -->
+                        <!-- Account Settings -->
                         <Link
-                            :href="route('notifications.settings')"
+                            :href="route('account.settings')"
                             :class="[
                                 'group flex items-center gap-4 px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-200 relative',
                                 'hover:bg-neutral-50 hover:text-neutral-900 hover:scale-[1.02]',
                                 'focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2',
                                 'active:scale-[0.98]',
                                 !sidebarOpen && 'lg:justify-center lg:px-4',
-                                route().current('notifications.settings')
+                                route().current('account.settings')
                                     ? 'bg-primary-50 text-primary-700 border border-primary-100 font-semibold'
                                     : 'text-neutral-600',
                             ]"
-                            :title="!sidebarOpen ? 'Notification Settings' : ''"
+                            :title="!sidebarOpen ? 'Account Settings' : ''"
                         >
                             <Cog6ToothIcon
                                 :class="[
                                     'w-5 h-5 flex-shrink-0 transition-all duration-200',
-                                    route().current('notifications.settings')
+                                    route().current('account.settings')
                                         ? 'text-primary-600 scale-110'
                                         : 'text-neutral-400 group-hover:text-neutral-600 group-hover:scale-110',
                                 ]"
@@ -789,7 +791,7 @@ const navigationSections = computed(() => {
                                 v-if="sidebarOpen"
                                 class="lg:block transition-all duration-200 group-hover:translate-x-0.5"
                             >
-                                Settings
+                                Account Settings
                             </span>
                             <div
                                 class="absolute inset-0 rounded-2xl bg-gradient-to-r from-neutral-500/0 to-neutral-500/0 group-hover:from-neutral-500/5 group-hover:to-transparent transition-all duration-200"
@@ -900,11 +902,12 @@ const navigationSections = computed(() => {
                                     [{{ navigationSections.length }} sections]
                                 </div>
                             </div>
-                            <div
-                                class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm shadow-card"
-                            >
-                                {{ user?.name?.charAt(0).toUpperCase() }}
-                            </div>
+                            <UserAvatar
+                                v-if="user"
+                                :user="user"
+                                size="md"
+                                class="shadow-card"
+                            />
                         </div>
                     </div>
                 </div>

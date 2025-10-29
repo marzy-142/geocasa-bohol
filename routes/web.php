@@ -352,6 +352,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Account Settings Routes
+    Route::prefix('account')->name('account.')->group(function () {
+        Route::get('/settings', [\App\Http\Controllers\AccountSettingsController::class, 'index'])->name('settings');
+        Route::patch('/profile', [\App\Http\Controllers\AccountSettingsController::class, 'updateProfile'])->name('update-profile');
+        Route::patch('/password', [\App\Http\Controllers\AccountSettingsController::class, 'updatePassword'])->name('update-password');
+        Route::post('/avatar', [\App\Http\Controllers\AccountSettingsController::class, 'updateAvatar'])->name('update-avatar');
+        Route::delete('/avatar', [\App\Http\Controllers\AccountSettingsController::class, 'deleteAvatar'])->name('delete-avatar');
+        Route::patch('/notifications', [\App\Http\Controllers\AccountSettingsController::class, 'updateNotificationPreferences'])->name('update-notifications');
+        Route::patch('/privacy', [\App\Http\Controllers\AccountSettingsController::class, 'updatePrivacySettings'])->name('update-privacy');
+        Route::post('/deactivate', [\App\Http\Controllers\AccountSettingsController::class, 'deactivateAccount'])->name('deactivate');
+        Route::delete('/delete', [\App\Http\Controllers\AccountSettingsController::class, 'deleteAccount'])->name('delete');
+    });
 });
 
 // REMOVE THIS ENTIRE BLOCK - This was causing the 403 error:

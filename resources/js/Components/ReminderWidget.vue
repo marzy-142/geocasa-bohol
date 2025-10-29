@@ -71,7 +71,26 @@ const allReminders = computed(() => {
 const fetchReminders = async () => {
     try {
         loading.value = true;
+
+        // Check if the API route exists, if not, skip silently
         const response = await fetch("/api/reminders");
+
+        // If we get a 404, just set empty data and don't show errors
+        if (response.status === 404) {
+            reminders.value = {
+                pending_seller_requests: [],
+                unverified_accounts: [],
+                overdue_inquiries: [],
+                summary: {
+                    total_reminders: 0,
+                    high_priority_count: 0,
+                    has_urgent_items: false,
+                },
+            };
+            loading.value = false;
+            return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
@@ -80,8 +99,17 @@ const fetchReminders = async () => {
             throw new Error("Failed to fetch reminders");
         }
     } catch (err) {
-        error.value = err.message;
-        console.error("Error fetching reminders:", err);
+        // Silently fail - don't show errors to user for optional widget
+        reminders.value = {
+            pending_seller_requests: [],
+            unverified_accounts: [],
+            overdue_inquiries: [],
+            summary: {
+                total_reminders: 0,
+                high_priority_count: 0,
+                has_urgent_items: false,
+            },
+        };
     } finally {
         loading.value = false;
     }

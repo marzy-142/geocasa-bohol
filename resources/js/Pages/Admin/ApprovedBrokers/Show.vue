@@ -2,6 +2,7 @@
 import { Head } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import ModernButton from "@/Components/ModernButton.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import { ref } from "vue";
 import {
     UserIcon,
@@ -54,11 +55,12 @@ const formatDate = (date) => {
             >
                 <div class="flex items-start gap-6">
                     <!-- Broker Avatar -->
-                    <div
-                        class="w-20 h-20 bg-primary-100 rounded-2xl flex items-center justify-center"
-                    >
-                        <UserIcon class="w-10 h-10 text-primary-600" />
-                    </div>
+                    <UserAvatar
+                        v-if="broker"
+                        :user="broker"
+                        size="2xl"
+                        bg-color="primary"
+                    />
 
                     <!-- Broker Info -->
                     <div>

@@ -59,9 +59,7 @@
                                 >Lot Area</label
                             >
                             <p class="text-gray-900">
-                                {{
-                                    sellerRequest.lot_area?.toLocaleString()
-                                }}
+                                {{ sellerRequest.lot_area?.toLocaleString() }}
                                 sqm
                             </p>
                         </div>
@@ -117,15 +115,11 @@
                     </h2>
 
                     <div class="flex items-center gap-4">
-                        <div
-                            class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center"
-                        >
-                            <span class="text-2xl font-bold text-white">
-                                {{
-                                    sellerRequest.assigned_broker.name.charAt(0)
-                                }}
-                            </span>
-                        </div>
+                        <UserAvatar
+                            :user="sellerRequest.assigned_broker"
+                            size="lg"
+                            bg-color="blue"
+                        />
                         <div>
                             <p class="text-lg font-semibold text-gray-900">
                                 {{ sellerRequest.assigned_broker.name }}
@@ -281,6 +275,7 @@
 <script setup>
 import { Link } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import {
     ChevronLeftIcon,
     ChatBubbleLeftRightIcon,

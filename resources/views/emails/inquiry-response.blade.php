@@ -163,6 +163,11 @@
 
         @if($inquiry->property->slug && \Illuminate\Support\Facades\Route::has('public.properties.show'))
             <div style="text-align: center;">
+                @if($inquiry->conversation)
+                    <a href="{{ route('conversations.show', $inquiry->conversation->id) }}" class="button" style="margin-right: 10px;">
+                        Continue Conversation
+                    </a>
+                @endif
                 <a href="{{ route('public.properties.show', $inquiry->property->slug) }}" class="button">
                     View Property Details
                 </a>

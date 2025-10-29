@@ -1,5 +1,6 @@
 <script setup>
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { ref, reactive } from "vue";
 import { useToast } from "@/Composables/useToast";
@@ -69,7 +70,10 @@ const scheduleMeeting = () => {
         !meetingFormData.date ||
         !meetingFormData.time
     ) {
-        toast.warning("Missing Information", "Please fill in all required fields.");
+        toast.warning(
+            "Missing Information",
+            "Please fill in all required fields."
+        );
         return;
     }
 
@@ -77,22 +81,31 @@ const scheduleMeeting = () => {
         onSuccess: () => {
             showMeetingForm.value = false;
             meetingFormData.reset();
-            toast.success("Meeting Scheduled", "Your meeting has been scheduled successfully!");
+            toast.success(
+                "Meeting Scheduled",
+                "Your meeting has been scheduled successfully!"
+            );
             // Reload page to show new meeting
             window.location.reload();
         },
         onError: () => {
-            toast.error("Failed to Schedule", "Unable to schedule meeting. Please try again.");
+            toast.error(
+                "Failed to Schedule",
+                "Unable to schedule meeting. Please try again."
+            );
         },
     });
 };
 
 const cancelMeeting = (meetingId) => {
-    if (!confirm('Are you sure you want to cancel this meeting?')) return;
-    
-    useForm({}).delete(route('client.broker.meeting.cancel', meetingId), {
+    if (!confirm("Are you sure you want to cancel this meeting?")) return;
+
+    useForm({}).delete(route("client.broker.meeting.cancel", meetingId), {
         onSuccess: () => {
-            toast.success("Meeting Cancelled", "The meeting has been cancelled.");
+            toast.success(
+                "Meeting Cancelled",
+                "The meeting has been cancelled."
+            );
             window.location.reload();
         },
         onError: () => {
@@ -161,18 +174,25 @@ const formatTime = (time) => {
         <div v-if="broker" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <!-- Broker Profile Card - Simplified -->
             <div class="lg:col-span-1">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                >
                     <!-- Broker Avatar -->
                     <div class="text-center mb-6">
-                        <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <span class="text-2xl font-bold text-white">{{
-                                broker.name.charAt(0)
-                            }}</span>
+                        <div class="flex justify-center mb-3">
+                            <UserAvatar
+                                v-if="broker"
+                                :user="broker"
+                                size="2xl"
+                                bg-color="blue"
+                            />
                         </div>
                         <h2 class="text-xl font-bold text-gray-900 mb-1">
                             {{ broker.name }}
                         </h2>
-                        <p class="text-sm text-gray-500 mb-4">Real Estate Broker</p>
+                        <p class="text-sm text-gray-500 mb-4">
+                            Real Estate Broker
+                        </p>
                     </div>
 
                     <!-- Contact Information -->
@@ -214,21 +234,27 @@ const formatTime = (time) => {
                                 >
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Properties Sold</span>
-                                <span class="font-medium text-gray-900"
-                                    >{{ brokerStats?.properties_sold || 0 }}</span
+                                <span class="text-gray-600"
+                                    >Properties Sold</span
                                 >
+                                <span class="font-medium text-gray-900">{{
+                                    brokerStats?.properties_sold || 0
+                                }}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Active Clients</span>
-                                <span class="font-medium text-gray-900"
-                                    >{{ brokerStats?.active_clients || 0 }}</span
+                                <span class="text-gray-600"
+                                    >Active Clients</span
                                 >
+                                <span class="font-medium text-gray-900">{{
+                                    brokerStats?.active_clients || 0
+                                }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Response Rate</span>
                                 <span class="font-medium text-gray-900"
-                                    >{{ brokerStats?.response_rate || 0 }}%</span
+                                    >{{
+                                        brokerStats?.response_rate || 0
+                                    }}%</span
                                 >
                             </div>
                         </div>
@@ -238,7 +264,12 @@ const formatTime = (time) => {
                     <div class="space-y-2">
                         <Link
                             v-if="activeConversation"
-                            :href="route('conversations.show', activeConversation.id)"
+                            :href="
+                                route(
+                                    'conversations.show',
+                                    activeConversation.id
+                                )
+                            "
                             class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                         >
                             <ChatBubbleLeftRightIcon class="w-4 h-4" />
@@ -266,7 +297,9 @@ const formatTime = (time) => {
             <!-- Main Content -->
             <div class="lg:col-span-3">
                 <!-- Tab Navigation -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6"
+                >
                     <div class="flex border-b border-gray-200">
                         <button
                             @click="activeTab = 'inquiries'"
@@ -424,13 +457,24 @@ const formatTime = (time) => {
                                             }}</span>
                                         </div>
                                     </div>
-                                    <div v-if="meeting.property" class="text-sm text-neutral-600">
-                                        <strong>Property:</strong> {{ meeting.property.title }}
+                                    <div
+                                        v-if="meeting.property"
+                                        class="text-sm text-neutral-600"
+                                    >
+                                        <strong>Property:</strong>
+                                        {{ meeting.property.title }}
                                     </div>
-                                    <div v-if="meeting.notes" class="text-sm text-neutral-600">
-                                        <strong>Notes:</strong> {{ meeting.notes }}
+                                    <div
+                                        v-if="meeting.notes"
+                                        class="text-sm text-neutral-600"
+                                    >
+                                        <strong>Notes:</strong>
+                                        {{ meeting.notes }}
                                     </div>
-                                    <div v-if="meeting.status === 'pending'" class="flex gap-2 pt-2">
+                                    <div
+                                        v-if="meeting.status === 'pending'"
+                                        class="flex gap-2 pt-2"
+                                    >
                                         <button
                                             @click="cancelMeeting(meeting.id)"
                                             class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors"
@@ -507,7 +551,10 @@ const formatTime = (time) => {
             class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
             @click.self="showMeetingForm = false"
         >
-            <div ref="meetingModalRef" class="bg-white rounded-2xl p-6 w-full max-w-md">
+            <div
+                ref="meetingModalRef"
+                class="bg-white rounded-2xl p-6 w-full max-w-md"
+            >
                 <h3 class="text-xl font-bold text-neutral-900 mb-4">
                     Schedule Meeting
                 </h3>
@@ -562,7 +609,9 @@ const formatTime = (time) => {
                         >
                             <option value="consultation">Consultation</option>
                             <option value="viewing">Property Viewing</option>
-                            <option value="document_review">Document Review</option>
+                            <option value="document_review">
+                                Document Review
+                            </option>
                             <option value="virtual">Virtual Meeting</option>
                         </select>
                     </div>

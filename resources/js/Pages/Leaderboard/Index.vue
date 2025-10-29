@@ -62,12 +62,14 @@
                 <!-- Broker Profile - Centered and Minimal -->
                 <div class="text-center">
                     <div class="inline-block">
-                        <div
-                            class="w-32 h-32 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-white shadow-lg"
-                        >
-                            <span class="text-neutral-600 font-light text-4xl">
-                                {{ topBroker.name.charAt(0) }}
-                            </span>
+                        <div class="mb-8">
+                            <UserAvatar
+                                v-if="topBroker"
+                                :user="topBroker"
+                                size="2xl"
+                                bg-color="gray"
+                                class="w-32 h-32 mx-auto border-4 border-white shadow-lg"
+                            />
                         </div>
                         <h2
                             class="text-4xl font-light text-neutral-900 mb-2 tracking-tight"
@@ -251,6 +253,7 @@ import { ref } from "vue";
 import { Head, router, Link } from "@inertiajs/vue3";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
 import PublicFooter from "@/Components/PublicFooter.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 
 const props = defineProps({
     topBroker: Object,
