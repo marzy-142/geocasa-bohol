@@ -357,100 +357,6 @@ const getImageUrl = (image, isVirtualTour = false) => {
                             {{ featuredProperties.length }} properties
                         </p>
                     </div>
-                    <Link
-                        :href="route('public.properties')"
-                        class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                        <FunnelIcon class="w-4 h-4" />
-                        Advanced Filters
-                    </Link>
-                </div>
-
-                <!-- Quick Filters -->
-                <div class="mb-6 flex flex-col sm:flex-row gap-3">
-                    <div class="flex-1">
-                        <label
-                            class="block text-xs font-medium text-neutral-700 mb-2"
-                            >Price Range</label
-                        >
-                        <div class="flex flex-wrap gap-2">
-                            <button
-                                @click="selectedPriceRange = 'all'"
-                                :class="[
-                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
-                                    selectedPriceRange === 'all'
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
-                                ]"
-                            >
-                                All Prices
-                            </button>
-                            <button
-                                @click="selectedPriceRange = 'under-1m'"
-                                :class="[
-                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
-                                    selectedPriceRange === 'under-1m'
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
-                                ]"
-                            >
-                                Under ₱1M
-                            </button>
-                            <button
-                                @click="selectedPriceRange = '1m-5m'"
-                                :class="[
-                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
-                                    selectedPriceRange === '1m-5m'
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
-                                ]"
-                            >
-                                ₱1M - ₱5M
-                            </button>
-                            <button
-                                @click="selectedPriceRange = '5m-10m'"
-                                :class="[
-                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
-                                    selectedPriceRange === '5m-10m'
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
-                                ]"
-                            >
-                                ₱5M - ₱10M
-                            </button>
-                            <button
-                                @click="selectedPriceRange = 'over-10m'"
-                                :class="[
-                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
-                                    selectedPriceRange === 'over-10m'
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
-                                ]"
-                            >
-                                Over ₱10M
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="sm:w-48">
-                        <label
-                            class="block text-xs font-medium text-neutral-700 mb-2"
-                            >Sort By</label
-                        >
-                        <select
-                            v-model="selectedSort"
-                            class="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        >
-                            <option value="featured">Featured</option>
-                            <option value="newest">Newest First</option>
-                            <option value="price-low">
-                                Price: Low to High
-                            </option>
-                            <option value="price-high">
-                                Price: High to Low
-                            </option>
-                        </select>
-                    </div>
                 </div>
 
                 <!-- Property Grid -->
@@ -548,17 +454,14 @@ const getImageUrl = (image, isVirtualTour = false) => {
 
                 <!-- View All CTA -->
                 <div
-                    v-if="
-                        filteredProperties.length > 0 &&
-                        featuredProperties.length > 6
-                    "
+                    v-if="filteredProperties.length > 0"
                     class="text-center mt-8"
                 >
                     <Link
                         :href="route('public.properties')"
-                        class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition font-medium"
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold shadow-md hover:shadow-lg"
                     >
-                        View All {{ featuredProperties.length }} Properties
+                        View All Properties
                         <ArrowRightIcon class="w-5 h-5" />
                     </Link>
                 </div>

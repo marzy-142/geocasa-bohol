@@ -10727,3 +10727,394 @@ dream beachfront properties and investment opportunities.","specializations":["r
 [2025-10-31 06:56:36] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/client/properties/1","duration_ms":2102.63,"user_id":6} 
 [2025-10-31 06:56:38] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
 [2025-10-31 06:56:38] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":17.17,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:15:12] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:15:15] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":2213.18,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:15:15] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000","duration_ms":2213.18,"user_id":6} 
+[2025-10-31 07:16:01] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:16:01] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":141.24,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:16:08] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:16:08] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":67.16,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:16:46] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:16:46] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":38.32,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:16:47] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:16:47] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":34.6,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:17:02] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:02] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":67.27,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:17:14] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:14] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":57.57,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:17:15] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/dashboard","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:15] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/dashboard","status":302,"duration_ms":7.81,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:16] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/client/dashboard","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:16] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/client/dashboard","status":200,"duration_ms":91.26,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:17:16] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:16] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":12.86,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:17] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:17] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":29.73,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:22] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/client/inquiries","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:22] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/client/inquiries","status":200,"duration_ms":89.3,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:17:22] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:22] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":13.1,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:22] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:22] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":13.84,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:23] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:23] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":10.84,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:26] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/conversations","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:26] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/conversations","status":200,"duration_ms":65.77,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:17:27] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:27] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":8.04,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:27] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:27] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":12.04,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:28] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/client/broker","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:28] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/client/broker","status":200,"duration_ms":81.21,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:17:28] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:28] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":8.24,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:28] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:28] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":10.55,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:32] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/client/dashboard","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:32] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/client/dashboard","status":200,"duration_ms":86.1,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:17:33] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:33] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":9.36,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:33] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:33] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":23.34,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:34] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/client/seller-requests","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:34] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/client/seller-requests","status":200,"duration_ms":56.4,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:17:35] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:35] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":14.48,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:35] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:35] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":20.14,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:49] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:49] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":7.61,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:49] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:49] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":22.63,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:49] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:49] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":11.94,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:50] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:50] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":15.9,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:50] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:50] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":7.27,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:50] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:51] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":19.61,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:51] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:51] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":6.54,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:51] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:51] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":15.98,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:52] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:52] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":22.14,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:52] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:52] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":13.79,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 07:17:53] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:17:55] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":2175.71,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:17:55] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000","duration_ms":2175.71,"user_id":6} 
+[2025-10-31 07:20:36] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:20:36] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":92.78,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:20:40] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:20:40] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":97.48,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:20:55] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:20:55] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":71.9,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:20:58] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:20:59] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":83.33,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:21:01] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:21:01] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":80.8,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:21:20] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:21:20] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":37.42,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:21:24] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:21:24] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":39.37,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:21:28] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers/4","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:21:28] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers/4","status":200,"duration_ms":100.61,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:21:31] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:21:32] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":72.63,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:21:38] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:21:38] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":108.6,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:21:42] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:21:43] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":55.75,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:21:44] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:21:44] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":49.11,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:24:22] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:24:22] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":60.19,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:25:55] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:25:55] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":59.46,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:26:03] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:26:03] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":114.79,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:26:07] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:26:07] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":92.35,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:27:03] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/mountain-view-agricultural-land-carmen","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:27:03] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/mountain-view-agricultural-land-carmen","status":200,"duration_ms":50.08,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:27:06] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:27:06] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":92.04,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:27:10] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/commercial-lot-tagbilaran-city-center","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:27:10] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/commercial-lot-tagbilaran-city-center","status":200,"duration_ms":85.43,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:29:47] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:29:47] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":114.89,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:30:32] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers/4","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:30:32] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers/4","status":200,"duration_ms":77.63,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:30:39] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:30:39] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":40.86,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:30:59] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:30:59] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":34.29,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:31:01] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:31:01] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":57.46,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:32:12] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:32:14] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":2162.75,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:32:14] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","duration_ms":2162.75,"user_id":6} 
+[2025-10-31 07:33:59] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:34:02] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":2163.75,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:34:02] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","duration_ms":2163.75,"user_id":6} 
+[2025-10-31 07:35:24] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:35:26] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":2206.86,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:35:26] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000","duration_ms":2206.86,"user_id":6} 
+[2025-10-31 07:35:44] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:35:44] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":62.15,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:35:47] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:35:47] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":40.11,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:35:49] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:35:49] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":150.94,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:36:36] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:36:37] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":219.41,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:36:41] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:36:41] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":165.05,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:38:11] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:38:13] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":2169.16,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:38:13] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000","duration_ms":2169.16,"user_id":6} 
+[2025-10-31 07:38:18] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:38:18] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":119.0,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:38:23] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:38:23] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":184.22,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:39:51] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:39:54] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":2099.15,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:39:54] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","duration_ms":2099.15,"user_id":6} 
+[2025-10-31 07:42:23] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:42:25] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":2122.91,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:42:25] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","duration_ms":2122.91,"user_id":6} 
+[2025-10-31 07:43:21] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:43:23] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":2109.56,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:43:23] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","duration_ms":2109.56,"user_id":6} 
+[2025-10-31 07:43:39] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:43:41] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":2115.42,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:43:41] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","duration_ms":2115.42,"user_id":6} 
+[2025-10-31 07:43:51] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:43:52] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":115.12,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 07:44:05] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:44:05] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":196.88,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:44:09] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:44:09] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":174.05,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:44:12] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:44:12] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":127.27,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:48:54] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:48:57] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":2293.77,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:48:57] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","duration_ms":2293.77,"user_id":6} 
+[2025-10-31 07:49:05] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:49:05] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":168.78,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:49:08] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:49:08] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":151.72,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 07:50:23] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:50:25] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":2103.82,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:50:25] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","duration_ms":2103.82,"user_id":6} 
+[2025-10-31 07:51:41] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:51:43] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":2105.58,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:51:43] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","duration_ms":2105.58,"user_id":6} 
+[2025-10-31 07:52:37] local.ERROR: Undefined array key 1 {"exception":"[object] (ErrorException(code: 0): Undefined array key 1 at D:\\geocasa-bohol-1\\database\\seeders\\VirtualTour360Seeder.php:153)
+[stacktrace]
+#0 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Bootstrap\\HandleExceptions.php(290): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->handleError(2, 'Undefined array...', 'D:\\\\geocasa-boho...', 153)
+#1 D:\\geocasa-bohol-1\\database\\seeders\\VirtualTour360Seeder.php(153): Illuminate\\Foundation\\Bootstrap\\HandleExceptions->Illuminate\\Foundation\\Bootstrap\\{closure}(2, 'Undefined array...', 'D:\\\\geocasa-boho...', 153)
+#2 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(36): Database\\Seeders\\VirtualTour360Seeder->run()
+#3 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#4 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#5 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#6 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Container.php(694): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#7 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Seeder.php(184): Illuminate\\Container\\Container->call(Array, Array)
+#8 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Seeder.php(193): Illuminate\\Database\\Seeder->Illuminate\\Database\\{closure}()
+#9 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Console\\Seeds\\SeedCommand.php(70): Illuminate\\Database\\Seeder->__invoke()
+#10 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Eloquent\\Concerns\\GuardsAttributes.php(155): Illuminate\\Database\\Console\\Seeds\\SeedCommand->Illuminate\\Database\\Console\\Seeds\\{closure}()
+#11 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Console\\Seeds\\SeedCommand.php(69): Illuminate\\Database\\Eloquent\\Model::unguarded(Object(Closure))
+#12 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(36): Illuminate\\Database\\Console\\Seeds\\SeedCommand->handle()
+#13 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#14 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#15 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#16 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Container.php(694): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#17 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(213): Illuminate\\Container\\Container->call(Array)
+#18 D:\\geocasa-bohol-1\\vendor\\symfony\\console\\Command\\Command.php(279): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#19 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#20 D:\\geocasa-bohol-1\\vendor\\symfony\\console\\Application.php(1094): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#21 D:\\geocasa-bohol-1\\vendor\\symfony\\console\\Application.php(342): Symfony\\Component\\Console\\Application->doRunCommand(Object(Illuminate\\Database\\Console\\Seeds\\SeedCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#22 D:\\geocasa-bohol-1\\vendor\\symfony\\console\\Application.php(193): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#23 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#24 D:\\geocasa-bohol-1\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1208): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#25 D:\\geocasa-bohol-1\\artisan(13): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#26 {main}
+"} 
+[2025-10-31 07:54:03] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:54:05] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":2149.6,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:54:05] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","duration_ms":2149.6,"user_id":6} 
+[2025-10-31 07:57:19] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 07:57:21] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":2148.74,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 07:57:21] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","duration_ms":2148.74,"user_id":6} 
+[2025-10-31 08:00:15] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:00:17] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":2143.04,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 08:00:17] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","duration_ms":2143.04,"user_id":6} 
+[2025-10-31 08:01:07] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:01:07] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":180.66,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:01:11] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:01:11] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":164.94,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:02:24] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:02:26] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":2386.14,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 08:02:26] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","duration_ms":2386.14,"user_id":6} 
+[2025-10-31 08:07:33] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:07:34] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":251.78,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:07:50] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/brokers","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:07:50] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/brokers","status":200,"duration_ms":126.73,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 08:08:10] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:08:10] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":98.28,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 08:08:13] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:08:13] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":171.59,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:08:18] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:08:20] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":2319.28,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 08:08:20] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","duration_ms":2319.28,"user_id":6} 
+[2025-10-31 08:08:26] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:08:26] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":154.2,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:10:52] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:10:55] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":2775.55,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 08:10:55] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","duration_ms":2775.55,"user_id":6} 
+[2025-10-31 08:11:39] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/client/properties/1","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:11:41] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/client/properties/1","status":200,"duration_ms":2200.75,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 08:11:41] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/client/properties/1","duration_ms":2200.75,"user_id":6} 
+[2025-10-31 08:11:43] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:11:43] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":20.71,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 08:11:46] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:11:46] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":62.85,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 08:12:27] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:12:29] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":2303.59,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 08:12:29] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","duration_ms":2303.59,"user_id":6} 
+[2025-10-31 08:28:08] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:28:10] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":2201.25,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 08:28:10] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000","duration_ms":2201.25,"user_id":6} 
+[2025-10-31 08:28:15] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:28:15] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":98.48,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 08:28:17] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:28:18] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":148.28,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:28:21] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:28:21] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":134.92,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:28:27] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:28:27] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":152.2,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:28:30] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:28:30] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":131.09,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:28:31] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:28:31] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":124.78,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:29:29] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao/inquire","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6,"input":{"name":"Mars","email":"jkfdjkas@gmail.com","phone":"094584584943","message":"I'm interested in learning more about this property. Please provide additional details."}} 
+[2025-10-31 08:29:29] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao/inquire","status":302,"duration_ms":226.01,"memory_usage":"30 MB","user_id":6} 
+[2025-10-31 08:29:29] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:29:30] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":181.72,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:29:36] local.INFO: Broadcasting [inquiry.new] on channels [private-inquiries, private-broker.2] with payload:
+{
+    "inquiry": {
+        "id": 33,
+        "name": "Mars",
+        "email": "jkfdjkas@gmail.com",
+        "phone": "094584584943",
+        "message": "I'm interested in learning more about this property. Please provide additional details.",
+        "inquiry_type": "general",
+        "status": "new",
+        "created_at": "2025-10-31T08:29:29.000000Z",
+        "property": {
+            "id": 7,
+            "title": "Luxury Beachfront Villa with 360\u00b0 Tour - Panglao",
+            "municipality": "Panglao",
+            "price": "37500000.00"
+        }
+    },
+    "socket": null
+}  
+[2025-10-31 08:29:36] local.INFO: Broadcasting [Illuminate\Notifications\Events\BroadcastNotificationCreated] on channels [private-App.Models.User.2] with payload:
+{
+    "id": "61aacddd-9326-4f10-b611-9242f024d1fb",
+    "type": "App\\Notifications\\NewInquiryNotification",
+    "inquiry_id": 33,
+    "property_id": 7,
+    "client_name": "Mars",
+    "property_title": "Luxury Beachfront Villa with 360\u00b0 Tour - Panglao",
+    "message": "New inquiry received for Luxury Beachfront Villa with 360\u00b0 Tour - Panglao",
+    "created_at": "2025-10-31T08:29:29.733607Z",
+    "socket": null
+}  
+[2025-10-31 08:29:38] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/store-inquiry-session","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6,"input":{"name":"Mars","email":"jkfdjkas@gmail.com","phone":"094584584943","message":"I'm interested in learning more about this property. Please provide additional details.","property_id":7,"property_title":"Luxury Beachfront Villa with 360° Tour - Panglao"}} 
+[2025-10-31 08:29:38] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/store-inquiry-session","status":302,"duration_ms":59.0,"memory_usage":"28 MB","user_id":6} 
+[2025-10-31 08:29:39] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:29:39] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/luxury-beachfront-villa-360-panglao","status":200,"duration_ms":141.5,"memory_usage":"32 MB","user_id":6} 
+[2025-10-31 08:29:39] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/register","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:29:39] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/register","status":302,"duration_ms":23.33,"memory_usage":"28 MB","user_id":6} 
+[2025-10-31 08:29:40] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/dashboard","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:29:40] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/dashboard","status":302,"duration_ms":9.0,"memory_usage":"28 MB","user_id":6} 
+[2025-10-31 08:29:41] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/client/dashboard","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:29:43] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/client/dashboard","status":200,"duration_ms":2288.86,"memory_usage":"34 MB","user_id":6} 
+[2025-10-31 08:29:43] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/client/dashboard","duration_ms":2288.86,"user_id":6} 
+[2025-10-31 08:29:45] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:29:45] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":21.0,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 08:29:45] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:29:45] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":13.66,"memory_usage":"26 MB","user_id":6} 
+[2025-10-31 08:29:48] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/logout","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":6} 
+[2025-10-31 08:29:48] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/logout","status":302,"duration_ms":27.07,"memory_usage":"26 MB","user_id":null} 
+[2025-10-31 08:29:49] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:29:49] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":195.32,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:29:53] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/sell-property","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:29:53] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/sell-property","status":200,"duration_ms":135.42,"memory_usage":"30 MB","user_id":null} 
+[2025-10-31 08:29:56] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:29:56] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":263.93,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:30:00] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:30:00] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":190.19,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:30:14] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island/inquire","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null,"input":{"name":"Mariella","email":"jknfsdfaj@gmail.com","phone":"04958695865","message":"I'm interested in learning more about this property. Please provide additional details."}} 
+[2025-10-31 08:30:14] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island/inquire","status":302,"duration_ms":191.04,"memory_usage":"30 MB","user_id":null} 
+[2025-10-31 08:30:14] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:30:15] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":188.11,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:30:17] local.INFO: Broadcasting [inquiry.new] on channels [private-inquiries, private-broker.2] with payload:
+{
+    "inquiry": {
+        "id": 34,
+        "name": "Mariella",
+        "email": "jknfsdfaj@gmail.com",
+        "phone": "04958695865",
+        "message": "I'm interested in learning more about this property. Please provide additional details.",
+        "inquiry_type": "general",
+        "status": "new",
+        "created_at": "2025-10-31T08:30:14.000000Z",
+        "property": {
+            "id": 1,
+            "title": "Beachfront Paradise - Panglao Island",
+            "municipality": "Panglao",
+            "price": "15000000.00"
+        }
+    },
+    "socket": null
+}  
+[2025-10-31 08:30:17] local.INFO: Broadcasting [Illuminate\Notifications\Events\BroadcastNotificationCreated] on channels [private-App.Models.User.2] with payload:
+{
+    "id": "940a496a-7e80-4457-bc94-05ba749d1f31",
+    "type": "App\\Notifications\\NewInquiryNotification",
+    "inquiry_id": 34,
+    "property_id": 1,
+    "client_name": "Mariella",
+    "property_title": "Beachfront Paradise - Panglao Island",
+    "message": "New inquiry received for Beachfront Paradise - Panglao Island",
+    "created_at": "2025-10-31T08:30:15.675538Z",
+    "socket": null
+}  
+[2025-10-31 08:30:17] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/store-inquiry-session","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null,"input":{"name":"Mariella","email":"jknfsdfaj@gmail.com","phone":"04958695865","message":"I'm interested in learning more about this property. Please provide additional details.","property_id":1,"property_title":"Beachfront Paradise - Panglao Island"}} 
+[2025-10-31 08:30:17] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/store-inquiry-session","status":302,"duration_ms":64.75,"memory_usage":"26 MB","user_id":null} 
+[2025-10-31 08:30:18] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:30:18] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":239.67,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:30:19] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/register","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:30:21] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/register","status":200,"duration_ms":2239.22,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:30:21] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/register","duration_ms":2239.22,"user_id":null} 
+[2025-10-31 08:30:27] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:30:30] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":2274.93,"memory_usage":"34 MB","user_id":null} 
+[2025-10-31 08:30:30] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","duration_ms":2274.93,"user_id":null} 
+[2025-10-31 08:30:57] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:30:58] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000","status":200,"duration_ms":123.27,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:31:50] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:31:50] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":68.47,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:31:53] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:31:53] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":143.26,"memory_usage":"32 MB","user_id":null} 
+[2025-10-31 08:31:58] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:32:00] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":2271.91,"memory_usage":"34 MB","user_id":null} 
+[2025-10-31 08:32:00] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","duration_ms":2271.91,"user_id":null} 
+[2025-10-31 08:36:29] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36","user_id":null} 
+[2025-10-31 08:36:32] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","status":200,"duration_ms":2135.59,"memory_usage":"34 MB","user_id":null} 
+[2025-10-31 08:36:32] local.WARNING: Slow Request Detected {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/beachfront-paradise-panglao-island","duration_ms":2135.59,"user_id":null} 

@@ -1107,91 +1107,25 @@ const propertyImages = computed(() => {
         .map((img, index) => {
             // If image is a string, it's the path
             if (typeof img === "string") {
-                const p = img.trim();
-                if (!p) return null;
-
-                // Absolute URLs / data URIs / blobs
-                if (
-                    /^(https?:)?\/\//i.test(p) ||
-                    p.startsWith("data:") ||
-                    p.startsWith("blob:")
-                ) {
-                    return { id: index, image_path: p };
-                }
-
-                // Already a storage URL
-                if (p.startsWith("/storage/")) {
-                    return { id: index, image_path: p };
-                }
-                if (p.startsWith("storage/")) {
-                    return { id: index, image_path: "/" + p };
-                }
-
-                // Strip leading public/ if present
-                let clean = p.replace(/^\/+/, "");
-                if (clean.startsWith("public/")) {
-                    clean = clean.substr(7);
-                }
-
-                // If the cleaned value already contains expected dirs, prefix /storage/
-                if (
-                    clean.includes("properties/images/") ||
-                    clean.includes("properties/virtual-tours/")
-                ) {
-                    return { id: index, image_path: "/storage/" + clean };
-                }
-
-                // Fallback: assume it's a filename under properties/images
                 return {
                     id: index,
-                    image_path: "/storage/properties/images/" + clean,
+                    image_path: img.startsWith("/") ? img : `/storage/${img}`,
                 };
             }
             // If image is an object, extract the path from common keys
             if (typeof img === "object") {
-                const raw =
+                const path =
                     img.url ||
                     img.path ||
                     img.src ||
                     img.image ||
                     img.filename ||
                     "";
-                const p = String(raw || "").trim();
-                if (!p) return null;
-
-                // Absolute URLs / data URIs / blobs
-                if (
-                    /^(https?:)?\/\//i.test(p) ||
-                    p.startsWith("data:") ||
-                    p.startsWith("blob:")
-                ) {
-                    return { id: img.id || index, image_path: p };
-                }
-
-                // Normalize storage/public prefixes
-                if (p.startsWith("/storage/")) {
-                    return { id: img.id || index, image_path: p };
-                }
-                if (p.startsWith("storage/")) {
-                    return { id: img.id || index, image_path: "/" + p };
-                }
-
-                let clean = p.replace(/^\/+/, "");
-                if (clean.startsWith("public/")) {
-                    clean = clean.substr(7);
-                }
-                if (
-                    clean.includes("properties/images/") ||
-                    clean.includes("properties/virtual-tours/")
-                ) {
-                    return {
-                        id: img.id || index,
-                        image_path: "/storage/" + clean,
-                    };
-                }
                 return {
                     id: img.id || index,
-                    image_path: "/storage/properties/images/" + clean,
+                    image_path: path.startsWith("/")
+                        ? path
+                        : `/storage/${path}`,
                 };
             }
             return null;

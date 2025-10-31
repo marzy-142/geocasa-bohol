@@ -29,13 +29,46 @@ class VirtualTour360Seeder extends Seeder
             ]);
         }
 
-        // Sample 360-degree equirectangular image URLs (stable demo sources)
-        // Using providers known to allow hotlinking and with proper CORS headers
+        // Create virtual tours directory if it doesn't exist
+        $virtualToursPath = 'properties/virtual-tours';
+        if (!Storage::disk('public')->exists($virtualToursPath)) {
+            Storage::disk('public')->makeDirectory($virtualToursPath);
+            $this->command->info("📁 Created directory: storage/app/public/{$virtualToursPath}");
+        }
+
+        // Sample 360-degree equirectangular image URLs
         $sample360Images = [
-            'https://pannellum.org/images/alma.jpg',
-            'https://photo-sphere-viewer-data.netlify.app/assets/sphere.jpg',
-            'https://pannellum.org/images/cerro-toco-0.jpg',
+            'https://cdn.pixabay.com/photo/2017/08/06/22/01/louvre-2596278_1280.jpg',
+            'https://cdn.pixabay.com/photo/2016/11/21/16/21/architecture-1846486_1280.jpg',
+            'https://cdn.pixabay.com/photo/2017/08/06/12/52/panorama-2595487_1280.jpg',
         ];
+
+        // Download images locally
+        $localImagePaths = [];
+        foreach ($sample360Images as $index => $imageUrl) {
+            $fileName = "360_tour_" . ($index + 1) . ".jpg";
+            $localPath = "{$virtualToursPath}/{$fileName}";
+            
+            // Check if already downloaded
+            if (Storage::disk('public')->exists($localPath)) {
+                $this->command->info("✓ Image already exists: {$fileName}");
+                $localImagePaths[] = $fileName;
+                continue;
+            }
+
+            // Download the image
+            try {
+                $this->command->info("⬇ Downloading {$fileName}...");
+                $imageContent = Http::timeout(30)->get($imageUrl)->body();
+                Storage::disk('public')->put($localPath, $imageContent);
+                $this->command->info("✓ Downloaded: {$fileName}");
+                $localImagePaths[] = $fileName;
+            } catch (\Exception $e) {
+                $this->command->error("✗ Failed to download {$fileName}: " . $e->getMessage());
+                // Use placeholder if download fails
+                $localImagePaths[] = null;
+            }
+        }
 
         // Create properties with 360-degree virtual tours
         $properties = [
@@ -63,7 +96,7 @@ class VirtualTour360Seeder extends Seeder
                 'internet_available' => true,
                 'is_featured' => true,
                 'has_virtual_tour' => true,
-                'virtual_tour_images' => json_encode([$sample360Images[0]]),
+                'virtual_tour_images' => $localImagePaths[0] ? json_encode([$localImagePaths[0]]) : null,
                 'gis_data' => json_encode([
                     'type' => 'beachfront',
                     'elevation' => '2m'
@@ -99,7 +132,7 @@ class VirtualTour360Seeder extends Seeder
                 'internet_available' => true,
                 'is_featured' => true,
                 'has_virtual_tour' => true,
-                'virtual_tour_images' => json_encode([$sample360Images[1]]),
+                'virtual_tour_images' => $localImagePaths[1] ? json_encode([$localImagePaths[1]]) : null,
                 'gis_data' => json_encode([
                     'type' => 'mountain',
                     'elevation' => '150m'
@@ -135,7 +168,7 @@ class VirtualTour360Seeder extends Seeder
                 'internet_available' => true,
                 'is_featured' => true,
                 'has_virtual_tour' => true,
-                'virtual_tour_images' => json_encode([$sample360Images[2]]),
+                'virtual_tour_images' => $localImagePaths[2] ? json_encode([$localImagePaths[2]]) : null,
                 'broker_id' => $broker->id,
                 'nearby_landmarks' => json_encode([
                     'Tagbilaran Port',
