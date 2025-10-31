@@ -143,7 +143,6 @@ class RegisteredUserController extends Controller
 
         // Send email verification notification
         event(new Registered($user));
-        $user->sendEmailVerificationNotification();
 
         // Handle broker-specific notifications and verification
         if ($user->role === 'broker') {

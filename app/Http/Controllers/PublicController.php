@@ -292,6 +292,10 @@ class PublicController extends Controller
                 // Map backend fields to frontend expected fields
                 $broker->total_properties = $broker->total_sales; // Properties sold
                 $broker->total_transactions = $broker->total_sales; // Happy clients (same as properties sold)
+                
+                // Add avatar fields for UserAvatar component
+                $broker->avatar_url = $broker->avatar ? asset('storage/' . $broker->avatar) . '?v=' . time() : null;
+                
                 return $broker;
             })
             // Rank by total sales count (not commission)

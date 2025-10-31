@@ -182,6 +182,7 @@ class DashboardController extends Controller
             'broker' => $broker,
             'recentActivity' => $recentActivity,
             'recentSellerRequests' => $recentSellerRequests,
+            'isFirstLogin' => $client->wasRecentlyCreated || $client->created_at->greaterThan(now()->subMinutes(5)),
         ]);
     }
     public function saveProperty(Request $request, Property $property)

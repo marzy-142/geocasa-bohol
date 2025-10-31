@@ -125,6 +125,104 @@ const updatePrivacy = () => {
     });
 };
 
+// Professional Profile Form (Broker Only)
+const professionalProfileForm = useForm({
+    bio: props.user.bio || "",
+    specializations: props.user.specializations || [],
+    service_areas: props.user.service_areas || [],
+    website: props.user.website || "",
+    facebook: props.user.facebook || "",
+    linkedin: props.user.linkedin || "",
+    availability_status: props.user.availability_status || "available",
+});
+
+const updateProfessionalProfile = () => {
+    professionalProfileForm.patch(
+        route("account.update-professional-profile"),
+        {
+            preserveScroll: true,
+        }
+    );
+};
+
+// Property specializations options
+const specializationOptions = [
+    { value: "residential", label: "Residential Properties" },
+    { value: "commercial", label: "Commercial Properties" },
+    { value: "agricultural", label: "Agricultural Land" },
+    { value: "industrial", label: "Industrial Properties" },
+    { value: "lot", label: "Vacant Lots" },
+    { value: "beach_resort", label: "Beach & Resort Properties" },
+    { value: "investment", label: "Investment Properties" },
+    { value: "luxury", label: "Luxury Properties" },
+];
+
+// Bohol municipalities for service areas
+const boholMunicipalities = [
+    "Tagbilaran City",
+    "Baclayon",
+    "Balilihan",
+    "Batuan",
+    "Bilar",
+    "Buenavista",
+    "Calape",
+    "Candijay",
+    "Carmen",
+    "Catigbian",
+    "Clarin",
+    "Corella",
+    "Cortes",
+    "Dagohoy",
+    "Danao",
+    "Dauis",
+    "Dimiao",
+    "Duero",
+    "Garcia Hernandez",
+    "Guindulman",
+    "Inabanga",
+    "Jagna",
+    "Jetafe",
+    "Lila",
+    "Loay",
+    "Loboc",
+    "Loon",
+    "Mabini",
+    "Maribojoc",
+    "Panglao",
+    "Pilar",
+    "President Carlos P. Garcia",
+    "Sagbayan",
+    "San Isidro",
+    "San Miguel",
+    "Sevilla",
+    "Sierra Bullones",
+    "Sikatuna",
+    "Talibon",
+    "Trinidad",
+    "Tubigon",
+    "Ubay",
+    "Valencia",
+    "Well",
+];
+
+const toggleSpecialization = (value) => {
+    const index = professionalProfileForm.specializations.indexOf(value);
+    if (index > -1) {
+        professionalProfileForm.specializations.splice(index, 1);
+    } else {
+        professionalProfileForm.specializations.push(value);
+    }
+};
+
+const toggleServiceArea = (municipality) => {
+    const index = professionalProfileForm.service_areas.indexOf(municipality);
+    if (index > -1) {
+        professionalProfileForm.service_areas.splice(index, 1);
+    } else {
+        professionalProfileForm.service_areas.push(municipality);
+    }
+};
+
 // Deactivate Account Form
 const deactivateForm = useForm({
     password: "",
@@ -312,6 +410,35 @@ const getInitials = (name) => {
                                         />
                                     </svg>
                                     Privacy
+                                </div>
+                            </button>
+
+                            <!-- Professional Profile Tab (Broker Only) -->
+                            <button
+                                v-if="user.role === 'broker'"
+                                @click="activeTab = 'professional'"
+                                :class="[
+                                    activeTab === 'professional'
+                                        ? 'bg-blue-50 text-blue-700 font-semibold'
+                                        : 'text-gray-700 hover:bg-gray-50',
+                                    'w-full text-left px-4 py-3 rounded-lg transition-colors',
+                                ]"
+                            >
+                                <div class="flex items-center">
+                                    <svg
+                                        class="w-5 h-5 mr-3"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                        />
+                                    </svg>
+                                    Professional Profile
                                 </div>
                             </button>
 
@@ -1332,6 +1459,470 @@ const getInitials = (name) => {
                                             privacyForm.processing
                                                 ? "Saving..."
                                                 : "Save Settings"
+                                        }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Professional Profile Tab (Broker Only) -->
+                        <div
+                            v-if="user.role === 'broker'"
+                            v-show="activeTab === 'professional'"
+                            class="bg-white rounded-lg shadow-sm p-6"
+                        >
+                            <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                                Professional Profile
+                            </h2>
+                            <p class="text-gray-600 mb-6">
+                                Enhance your broker profile to attract more
+                                clients
+                            </p>
+
+                            <form
+                                @submit.prevent="updateProfessionalProfile"
+                                class="space-y-8"
+                            >
+                                <!-- Bio Section -->
+                                <div>
+                                    <label
+                                        for="bio"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                    >
+                                        Professional Bio
+                                        <span class="text-gray-500 font-normal"
+                                            >(Optional)</span
+                                        >
+                                    </label>
+                                    <textarea
+                                        id="bio"
+                                        v-model="professionalProfileForm.bio"
+                                        rows="4"
+                                        maxlength="1000"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Tell clients about your experience, expertise, and what makes you stand out as a broker..."
+                                    ></textarea>
+                                    <div class="flex justify-between mt-1">
+                                        <p class="text-sm text-gray-500">
+                                            This will be displayed on your
+                                            public profile in the Broker
+                                            Directory
+                                        </p>
+                                        <p class="text-sm text-gray-500">
+                                            {{
+                                                professionalProfileForm.bio
+                                                    ?.length || 0
+                                            }}/1000
+                                        </p>
+                                    </div>
+                                    <p
+                                        v-if="
+                                            professionalProfileForm.errors.bio
+                                        "
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{ professionalProfileForm.errors.bio }}
+                                    </p>
+                                </div>
+
+                                <!-- Specializations Section -->
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-3"
+                                    >
+                                        Property Specializations
+                                        <span class="text-gray-500 font-normal"
+                                            >(Select all that apply)</span
+                                        >
+                                    </label>
+                                    <div
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-3"
+                                    >
+                                        <label
+                                            v-for="option in specializationOptions"
+                                            :key="option.value"
+                                            class="flex items-center p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                :value="option.value"
+                                                :checked="
+                                                    professionalProfileForm.specializations.includes(
+                                                        option.value
+                                                    )
+                                                "
+                                                @change="
+                                                    toggleSpecialization(
+                                                        option.value
+                                                    )
+                                                "
+                                                class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                            />
+                                            <span class="ml-3 text-gray-900">{{
+                                                option.label
+                                            }}</span>
+                                        </label>
+                                    </div>
+                                    <p class="mt-2 text-sm text-gray-500">
+                                        {{
+                                            professionalProfileForm
+                                                .specializations.length
+                                        }}
+                                        selected
+                                    </p>
+                                    <p
+                                        v-if="
+                                            professionalProfileForm.errors
+                                                .specializations
+                                        "
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{
+                                            professionalProfileForm.errors
+                                                .specializations
+                                        }}
+                                    </p>
+                                </div>
+
+                                <!-- Service Areas Section -->
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-3"
+                                    >
+                                        Service Areas in Bohol
+                                        <span class="text-gray-500 font-normal"
+                                            >(Select municipalities you
+                                            serve)</span
+                                        >
+                                    </label>
+                                    <div
+                                        class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50"
+                                    >
+                                        <div
+                                            class="grid grid-cols-2 md:grid-cols-3 gap-2"
+                                        >
+                                            <label
+                                                v-for="municipality in boholMunicipalities"
+                                                :key="municipality"
+                                                class="flex items-center p-2 hover:bg-white rounded cursor-pointer transition-colors"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    :value="municipality"
+                                                    :checked="
+                                                        professionalProfileForm.service_areas.includes(
+                                                            municipality
+                                                        )
+                                                    "
+                                                    @change="
+                                                        toggleServiceArea(
+                                                            municipality
+                                                        )
+                                                    "
+                                                    class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                                />
+                                                <span
+                                                    class="ml-2 text-sm text-gray-900"
+                                                    >{{ municipality }}</span
+                                                >
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2 text-sm text-gray-500">
+                                        {{
+                                            professionalProfileForm
+                                                .service_areas.length
+                                        }}
+                                        municipality/municipalities selected
+                                    </p>
+                                    <p
+                                        v-if="
+                                            professionalProfileForm.errors
+                                                .service_areas
+                                        "
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{
+                                            professionalProfileForm.errors
+                                                .service_areas
+                                        }}
+                                    </p>
+                                </div>
+
+                                <!-- Online Presence Section -->
+                                <div class="space-y-4">
+                                    <h3
+                                        class="text-lg font-medium text-gray-900"
+                                    >
+                                        Online Presence
+                                    </h3>
+
+                                    <div>
+                                        <label
+                                            for="website"
+                                            class="block text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            Website URL
+                                            <span
+                                                class="text-gray-500 font-normal"
+                                                >(Optional)</span
+                                            >
+                                        </label>
+                                        <input
+                                            id="website"
+                                            v-model="
+                                                professionalProfileForm.website
+                                            "
+                                            type="url"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="https://yourwebsite.com"
+                                        />
+                                        <p
+                                            v-if="
+                                                professionalProfileForm.errors
+                                                    .website
+                                            "
+                                            class="mt-1 text-sm text-red-600"
+                                        >
+                                            {{
+                                                professionalProfileForm.errors
+                                                    .website
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            for="facebook"
+                                            class="block text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            Facebook Profile/Page
+                                            <span
+                                                class="text-gray-500 font-normal"
+                                                >(Optional)</span
+                                            >
+                                        </label>
+                                        <input
+                                            id="facebook"
+                                            v-model="
+                                                professionalProfileForm.facebook
+                                            "
+                                            type="url"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="https://facebook.com/yourprofile"
+                                        />
+                                        <p
+                                            v-if="
+                                                professionalProfileForm.errors
+                                                    .facebook
+                                            "
+                                            class="mt-1 text-sm text-red-600"
+                                        >
+                                            {{
+                                                professionalProfileForm.errors
+                                                    .facebook
+                                            }}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            for="linkedin"
+                                            class="block text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            LinkedIn Profile
+                                            <span
+                                                class="text-gray-500 font-normal"
+                                                >(Optional)</span
+                                            >
+                                        </label>
+                                        <input
+                                            id="linkedin"
+                                            v-model="
+                                                professionalProfileForm.linkedin
+                                            "
+                                            type="url"
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="https://linkedin.com/in/yourprofile"
+                                        />
+                                        <p
+                                            v-if="
+                                                professionalProfileForm.errors
+                                                    .linkedin
+                                            "
+                                            class="mt-1 text-sm text-red-600"
+                                        >
+                                            {{
+                                                professionalProfileForm.errors
+                                                    .linkedin
+                                            }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Availability Status Section -->
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-3"
+                                    >
+                                        Availability Status
+                                    </label>
+                                    <div class="space-y-2">
+                                        <label
+                                            class="flex items-start p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                                            :class="{
+                                                'ring-2 ring-green-500 bg-green-50':
+                                                    professionalProfileForm.availability_status ===
+                                                    'available',
+                                            }"
+                                        >
+                                            <input
+                                                type="radio"
+                                                v-model="
+                                                    professionalProfileForm.availability_status
+                                                "
+                                                value="available"
+                                                class="mt-1 w-4 h-4 text-green-600 focus:ring-2 focus:ring-green-500"
+                                            />
+                                            <div class="ml-3">
+                                                <p
+                                                    class="font-medium text-gray-900"
+                                                >
+                                                    🟢 Available
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-600"
+                                                >
+                                                    Actively taking on new
+                                                    clients
+                                                </p>
+                                            </div>
+                                        </label>
+
+                                        <label
+                                            class="flex items-start p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                                            :class="{
+                                                'ring-2 ring-yellow-500 bg-yellow-50':
+                                                    professionalProfileForm.availability_status ===
+                                                    'limited',
+                                            }"
+                                        >
+                                            <input
+                                                type="radio"
+                                                v-model="
+                                                    professionalProfileForm.availability_status
+                                                "
+                                                value="limited"
+                                                class="mt-1 w-4 h-4 text-yellow-600 focus:ring-2 focus:ring-yellow-500"
+                                            />
+                                            <div class="ml-3">
+                                                <p
+                                                    class="font-medium text-gray-900"
+                                                >
+                                                    🟡 Limited Availability
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-600"
+                                                >
+                                                    Taking select clients only
+                                                </p>
+                                            </div>
+                                        </label>
+
+                                        <label
+                                            class="flex items-start p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                                            :class="{
+                                                'ring-2 ring-red-500 bg-red-50':
+                                                    professionalProfileForm.availability_status ===
+                                                    'unavailable',
+                                            }"
+                                        >
+                                            <input
+                                                type="radio"
+                                                v-model="
+                                                    professionalProfileForm.availability_status
+                                                "
+                                                value="unavailable"
+                                                class="mt-1 w-4 h-4 text-red-600 focus:ring-2 focus:ring-red-500"
+                                            />
+                                            <div class="ml-3">
+                                                <p
+                                                    class="font-medium text-gray-900"
+                                                >
+                                                    🔴 Unavailable
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-600"
+                                                >
+                                                    Not accepting new clients at
+                                                    this time
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <p
+                                        v-if="
+                                            professionalProfileForm.errors
+                                                .availability_status
+                                        "
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{
+                                            professionalProfileForm.errors
+                                                .availability_status
+                                        }}
+                                    </p>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="flex justify-end pt-4 border-t">
+                                    <button
+                                        type="submit"
+                                        :disabled="
+                                            professionalProfileForm.processing
+                                        "
+                                        class="inline-flex items-center px-6 py-3 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                    >
+                                        <svg
+                                            v-if="
+                                                !professionalProfileForm.processing
+                                            "
+                                            class="w-4 h-4 mr-2"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M5 13l4 4L19 7"
+                                            />
+                                        </svg>
+                                        <svg
+                                            v-else
+                                            class="animate-spin w-4 h-4 mr-2"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                class="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                stroke-width="4"
+                                            ></circle>
+                                            <path
+                                                class="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
+                                        </svg>
+                                        {{
+                                            professionalProfileForm.processing
+                                                ? "Saving..."
+                                                : "Update Professional Profile"
                                         }}
                                     </button>
                                 </div>

@@ -50,6 +50,36 @@
             <div
                 class="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
             >
+                <!-- Warning message if property has assigned client -->
+                <div
+                    v-if="propertyHasAssignedClient"
+                    class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg"
+                >
+                    <div class="flex items-start">
+                        <svg
+                            class="w-5 h-5 text-amber-600 mr-3 flex-shrink-0 mt-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                            ></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-medium text-amber-800">
+                                Property Not Available
+                            </p>
+                            <p class="text-sm text-amber-700 mt-1">
+                                {{ propertyUnavailableReason }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex flex-wrap gap-3">
                     <Link
                         v-if="inquiry.conversation"
@@ -81,7 +111,9 @@
                         Reply to Inquiry
                     </button>
                     <Link
-                        v-if="!inquiry.transaction"
+                        v-if="
+                            !inquiry.transaction && !propertyHasAssignedClient
+                        "
                         :href="
                             route('transactions.create', {
                                 inquiry_id: inquiry.id,
@@ -91,6 +123,14 @@
                     >
                         Start Transaction
                     </Link>
+                    <button
+                        v-if="!inquiry.transaction && propertyHasAssignedClient"
+                        disabled
+                        class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed opacity-60"
+                        title="Property already has an assigned client"
+                    >
+                        Start Transaction (Unavailable)
+                    </button>
                     <button
                         v-if="can.delete"
                         @click="deleteInquiry"
@@ -712,7 +752,7 @@
 
 <script setup>
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import { Link, router } from "@inertiajs/vue3";
 
@@ -722,6 +762,38 @@ const props = defineProps({
 });
 
 const showResponseForm = ref(true);
+
+// Computed property to check if property has an assigned client
+const propertyHasAssignedClient = computed(() => {
+    if (!props.inquiry.property) return false;
+
+    const unavailableStatuses = [
+        "reserved",
+        "under_negotiation",
+        "sold",
+        "pending",
+    ];
+    return unavailableStatuses.includes(props.inquiry.property.status);
+});
+
+// Computed property to get the reason why property is unavailable
+const propertyUnavailableReason = computed(() => {
+    if (!propertyHasAssignedClient.value) return "";
+
+    const status = props.inquiry.property.status;
+    const messages = {
+        reserved: "This property is reserved and cannot accept new inquiries.",
+        under_negotiation:
+            "This property is under negotiation with a client and cannot accept new inquiries.",
+        sold: "This property has been sold and cannot accept new inquiries.",
+        pending:
+            "This property has an accepted offer and cannot accept new inquiries.",
+    };
+
+    return (
+        messages[status] || "This property is not available for new inquiries."
+    );
+});
 
 const responseForm = useForm({
     broker_response: "",

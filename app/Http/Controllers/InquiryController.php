@@ -292,6 +292,13 @@ class InquiryController extends Controller
             abort(403, 'You are not assigned to this inquiry');
         }
         
+        // IMPORTANT: Check if property already has an assigned client
+        if ($inquiry->property && $inquiry->property->hasAssignedClient()) {
+            return redirect()
+                ->back()
+                ->with('error', 'This property already has an assigned client and cannot accept new inquiries. ' . $inquiry->property->unavailable_reason);
+        }
+        
         // Check if inquiry already has a transaction
         if ($inquiry->transaction) {
             // Redirect to the existing transaction view instead of erroring out

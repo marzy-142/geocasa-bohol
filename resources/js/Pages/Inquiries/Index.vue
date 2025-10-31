@@ -281,6 +281,14 @@
 
                         <!-- Bottom: Action buttons with single accent color -->
                         <div class="flex gap-2 pt-4 border-t border-gray-100">
+                            <!-- Warning badge if property has assigned client -->
+                            <div
+                                v-if="hasAssignedClient(inquiry.property)"
+                                class="flex-1 py-2 px-3 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg text-center"
+                            >
+                                ⚠️ Property Unavailable
+                            </div>
+
                             <Link
                                 :href="route('inquiries.show', inquiry.id)"
                                 class="flex-1 text-center py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
@@ -294,6 +302,7 @@
                                 Reply
                             </button>
                             <Link
+                                v-if="!hasAssignedClient(inquiry.property)"
                                 :href="
                                     route('transactions.create', {
                                         inquiry_id: inquiry.id,
@@ -303,6 +312,14 @@
                             >
                                 Start Deal
                             </Link>
+                            <button
+                                v-else
+                                disabled
+                                class="flex-1 py-2 px-3 text-sm font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed opacity-60"
+                                title="Property already has an assigned client"
+                            >
+                                Start Deal
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -600,6 +617,19 @@ const createTransaction = (inquiry) => {
             inquiry_message: inquiry.message,
         },
     });
+};
+
+// Helper function to check if property has assigned client
+const hasAssignedClient = (property) => {
+    if (!property) return false;
+
+    const unavailableStatuses = [
+        "reserved",
+        "under_negotiation",
+        "sold",
+        "pending",
+    ];
+    return unavailableStatuses.includes(property.status);
 };
 
 const sendQuickResponse = () => {

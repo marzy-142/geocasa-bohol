@@ -1,4 +1,45 @@
 <script setup>
+// Image URL handler - matches the Properties page logic
+const getImageUrl = (img, isVirtualTour = false) => {
+    if (!img) return "";
+
+    let cleanImage = String(img).trim();
+
+    // If already a full URL, return as-is
+    if (cleanImage.startsWith("http://") || cleanImage.startsWith("https://")) {
+        return cleanImage;
+    }
+
+    // If already starts with /storage/, return as-is to prevent duplication
+    if (cleanImage.startsWith("/storage/")) {
+        return cleanImage;
+    }
+
+    // Remove any leading slashes to prevent double slashes
+    cleanImage = cleanImage.replace(/^\/+/, "");
+
+    // Check for existing path segments to prevent duplication
+    if (cleanImage.includes("properties/virtual-tours/")) {
+        return `/storage/${cleanImage}`;
+    } else if (cleanImage.includes("properties/images/")) {
+        return `/storage/${cleanImage}`;
+    }
+
+    // Determine the correct path based on context
+    if (
+        isVirtualTour ||
+        cleanImage.includes("virtual") ||
+        cleanImage.includes("tour")
+    ) {
+        return `/storage/properties/virtual-tours/${cleanImage}`;
+    } else {
+        return `/storage/properties/images/${cleanImage}`;
+    }
+};
+
+const onImageError = (e) => {
+    e.target.style.display = "none";
+};
 import { ref } from "vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
@@ -14,6 +55,7 @@ import {
     ChatBubbleLeftRightIcon,
     HomeIcon,
     ChartBarIcon,
+    ArrowLeftIcon,
 } from "@heroicons/vue/24/outline";
 
 const props = defineProps({
@@ -81,121 +123,123 @@ const formatPrice = (price) => {
     <Head :title="`${broker.name} - GeoCasa Bohol`" />
 
     <div
-        class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50"
+        class="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-blue-50"
     >
         <PublicNavigation :auth="auth" />
 
-        <!-- Hero Section -->
+        <!-- Back Button Navigation -->
         <div
-            class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16"
+            class="bg-white border-b border-neutral-200 sticky top-0 z-40 shadow-sm"
         >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col md:flex-row items-center gap-8">
-                    <!-- Profile Image -->
-                    <div class="relative">
-                        <div
-                            class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl"
-                        >
-                            <UserAvatar
-                                v-if="broker"
-                                :user="broker"
-                                size="2xl"
-                                bg-color="blue"
-                                class="w-full h-full"
-                            />
-                        </div>
-                        <div class="absolute -bottom-2 -right-2">
-                            <span
-                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500 text-white shadow-lg"
-                            >
-                                <CheckBadgeIcon class="w-4 h-4 mr-1" />
-                                Verified
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Broker Info -->
-                    <div class="flex-1 text-center md:text-left">
-                        <h1 class="text-4xl font-bold mb-2">
-                            {{ broker.name }}
-                        </h1>
-                        <p
-                            v-if="broker.brokerage_firm_name"
-                            class="text-xl text-blue-100 mb-4"
-                        >
-                            {{ broker.brokerage_firm_name }}
-                        </p>
-
-                        <div
-                            class="flex flex-wrap gap-4 justify-center md:justify-start mb-4"
-                        >
-                            <div
-                                v-if="broker.city"
-                                class="flex items-center text-blue-100"
-                            >
-                                <MapPinIcon class="w-5 h-5 mr-2" />
-                                <span
-                                    >{{ broker.city }},
-                                    {{ broker.province }}</span
-                                >
-                            </div>
-                            <div
-                                v-if="broker.years_experience"
-                                class="flex items-center text-blue-100"
-                            >
-                                <BriefcaseIcon class="w-5 h-5 mr-2" />
-                                <span
-                                    >{{ broker.years_experience }} years
-                                    experience</span
-                                >
-                            </div>
-                        </div>
-
-                        <div
-                            :class="[
-                                'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium',
-                                getAvailabilityColor(
-                                    broker.availability_status
-                                ),
-                            ]"
-                        >
-                            {{
-                                getAvailabilityText(broker.availability_status)
-                            }}
-                        </div>
-                    </div>
-
-                    <!-- Contact Button -->
-                    <div v-if="broker.accept_inquiries">
-                        <button
-                            @click="showContactModal = true"
-                            class="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
-                        >
-                            <ChatBubbleLeftRightIcon class="w-5 h-5" />
-                            Contact Broker
-                        </button>
-                    </div>
-                </div>
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <Link
+                    :href="route('brokers.index')"
+                    class="inline-flex items-center gap-2 text-neutral-600 hover:text-blue-600 transition-colors duration-200 font-medium group"
+                >
+                    <ArrowLeftIcon
+                        class="w-5 h-5 transition-transform group-hover:-translate-x-1"
+                    />
+                    <span>Back to Broker Directory</span>
+                </Link>
             </div>
         </div>
 
+        <!-- Hero/Profile Header -->
+        <section
+            class="relative bg-gradient-to-r from-blue-700 to-accent-700 text-white py-16 shadow-lg"
+        >
+            <div
+                class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center gap-10"
+            >
+                <!-- Profile Image & Badge -->
+                <div class="relative flex-shrink-0 mb-8 md:mb-0">
+                    <div
+                        class="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-white"
+                    >
+                        <UserAvatar
+                            v-if="broker"
+                            :user="broker"
+                            size="2xl"
+                            bg-color="blue"
+                            class="w-full h-full"
+                        />
+                    </div>
+                    <span
+                        class="absolute -bottom-3 -right-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-lg border-2 border-white"
+                    >
+                        <CheckBadgeIcon class="w-4 h-4 mr-1" /> Verified
+                    </span>
+                </div>
+
+                <!-- Main Info -->
+                <div class="flex-1 text-center md:text-left">
+                    <h1
+                        class="text-4xl md:text-5xl font-extrabold mb-2 tracking-tight drop-shadow-lg"
+                    >
+                        {{ broker.name }}
+                    </h1>
+                    <p
+                        v-if="broker.brokerage_firm_name"
+                        class="text-lg md:text-2xl text-blue-100 mb-3 font-medium"
+                    >
+                        {{ broker.brokerage_firm_name }}
+                    </p>
+                    <div
+                        class="flex flex-wrap gap-4 justify-center md:justify-start mb-4"
+                    >
+                        <div
+                            v-if="broker.city"
+                            class="flex items-center text-blue-100"
+                        >
+                            <MapPinIcon class="w-5 h-5 mr-2" />
+                            <span
+                                >{{ broker.city }}, {{ broker.province }}</span
+                            >
+                        </div>
+                        <div
+                            v-if="broker.years_experience"
+                            class="flex items-center text-blue-100"
+                        >
+                            <BriefcaseIcon class="w-5 h-5 mr-2" />
+                            <span
+                                >{{ broker.years_experience }} years
+                                experience</span
+                            >
+                        </div>
+                    </div>
+                    <div
+                        :class="[
+                            'inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-md',
+                            getAvailabilityColor(broker.availability_status),
+                        ]"
+                    >
+                        {{ getAvailabilityText(broker.availability_status) }}
+                    </div>
+                </div>
+                <!-- Contact Button removed as requested -->
+            </div>
+        </section>
+
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Left Column - Main Info -->
-                <div class="lg:col-span-2 space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <!-- Left/Main Column -->
+                <div class="lg:col-span-2 space-y-10">
                     <!-- About Section -->
                     <div class="bg-white rounded-2xl shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                        <h2
+                            class="text-2xl font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                        >
+                            <BriefcaseIcon class="w-6 h-6 text-blue-400" />
                             About
                         </h2>
                         <p
                             v-if="broker.bio"
-                            class="text-gray-700 leading-relaxed whitespace-pre-wrap"
+                            class="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg"
                         >
                             {{ broker.bio }}
                         </p>
-                        <p v-else class="text-gray-500 italic">
+                        <p v-else class="text-gray-400 italic">
                             No biography available.
                         </p>
                     </div>
@@ -208,14 +252,17 @@ const formatPrice = (price) => {
                         "
                         class="bg-white rounded-2xl shadow-lg p-8"
                     >
-                        <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                        <h2
+                            class="text-2xl font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                        >
+                            <ChartBarIcon class="w-6 h-6 text-blue-400" />
                             Specializations
                         </h2>
                         <div class="flex flex-wrap gap-3">
                             <span
                                 v-for="spec in broker.specializations"
                                 :key="spec"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium bg-blue-100 text-blue-800 rounded-full"
+                                class="inline-flex items-center px-4 py-2 text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-100 rounded-full shadow-sm"
                             >
                                 {{ spec }}
                             </span>
@@ -230,14 +277,17 @@ const formatPrice = (price) => {
                         "
                         class="bg-white rounded-2xl shadow-lg p-8"
                     >
-                        <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                        <h2
+                            class="text-2xl font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                        >
+                            <MapPinIcon class="w-6 h-6 text-purple-400" />
                             Service Areas
                         </h2>
                         <div class="flex flex-wrap gap-3">
                             <span
                                 v-for="area in broker.service_areas"
                                 :key="area"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium bg-purple-100 text-purple-800 rounded-full"
+                                class="inline-flex items-center px-4 py-2 text-sm font-semibold bg-purple-50 text-purple-700 border border-purple-100 rounded-full shadow-sm"
                             >
                                 <MapPinIcon class="w-4 h-4 mr-1" />
                                 {{ area }}
@@ -250,7 +300,10 @@ const formatPrice = (price) => {
                         v-if="broker.properties && broker.properties.length > 0"
                         class="bg-white rounded-2xl shadow-lg p-8"
                     >
-                        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                        <h2
+                            class="text-2xl font-extrabold text-blue-900 mb-6 flex items-center gap-2"
+                        >
+                            <HomeIcon class="w-6 h-6 text-blue-400" />
                             Active Listings
                         </h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -258,40 +311,78 @@ const formatPrice = (price) => {
                                 v-for="property in broker.properties"
                                 :key="property.id"
                                 :href="
-                                    route('public.properties.show', property.id)
+                                    property.slug
+                                        ? route(
+                                              'public.properties.show',
+                                              property.slug
+                                          )
+                                        : '#'
                                 "
-                                class="group bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition-all"
+                                :aria-disabled="!property.slug"
+                                :class="[
+                                    'group bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl overflow-hidden transition-all border border-blue-100',
+                                    property.slug
+                                        ? 'hover:shadow-xl hover:border-blue-300'
+                                        : 'opacity-95 pointer-events-none',
+                                ]"
                             >
-                                <div class="h-48 bg-gray-200 overflow-hidden">
-                                    <img
+                                <div
+                                    class="h-48 bg-gray-200 overflow-hidden relative"
+                                >
+                                    <template
                                         v-if="
                                             property.images &&
-                                            property.images.length > 0
+                                            property.images.length > 0 &&
+                                            property.images[0]
                                         "
-                                        :src="property.images[0]"
-                                        :alt="property.title"
-                                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                    />
+                                    >
+                                        <img
+                                            :src="
+                                                getImageUrl(property.images[0])
+                                            "
+                                            :alt="property.title"
+                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            @error="onImageError"
+                                        />
+                                    </template>
                                     <div
                                         v-else
-                                        class="w-full h-full flex items-center justify-center"
+                                        class="w-full h-full flex items-center justify-center bg-gray-100"
                                     >
                                         <HomeIcon
                                             class="w-16 h-16 text-gray-400"
                                         />
+                                        <p
+                                            class="absolute bottom-2 text-xs text-red-500 break-all px-2"
+                                        >
+                                            {{
+                                                JSON.stringify(property.images)
+                                            }}
+                                        </p>
                                     </div>
+                                    <span
+                                        v-if="property.status === 'sold'"
+                                        class="absolute top-3 right-3 bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow"
+                                        >SOLD</span
+                                    >
                                 </div>
                                 <div class="p-4">
                                     <h3
-                                        class="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors"
+                                        class="font-semibold text-blue-900 mb-1 group-hover:text-blue-700 transition-colors text-lg"
                                     >
                                         {{ property.title }}
                                     </h3>
                                     <p class="text-sm text-gray-600 mb-2">
-                                        {{ property.location }}
+                                        {{
+                                            property.full_address ||
+                                            property.municipality
+                                        }}
                                     </p>
-                                    <p class="text-lg font-bold text-blue-600">
-                                        {{ formatPrice(property.price) }}
+                                    <p class="text-lg font-bold text-blue-700">
+                                        {{
+                                            property.formatted_total_price ||
+                                            formatPrice(property.total_price)
+                                        }}
                                     </p>
                                 </div>
                             </Link>
@@ -304,9 +395,8 @@ const formatPrice = (price) => {
                             "
                             class="mt-6 text-center"
                         >
-                            <p class="text-gray-600">
-                                +
-                                {{
+                            <p class="text-gray-600 font-medium">
+                                +{{
                                     broker.active_listings -
                                     broker.properties.length
                                 }}
@@ -319,11 +409,13 @@ const formatPrice = (price) => {
                 <!-- Right Column - Contact & Stats -->
                 <div class="space-y-6">
                     <!-- Statistics Card -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div
+                        class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl shadow-lg p-6 border border-blue-100"
+                    >
                         <h3
-                            class="text-lg font-bold text-gray-900 mb-4 flex items-center"
+                            class="text-lg font-extrabold text-blue-900 mb-4 flex items-center gap-2"
                         >
-                            <ChartBarIcon class="w-5 h-5 mr-2" />
+                            <ChartBarIcon class="w-5 h-5 text-blue-400" />
                             Statistics
                         </h3>
                         <div class="space-y-4">
@@ -332,7 +424,7 @@ const formatPrice = (price) => {
                                     >Active Listings</span
                                 >
                                 <span
-                                    class="text-2xl font-bold text-blue-600"
+                                    class="text-2xl font-bold text-blue-700"
                                     >{{ broker.active_listings }}</span
                                 >
                             </div>
@@ -341,7 +433,7 @@ const formatPrice = (price) => {
                                     >Total Listings</span
                                 >
                                 <span
-                                    class="text-2xl font-bold text-gray-900"
+                                    class="text-2xl font-bold text-blue-900"
                                     >{{ broker.total_listings }}</span
                                 >
                             </div>
@@ -359,7 +451,10 @@ const formatPrice = (price) => {
 
                     <!-- Contact Information Card -->
                     <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-4">
+                        <h3
+                            class="text-lg font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                        >
+                            <EnvelopeIcon class="w-5 h-5 text-blue-400" />
                             Contact Information
                         </h3>
                         <div class="space-y-4">
@@ -439,9 +534,9 @@ const formatPrice = (price) => {
                         <!-- Social Links -->
                         <div
                             v-if="broker.facebook || broker.linkedin"
-                            class="mt-6 pt-6 border-t border-gray-200"
+                            class="mt-6 pt-6 border-t border-blue-100"
                         >
-                            <p class="text-sm text-gray-600 mb-3">
+                            <p class="text-sm text-blue-700 mb-3 font-semibold">
                                 Connect on Social Media
                             </p>
                             <div class="flex gap-3">
@@ -449,7 +544,7 @@ const formatPrice = (price) => {
                                     v-if="broker.facebook"
                                     :href="broker.facebook"
                                     target="_blank"
-                                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-700 transition-colors"
+                                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-700 transition-colors font-semibold shadow"
                                 >
                                     Facebook
                                 </a>
@@ -457,7 +552,7 @@ const formatPrice = (price) => {
                                     v-if="broker.linkedin"
                                     :href="broker.linkedin"
                                     target="_blank"
-                                    class="flex-1 bg-blue-800 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-900 transition-colors"
+                                    class="flex-1 bg-blue-800 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-900 transition-colors font-semibold shadow"
                                 >
                                     LinkedIn
                                 </a>

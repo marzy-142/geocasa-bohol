@@ -34,6 +34,7 @@ class EmailVerificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
+            to: $this->user->email,
             subject: 'Welcome to GeoCasa Bohol - Verify Your Email Address',
         );
     }

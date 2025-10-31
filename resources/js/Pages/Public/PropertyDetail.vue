@@ -76,8 +76,295 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 <!-- Main Content -->
                 <div class="lg:col-span-2 space-y-6">
-                    <!-- Enhanced Property Images Gallery -->
+                    <!-- Media Viewer Tabs (Gallery + Panorama) -->
                     <div
+                        v-if="property.has_virtual_tour && hasVirtualTourData"
+                        class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden"
+                    >
+                        <!-- Tab Navigation -->
+                        <div class="border-b border-gray-200">
+                            <nav class="flex -mb-px" aria-label="Media tabs">
+                                <button
+                                    @click="activeTab = 'gallery'"
+                                    :class="[
+                                        activeTab === 'gallery'
+                                            ? 'border-blue-500 text-blue-600 bg-blue-50'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                        'flex-1 py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200',
+                                    ]"
+                                >
+                                    <div
+                                        class="flex items-center justify-center gap-2"
+                                    >
+                                        <svg
+                                            class="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                            />
+                                        </svg>
+                                        <span>Photo Gallery</span>
+                                        <span
+                                            class="ml-1 text-xs bg-gray-200 px-2 py-0.5 rounded-full"
+                                            >{{ safeImages.length }}</span
+                                        >
+                                    </div>
+                                </button>
+                                <button
+                                    @click="activeTab = 'panorama'"
+                                    :class="[
+                                        activeTab === 'panorama'
+                                            ? 'border-purple-500 text-purple-600 bg-purple-50'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                        'flex-1 py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200',
+                                    ]"
+                                >
+                                    <div
+                                        class="flex items-center justify-center gap-2"
+                                    >
+                                        <svg
+                                            class="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                            />
+                                        </svg>
+                                        <span>360° Panorama</span>
+                                        <span
+                                            class="ml-1 px-2 py-0.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs rounded-full"
+                                            >NEW</span
+                                        >
+                                    </div>
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Gallery Tab Content -->
+                        <div v-show="activeTab === 'gallery'">
+                            <!-- Main Image Display -->
+                            <div
+                                class="relative aspect-video lg:aspect-[4/3] group"
+                            >
+                                <img
+                                    :src="currentImage"
+                                    :alt="property.title"
+                                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    :class="{ 'blur-sm': imageLoading }"
+                                    @load="imageLoading = false"
+                                    @error="handleImageError"
+                                />
+
+                                <!-- Loading Overlay -->
+                                <div
+                                    v-if="imageLoading"
+                                    class="absolute inset-0 flex items-center justify-center bg-gray-100"
+                                >
+                                    <div
+                                        class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"
+                                    ></div>
+                                </div>
+
+                                <!-- Navigation Arrows -->
+                                <div
+                                    v-if="
+                                        property.images &&
+                                        property.images.length > 1
+                                    "
+                                    class="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <button
+                                        @click="previousImage"
+                                        class="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                        aria-label="Previous image"
+                                    >
+                                        <svg
+                                            class="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M15 19l-7-7 7-7"
+                                            />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        @click="nextImage"
+                                        class="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                        aria-label="Next image"
+                                    >
+                                        <svg
+                                            class="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M9 5l7 7-7 7"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Image Counter -->
+                                <div
+                                    v-if="
+                                        property.images &&
+                                        property.images.length > 1
+                                    "
+                                    class="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm"
+                                >
+                                    {{ currentImageIndex + 1 }} /
+                                    {{ property.images.length }}
+                                </div>
+
+                                <!-- Fullscreen Button -->
+                                <button
+                                    @click="openImageModal"
+                                    class="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                    aria-label="View fullscreen gallery"
+                                >
+                                    <svg
+                                        class="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Image Thumbnails -->
+                            <div
+                                v-if="
+                                    property.images &&
+                                    property.images.length > 1
+                                "
+                                class="p-4 lg:p-6"
+                            >
+                                <div class="flex gap-2 overflow-x-auto pb-2">
+                                    <button
+                                        v-for="(image, index) in safeImages"
+                                        :key="index"
+                                        @click="selectImage(index)"
+                                        class="flex-shrink-0 relative group"
+                                        :aria-label="`View image ${
+                                            index + 1
+                                        } of ${safeImages.length}`"
+                                        :aria-pressed="
+                                            currentImageIndex === index
+                                        "
+                                    >
+                                        <div
+                                            class="w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all duration-200"
+                                            :class="
+                                                currentImageIndex === index
+                                                    ? 'border-blue-500 shadow-lg'
+                                                    : 'border-gray-200 hover:border-gray-300'
+                                            "
+                                        >
+                                            <img
+                                                :src="getImageUrl(image)"
+                                                :alt="`Image ${index + 1}`"
+                                                class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                                                loading="lazy"
+                                            />
+                                        </div>
+                                        <div
+                                            v-if="currentImageIndex === index"
+                                            class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full"
+                                        ></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panorama Tab Content -->
+                        <div v-show="activeTab === 'panorama'">
+                            <div
+                                class="bg-gradient-to-br from-purple-50 to-blue-50 p-4 lg:p-6 border-b border-gray-200"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center"
+                                        >
+                                            <svg
+                                                class="w-6 h-6 text-white"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                                />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3
+                                                class="text-lg font-bold text-gray-900"
+                                            >
+                                                360° Virtual Tour
+                                            </h3>
+                                            <p class="text-sm text-gray-600">
+                                                Drag to explore • Scroll to zoom
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-white px-3 py-1.5 rounded-full text-sm font-semibold text-purple-700 shadow-sm"
+                                    >
+                                        🌟 Interactive
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 lg:p-6 bg-gray-50">
+                                <VirtualTourViewer360
+                                    v-if="virtualTourImages.length > 0"
+                                    :imageUrl="virtualTourImages[0].url"
+                                />
+                                <div
+                                    v-else
+                                    class="text-center py-12 text-gray-500"
+                                >
+                                    <p>No panorama images available</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fallback: Gallery Only (No Virtual Tour) -->
+                    <div
+                        v-else
                         class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden"
                     >
                         <!-- Main Image Display -->
@@ -224,58 +511,6 @@
                                     ></div>
                                 </button>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Virtual Tour Section -->
-                    <div
-                        v-if="property.has_virtual_tour && hasVirtualTourData"
-                        class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden"
-                    >
-                        <div class="p-4 lg:p-6 border-b border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div
-                                        class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center"
-                                    >
-                                        <svg
-                                            class="w-6 h-6 text-white"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h3
-                                            class="text-xl font-bold text-gray-900"
-                                        >
-                                            Virtual Tour
-                                        </h3>
-                                        <p class="text-gray-600">
-                                            Explore this property in 360°
-                                        </p>
-                                    </div>
-                                </div>
-                                <div
-                                    class="bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 px-4 py-2 rounded-full text-sm font-semibold"
-                                >
-                                    🌟 Interactive Experience
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="p-4 lg:p-6">
-                            <VirtualTourViewer
-                                :tourImages="virtualTourImages"
-                                :hotspots="virtualTourHotspots"
-                            />
                         </div>
                     </div>
 
@@ -1280,6 +1515,7 @@ import { Link, useForm, usePage } from "@inertiajs/vue3";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
 import PublicFooter from "@/Components/PublicFooter.vue";
 import VirtualTourViewer from "@/Components/VirtualTourViewer.vue";
+import VirtualTourViewer360 from "@/Components/VirtualTourViewer360.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -1325,6 +1561,7 @@ const processing = computed(() => inquiryForm.processing);
 const currentImageIndex = ref(0);
 const imageLoading = ref(false);
 const showImageModal = ref(false);
+const activeTab = ref("gallery"); // Tab state for gallery vs panorama
 
 // Mobile sticky CTA state
 const showMobileCTA = ref(false);

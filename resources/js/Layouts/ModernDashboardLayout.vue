@@ -791,7 +791,7 @@ const navigationSections = computed(() => {
                                 v-if="sidebarOpen"
                                 class="lg:block transition-all duration-200 group-hover:translate-x-0.5"
                             >
-                                Account Settings
+                                Settings
                             </span>
                             <div
                                 class="absolute inset-0 rounded-2xl bg-gradient-to-r from-neutral-500/0 to-neutral-500/0 group-hover:from-neutral-500/5 group-hover:to-transparent transition-all duration-200"

@@ -129,17 +129,8 @@ class BrokerDirectoryController extends Controller
                 'facebook' => $broker->facebook,
                 'linkedin' => $broker->linkedin,
                 'properties' => $broker->properties->map(function($property) {
-                    return [
-                        'id' => $property->id,
-                        'title' => $property->title,
-                        'price' => $property->price,
-                        'location' => $property->location,
-                        'property_type' => $property->property_type,
-                        'bedrooms' => $property->bedrooms,
-                        'bathrooms' => $property->bathrooms,
-                        'lot_area' => $property->lot_area,
-                        'images' => $property->images,
-                    ];
+                    // Return the full property data like the Properties browse page does
+                    return $property;
                 }),
             ],
         ]);

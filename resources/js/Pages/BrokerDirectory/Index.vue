@@ -1,5 +1,5 @@
 <script setup>
-import { Head } from "@inertiajs/vue3";
+import { Head, Link } from "@inertiajs/vue3";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import {
@@ -11,6 +11,7 @@ import {
     CheckBadgeIcon,
     TrophyIcon,
     FireIcon,
+    ArrowRightIcon,
 } from "@heroicons/vue/24/outline";
 
 const props = defineProps({
@@ -88,110 +89,82 @@ const getMedalColor = (rank) => {
 
             <!-- Top Broker Spotlight -->
             <div v-if="topPerformers && topPerformers.length > 0" class="mb-16">
-                <div class="max-w-5xl mx-auto">
+                <div class="max-w-4xl mx-auto">
                     <!-- Header -->
-                    <div class="text-center mb-10">
+                    <div class="text-center mb-6">
                         <h2
-                            class="text-3xl md:text-4xl font-bold text-neutral-900 mb-3"
+                            class="text-2xl md:text-3xl font-bold text-neutral-900"
                         >
-                            Top Performing
-                            <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600"
-                            >
-                                Broker
-                            </span>
+                            Top Performing Broker
                         </h2>
-                        <p class="text-neutral-600 text-lg">
-                            Excellence in Real Estate
+                        <p class="text-neutral-600">
+                            Recognizing consistent results
                         </p>
                     </div>
 
-                    <!-- Premium Card -->
+                    <!-- Simple Card -->
                     <div
-                        class="relative bg-white rounded-xl shadow-lg border border-neutral-200 overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                        class="bg-white border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition p-8"
                     >
-                        <!-- Gradient accent line -->
                         <div
-                            class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-600 to-accent-600"
-                        ></div>
+                            class="flex flex-col md:flex-row items-center gap-8"
+                        >
+                            <!-- Avatar -->
+                            <div class="relative flex-shrink-0">
+                                <UserAvatar
+                                    v-if="topPerformers[0]"
+                                    :user="topPerformers[0]"
+                                    size="2xl"
+                                    bg-color="primary"
+                                    class="w-32 h-32 border-4 border-white shadow ring-2 ring-amber-400/40"
+                                />
+                                <div
+                                    class="absolute -bottom-2 -right-2 bg-amber-500 text-white rounded-full p-2 shadow-md"
+                                >
+                                    <TrophyIcon class="w-5 h-5" />
+                                </div>
+                            </div>
 
-                        <div class="p-12">
-                            <div
-                                class="flex flex-col md:flex-row items-center gap-10"
-                            >
-                                <!-- Refined Avatar -->
-                                <div class="relative flex-shrink-0">
-                                    <UserAvatar
-                                        v-if="topPerformers[0]"
-                                        :user="topPerformers[0]"
-                                        size="2xl"
-                                        bg-color="primary"
-                                        class="w-32 h-32 border-4 border-white shadow-lg"
-                                    />
-                                    <!-- Trophy badge -->
+                            <!-- Content -->
+                            <div class="flex-1 text-center md:text-left">
+                                <h3 class="text-2xl font-bold text-neutral-900">
+                                    {{ topPerformers[0].name }}
+                                </h3>
+                                <p
+                                    v-if="topPerformers[0].brokerage_firm_name"
+                                    class="text-neutral-600"
+                                >
+                                    {{ topPerformers[0].brokerage_firm_name }}
+                                </p>
+
+                                <div
+                                    class="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-4"
+                                >
                                     <div
-                                        class="absolute -bottom-2 -right-2 w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg border-4 border-white"
+                                        v-if="topPerformers[0].city"
+                                        class="flex items-center gap-2 text-sm text-neutral-700"
                                     >
-                                        <TrophyIcon
-                                            class="w-6 h-6 text-white"
+                                        <MapPinIcon
+                                            class="w-4 h-4 text-neutral-400"
                                         />
+                                        <span>{{ topPerformers[0].city }}</span>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-2 text-sm text-neutral-700"
+                                    >
+                                        <CheckBadgeIcon
+                                            class="w-4 h-4 text-green-500"
+                                        />
+                                        <span>Verified</span>
                                     </div>
                                 </div>
 
-                                <!-- Content -->
-                                <div class="flex-1 text-center md:text-left">
-                                    <div class="mb-6">
-                                        <h3
-                                            class="text-3xl md:text-4xl font-bold text-neutral-900 mb-2"
-                                        >
-                                            {{ topPerformers[0].name }}
-                                        </h3>
-                                        <p
-                                            v-if="
-                                                topPerformers[0]
-                                                    .brokerage_firm_name
-                                            "
-                                            class="text-lg text-neutral-600"
-                                        >
-                                            {{
-                                                topPerformers[0]
-                                                    .brokerage_firm_name
-                                            }}
-                                        </p>
-                                    </div>
-
+                                <div class="mt-4 flex items-center gap-4">
                                     <div
-                                        class="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-6"
+                                        class="px-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg"
                                     >
                                         <div
-                                            v-if="topPerformers[0].city"
-                                            class="flex items-center text-neutral-600"
-                                        >
-                                            <MapPinIcon
-                                                class="w-4 h-4 mr-1.5 text-primary-600"
-                                            />
-                                            <span class="text-sm font-medium">{{
-                                                topPerformers[0].city
-                                            }}</span>
-                                        </div>
-                                        <div
-                                            class="flex items-center text-neutral-600"
-                                        >
-                                            <CheckBadgeIcon
-                                                class="w-4 h-4 mr-1.5 text-green-600"
-                                            />
-                                            <span class="text-sm font-medium"
-                                                >Verified Professional</span
-                                            >
-                                        </div>
-                                    </div>
-
-                                    <!-- Stats Badge -->
-                                    <div
-                                        class="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg shadow-md"
-                                    >
-                                        <div
-                                            class="text-4xl font-bold text-white"
+                                            class="text-2xl font-bold text-neutral-900"
                                         >
                                             {{
                                                 topPerformers[0]
@@ -199,11 +172,24 @@ const getMedalColor = (rank) => {
                                             }}
                                         </div>
                                         <div
-                                            class="text-sm text-white/90 uppercase tracking-wide font-semibold"
+                                            class="text-xs text-neutral-600 uppercase tracking-wide"
                                         >
                                             Completed Sales
                                         </div>
                                     </div>
+
+                                    <Link
+                                        :href="
+                                            route(
+                                                'brokers.show',
+                                                topPerformers[0].id
+                                            )
+                                        "
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 text-neutral-800 hover:bg-neutral-50 transition"
+                                    >
+                                        View Profile
+                                        <ArrowRightIcon class="w-4 h-4" />
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -369,6 +355,19 @@ const getMedalColor = (rank) => {
                                     </span>
                                 </div>
                             </div>
+
+                            <!-- View Profile Button -->
+                            <div class="mt-4 pt-4 border-t border-neutral-100">
+                                <Link
+                                    :href="route('brokers.show', broker.id)"
+                                    class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-accent-600 text-white text-sm font-semibold rounded-lg hover:from-primary-700 hover:to-accent-700 transition-all duration-200 shadow-sm hover:shadow-md group"
+                                >
+                                    <span>View Full Profile</span>
+                                    <ArrowRightIcon
+                                        class="w-4 h-4 transition-transform group-hover:translate-x-1"
+                                    />
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -388,3 +387,5 @@ const getMedalColor = (rank) => {
         </div>
     </div>
 </template>
+
+<style scoped></style>

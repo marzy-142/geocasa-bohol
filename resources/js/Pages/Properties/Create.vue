@@ -38,8 +38,63 @@
             enctype="multipart/form-data"
             class="space-y-8"
         >
+            <!-- Stepper / Progress Indicator -->
+            <div
+                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 sticky top-0 z-10"
+            >
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 mr-4">
+                        <div
+                            class="h-2 bg-gray-100 rounded-full overflow-hidden"
+                        >
+                            <div
+                                class="h-full bg-blue-600 transition-all"
+                                :style="{ width: progressPercent + '%' }"
+                            ></div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-600">
+                            Step {{ currentStep }} of {{ steps.length }}
+                        </div>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-3">
+                        <template v-for="(s, idx) in steps" :key="s.id">
+                            <button
+                                type="button"
+                                @click="goToStep(idx + 1)"
+                                class="flex items-center"
+                            >
+                                <div
+                                    class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                                    :class="
+                                        idx + 1 <= currentStep
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-200 text-gray-700'
+                                    "
+                                >
+                                    {{ idx + 1 }}
+                                </div>
+                                <span
+                                    class="ml-2 text-sm"
+                                    :class="
+                                        idx + 1 <= currentStep
+                                            ? 'text-gray-900'
+                                            : 'text-gray-500'
+                                    "
+                                >
+                                    {{ s.label }}
+                                </span>
+                            </button>
+                            <div
+                                v-if="idx < steps.length - 1"
+                                class="w-6 h-[2px] bg-gray-200"
+                            ></div>
+                        </template>
+                    </div>
+                </div>
+            </div>
             <!-- Basic Information -->
             <div
+                id="step-basic"
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
             >
                 <h3
@@ -150,6 +205,7 @@
 
             <!-- Location Details -->
             <div
+                id="step-location"
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
             >
                 <h3
@@ -325,6 +381,7 @@
 
             <!-- Pricing & Area -->
             <div
+                id="step-pricing"
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
             >
                 <h3
@@ -351,6 +408,57 @@
                     </svg>
                     Pricing & Area
                 </h3>
+
+                <!-- Pricing Mode Toggle -->
+                <div
+                    class="mb-6 flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-4"
+                >
+                    <div class="flex items-center space-x-3">
+                        <svg
+                            class="w-5 h-5 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
+                        </svg>
+                        <span class="text-sm font-medium text-gray-700"
+                            >Pricing Method:</span
+                        >
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button
+                            type="button"
+                            @click="pricingMode = 'calculate'"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            :class="
+                                pricingMode === 'calculate'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                            "
+                        >
+                            Calculate Total
+                        </button>
+                        <button
+                            type="button"
+                            @click="pricingMode = 'direct'"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            :class="
+                                pricingMode === 'direct'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                            "
+                        >
+                            Enter Total Directly
+                        </button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label
@@ -371,7 +479,7 @@
                             }"
                             placeholder="e.g., 1000"
                             required
-                            @input="calculateTotalPrice"
+                            @input="onLotAreaChange"
                         />
                         <div
                             v-if="errors.lot_area_sqm"
@@ -398,9 +506,14 @@
                                 'border-red-500 ring-red-500':
                                     errors.price_per_sqm,
                             }"
-                            placeholder="e.g., 5000"
+                            :readonly="pricingMode === 'direct'"
+                            :placeholder="
+                                pricingMode === 'direct'
+                                    ? 'Auto-calculated'
+                                    : 'e.g., 5000'
+                            "
                             required
-                            @input="calculateTotalPrice"
+                            @input="onPricePerSqmChange"
                         />
                         <div
                             v-if="errors.price_per_sqm"
@@ -422,13 +535,19 @@
                             v-model="form.total_price"
                             type="number"
                             step="0.01"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                             :class="{
                                 'border-red-500 ring-red-500':
                                     errors.total_price,
+                                'bg-gray-50': pricingMode === 'calculate',
                             }"
-                            placeholder="Auto-calculated"
-                            readonly
+                            :placeholder="
+                                pricingMode === 'calculate'
+                                    ? 'Auto-calculated'
+                                    : 'e.g., 5000000'
+                            "
+                            :readonly="pricingMode === 'calculate'"
+                            @input="onTotalPriceChange"
                         />
                         <div
                             v-if="errors.total_price"
@@ -437,6 +556,23 @@
                             {{ errors.total_price }}
                         </div>
                     </div>
+                </div>
+
+                <!-- Pricing Help -->
+                <div
+                    class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-3"
+                >
+                    <p class="text-xs text-gray-600">
+                        <span class="font-semibold">💡 Tip:</span>
+                        <span v-if="pricingMode === 'calculate'">
+                            Enter the lot area and price per sqm, and we'll
+                            calculate the total price for you.
+                        </span>
+                        <span v-else>
+                            Enter the lot area and total price, and we'll
+                            calculate the price per sqm automatically.
+                        </span>
+                    </p>
                 </div>
             </div>
 
@@ -489,7 +625,6 @@
                             <option value="">Select Title Type</option>
                             <option value="titled">Titled</option>
                             <option value="tax_declared">Tax Declared</option>
-                            <option value="mother_title">Mother Title</option>
                             <option value="cct">CCT</option>
                         </select>
                         <div
@@ -723,6 +858,7 @@
 
             <!-- Virtual Tour Section -->
             <div
+                id="step-virtual-tour"
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
             >
                 <h3
@@ -951,6 +1087,7 @@
 
             <!-- Images -->
             <div
+                id="step-images"
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
             >
                 <h3 class="text-xl font-semibold text-gray-900 mb-4">
@@ -1013,6 +1150,7 @@
 
             <!-- Status -->
             <div
+                id="step-status"
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
             >
                 <h3 class="text-xl font-semibold text-gray-900 mb-4">
@@ -1084,46 +1222,65 @@
                 </div>
             </div>
 
-            <!-- Submit Buttons -->
+            <!-- Wizard Navigation -->
             <div
                 class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
             >
-                <div class="flex justify-end space-x-4">
+                <div class="flex justify-between items-center">
                     <Link
                         :href="route('broker.properties.index')"
-                        class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200"
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors"
                     >
                         Cancel
                     </Link>
-                    <button
-                        type="submit"
-                        :disabled="processing"
-                        class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                    >
-                        <svg
-                            v-if="processing"
-                            class="animate-spin w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
+                    <div class="flex items-center space-x-3">
+                        <button
+                            type="button"
+                            @click="prevStep"
+                            :disabled="currentStep === 1"
+                            class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
                         >
-                            <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"
-                            ></circle>
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                        </svg>
-                        <span>{{
-                            processing ? "Creating..." : "Create Property"
-                        }}</span>
-                    </button>
+                            Back
+                        </button>
+                        <button
+                            v-if="currentStep < steps.length"
+                            type="button"
+                            @click="nextStep"
+                            class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                        >
+                            Next
+                        </button>
+                        <button
+                            v-else
+                            type="submit"
+                            :disabled="processing"
+                            class="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-50 flex items-center space-x-2"
+                        >
+                            <svg
+                                v-if="processing"
+                                class="animate-spin w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                ></circle>
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                            </svg>
+                            <span>{{
+                                processing ? "Creating..." : "Create Property"
+                            }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -1147,7 +1304,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { useForm, usePage, Link } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import MapLocationPicker from "@/Components/MapLocationPicker.vue";
@@ -1278,6 +1435,9 @@ const formatType = (type) => {
     return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
+// Pricing mode: 'calculate' = enter area + price/sqm, 'direct' = enter area + total
+const pricingMode = ref("calculate");
+
 // Handle location selection from map
 const onLocationSelected = (location) => {
     if (location && location.lat && location.lng) {
@@ -1291,6 +1451,34 @@ const calculateTotalPrice = () => {
     const area = parseFloat(form.lot_area_sqm) || 0;
     const pricePerSqm = parseFloat(form.price_per_sqm) || 0;
     form.total_price = area * pricePerSqm;
+};
+
+const calculatePricePerSqm = () => {
+    const area = parseFloat(form.lot_area_sqm) || 0;
+    const total = parseFloat(form.total_price) || 0;
+    if (area > 0) {
+        form.price_per_sqm = total / area;
+    }
+};
+
+const onLotAreaChange = () => {
+    if (pricingMode.value === "calculate") {
+        calculateTotalPrice();
+    } else {
+        calculatePricePerSqm();
+    }
+};
+
+const onPricePerSqmChange = () => {
+    if (pricingMode.value === "calculate") {
+        calculateTotalPrice();
+    }
+};
+
+const onTotalPriceChange = () => {
+    if (pricingMode.value === "direct") {
+        calculatePricePerSqm();
+    }
 };
 
 const handleImageUpload = (event) => {
@@ -1407,11 +1595,82 @@ watch(nearbyLandmarksText, (newValue) => {
     }
 });
 
+// Wizard steps
+const steps = [
+    { id: "basic", label: "Basic" },
+    { id: "location", label: "Location" },
+    { id: "pricing", label: "Pricing" },
+    { id: "virtual-tour", label: "Virtual Tour" },
+    { id: "images", label: "Images" },
+    { id: "status", label: "Status" },
+];
+const currentStep = ref(1);
+const progressPercent = computed(() =>
+    Math.round(((currentStep.value - 1) / (steps.length - 1)) * 100)
+);
+
+const scrollToStep = async (stepIdx) => {
+    const id = steps[stepIdx - 1]?.id;
+    if (!id) return;
+    await nextTick();
+    const el = document.getElementById(`step-${id}`);
+    if (el && typeof el.scrollIntoView === "function") {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+};
+
+const basicValid = computed(
+    () => !!form.title && !!form.type && !!form.description
+);
+const locationValid = computed(() => !!form.municipality && !!form.barangay);
+const pricingValid = computed(
+    () => !!form.lot_area_sqm && !!form.price_per_sqm && !!form.total_price
+);
+// Virtual tour optional, images optional on create depending on policy; keep optional to reduce friction.
+
+const canProceed = (step) => {
+    switch (step) {
+        case 1:
+            return basicValid.value;
+        case 2:
+            return locationValid.value;
+        case 3:
+            return pricingValid.value;
+        default:
+            return true;
+    }
+};
+
+const nextStep = () => {
+    if (!canProceed(currentStep.value)) {
+        // Lightweight inline feedback
+        window?.alert?.(
+            "Please complete the required fields before continuing."
+        );
+        return;
+    }
+    if (currentStep.value < steps.length) {
+        currentStep.value += 1;
+        scrollToStep(currentStep.value);
+    }
+};
+
+const prevStep = () => {
+    if (currentStep.value > 1) {
+        currentStep.value -= 1;
+        scrollToStep(currentStep.value);
+    }
+};
+
+const goToStep = (n) => {
+    currentStep.value = n;
+    scrollToStep(currentStep.value);
+};
+
 const submit = () => {
     processing.value = true;
 
     form.post(route("broker.properties.store"), {
-        // Fixed route name
         onSuccess: () => {
             processing.value = false;
         },

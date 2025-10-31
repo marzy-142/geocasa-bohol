@@ -44,7 +44,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6340',
                 'lot_area' => 800,
                 'features' => ['beachfront', 'ocean_view', 'white_sand_beach', 'coral_reefs', 'resort_potential'],
-                'preferred_contact_method' => 'email',
+
                 'availability' => 'weekdays',
                 'urgency' => 'medium',
                 'additional_notes' => 'Property has been in family for generations. Looking for serious buyers who will develop it properly.',
@@ -69,7 +69,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6319',
                 'lot_area' => 12000,
                 'features' => ['chocolate_hills_view', 'fertile_soil', 'natural_water_source', 'farming_history', 'eco_tourism_potential'],
-                'preferred_contact_method' => 'phone',
+
                 'availability' => 'weekends',
                 'urgency' => 'low',
                 'additional_notes' => 'Looking for buyers interested in sustainable farming or eco-tourism projects.',
@@ -93,7 +93,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6300',
                 'lot_area' => 500,
                 'features' => ['high_foot_traffic', 'city_center', 'near_government_offices', 'commercial_zone', 'development_ready'],
-                'preferred_contact_method' => 'email',
+
                 'availability' => 'anytime',
                 'urgency' => 'high',
                 'additional_notes' => 'Property is zoned for commercial use. All necessary permits can be easily obtained.',
@@ -121,7 +121,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6326',
                 'lot_area' => 750,
                 'features' => ['river_view', 'peaceful_location', 'residential_area', 'near_town_center', 'natural_surroundings'],
-                'preferred_contact_method' => 'phone',
+
                 'availability' => 'weekdays_afternoon',
                 'urgency' => 'medium',
                 'additional_notes' => 'Property is perfect for families who want to live close to nature.',
@@ -145,7 +145,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6308',
                 'lot_area' => 2000,
                 'features' => ['near_port', 'industrial_zone', 'excellent_road_access', 'warehouse_potential', 'logistics_ready'],
-                'preferred_contact_method' => 'email',
+
                 'availability' => 'weekdays_morning',
                 'urgency' => 'high',
                 'additional_notes' => 'Perfect for businesses looking to establish operations near the port.',
@@ -174,7 +174,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6344',
                 'lot_area' => 1500,
                 'features' => ['mountain_view', 'eco_tourism_potential', 'near_adventure_park', 'luxury_development', 'panoramic_views'],
-                'preferred_contact_method' => 'phone',
+
                 'availability' => 'weekends',
                 'urgency' => 'low',
                 'additional_notes' => 'Property offers unique mountain views and eco-tourism potential.',
@@ -199,7 +199,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6315',
                 'lot_area' => 8000,
                 'features' => ['irrigation_system', 'productive_soil', 'farming_history', 'storage_facilities', 'agricultural_ready'],
-                'preferred_contact_method' => 'email',
+
                 'availability' => 'weekdays_morning',
                 'urgency' => 'medium',
                 'additional_notes' => 'Looking for buyers who will continue agricultural use of the land.',
@@ -223,7 +223,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6321',
                 'lot_area' => 400,
                 'features' => ['gated_community', 'utilities_ready', 'security', 'clubhouse', 'recreational_facilities'],
-                'preferred_contact_method' => 'phone',
+
                 'availability' => 'weekends',
                 'urgency' => 'low',
                 'additional_notes' => 'Perfect for families looking for a secure residential environment.',
@@ -264,7 +264,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6342',
                 'lot_area' => 600,
                 'features' => ['heritage_value', 'spanish_era_structures', 'town_center', 'cultural_potential', 'tourism_ready'],
-                'preferred_contact_method' => 'email',
+
                 'availability' => 'weekdays',
                 'urgency' => 'medium',
                 'additional_notes' => 'Property has historical significance and should be preserved.',
@@ -288,7 +288,7 @@ class SellerRequestSeeder extends Seeder
                 'postal_code' => '6317',
                 'lot_area' => 1000,
                 'features' => ['residential', 'development_potential', 'good_road_access', 'flexible_use', 'affordable'],
-                'preferred_contact_method' => 'phone',
+
                 'availability' => 'anytime',
                 'urgency' => 'low',
                 'additional_notes' => 'Perfect for investors looking for development opportunities.',
@@ -334,7 +334,7 @@ class SellerRequestSeeder extends Seeder
                     'contact_name' => $clients->first()->name,
                     'contact_email' => $clients->first()->email,
                     'contact_phone' => $clients->first()->phone ?? '+63-917-000-0001',
-                    'preferred_contact_method' => 'both',
+
                     'urgency' => 'medium',
                     'status' => 'pending',
                     'submission_date' => now()->subHours(4),
@@ -360,7 +360,7 @@ class SellerRequestSeeder extends Seeder
                     'contact_name' => $clients->skip(1)->first()?->name ?? $clients->first()->name,
                     'contact_email' => $clients->skip(1)->first()?->email ?? $clients->first()->email,
                     'contact_phone' => $clients->skip(1)->first()?->phone ?? '+63-917-000-0002',
-                    'preferred_contact_method' => 'email',
+
                     'urgency' => 'high',
                     'status' => 'under_review',
                     'submission_date' => now()->subDays(2),
@@ -387,7 +387,7 @@ class SellerRequestSeeder extends Seeder
                     'contact_name' => $clients->skip(2)->first()?->name ?? $clients->first()->name,
                     'contact_email' => $clients->skip(2)->first()?->email ?? $clients->first()->email,
                     'contact_phone' => $clients->skip(2)->first()?->phone ?? '+63-917-000-0003',
-                    'preferred_contact_method' => 'phone',
+
                     'urgency' => 'low',
                     'status' => 'pending',
                     'submission_date' => now()->subHours(8),

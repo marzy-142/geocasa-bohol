@@ -362,6 +362,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/avatar', [\App\Http\Controllers\AccountSettingsController::class, 'deleteAvatar'])->name('delete-avatar');
         Route::patch('/notifications', [\App\Http\Controllers\AccountSettingsController::class, 'updateNotificationPreferences'])->name('update-notifications');
         Route::patch('/privacy', [\App\Http\Controllers\AccountSettingsController::class, 'updatePrivacySettings'])->name('update-privacy');
+        Route::patch('/professional-profile', [\App\Http\Controllers\AccountSettingsController::class, 'updateProfessionalProfile'])->name('update-professional-profile');
         Route::post('/deactivate', [\App\Http\Controllers\AccountSettingsController::class, 'deactivateAccount'])->name('deactivate');
         Route::delete('/delete', [\App\Http\Controllers\AccountSettingsController::class, 'deleteAccount'])->name('delete');
     });

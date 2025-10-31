@@ -2,6 +2,8 @@
 import { Head, Link } from "@inertiajs/vue3";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
 import PublicFooter from "@/Components/PublicFooter.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
+import { ref, computed } from "vue";
 
 import {
     MapPinIcon,
@@ -13,9 +15,12 @@ import {
     PlayIcon,
     CheckCircleIcon,
     SunIcon,
+    TrophyIcon,
+    CheckBadgeIcon,
+    FunnelIcon,
 } from "@heroicons/vue/24/outline";
 
-defineProps({
+const props = defineProps({
     auth: Object,
     stats: {
         type: Object,
@@ -36,6 +41,10 @@ defineProps({
     },
 });
 
+// Featured properties filter state
+const selectedPriceRange = ref("all");
+const selectedSort = ref("featured");
+
 const formatCurrency = (value) => {
     return new Intl.NumberFormat("en-PH", {
         style: "currency",
@@ -51,6 +60,45 @@ const formatCurrency = (value) => {
 const formatPropertyType = (type) => {
     return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 };
+
+// Filter and sort featured properties
+const filteredProperties = computed(() => {
+    if (!props.featuredProperties) return [];
+
+    let filtered = [...props.featuredProperties];
+
+    // Apply price range filter
+    if (selectedPriceRange.value !== "all") {
+        filtered = filtered.filter((prop) => {
+            const price = prop.total_price || 0;
+            switch (selectedPriceRange.value) {
+                case "under-1m":
+                    return price < 1000000;
+                case "1m-5m":
+                    return price >= 1000000 && price < 5000000;
+                case "5m-10m":
+                    return price >= 5000000 && price < 10000000;
+                case "over-10m":
+                    return price >= 10000000;
+                default:
+                    return true;
+            }
+        });
+    }
+
+    // Apply sorting
+    if (selectedSort.value === "price-low") {
+        filtered.sort((a, b) => (a.total_price || 0) - (b.total_price || 0));
+    } else if (selectedSort.value === "price-high") {
+        filtered.sort((a, b) => (b.total_price || 0) - (a.total_price || 0));
+    } else if (selectedSort.value === "newest") {
+        filtered.sort(
+            (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+        );
+    }
+
+    return filtered.slice(0, 6);
+});
 
 // Robust image resolver (shared logic adapted from Properties pages)
 const placeholderImg =
@@ -134,89 +182,162 @@ const getImageUrl = (image, isVirtualTour = false) => {
                 <h1
                     class="text-4xl md:text-6xl font-bold text-white leading-tight"
                 >
-                    Find verified property in Bohol
+                    Find prime land for sale in Bohol
                 </h1>
                 <p class="mt-4 text-lg md:text-xl text-white/90 max-w-3xl">
-                    Licensed local brokers. Transparent process. Real properties
-                    you can trust.
+                    Buy or sell land with verified listings, licensed brokers,
+                    and complete transparency.
                 </p>
                 <div class="mt-8 flex flex-col sm:flex-row gap-3">
                     <Link
                         :href="route('public.properties')"
                         class="bg-accent-600 text-white hover:bg-accent-700 px-7 py-3 rounded-lg font-semibold flex items-center gap-2"
                     >
-                        <BuildingOfficeIcon class="w-5 h-5" /> Browse properties
+                        <BuildingOfficeIcon class="w-5 h-5" /> Browse land
+                        listings
                     </Link>
                     <Link
                         :href="route('seller-requests.create')"
                         class="bg-white/90 text-primary-700 hover:bg-white px-7 py-3 rounded-lg font-semibold border border-white/20"
                     >
-                        List your property
+                        Sell your land
                     </Link>
                 </div>
 
                 <div class="mt-6 flex flex-wrap gap-4 text-white/90 text-sm">
                     <div class="flex items-center gap-2">
                         <CheckCircleIcon class="w-4 h-4 text-accent-300" />
-                        Verified listings
+                        Verified land titles
                     </div>
                     <div class="flex items-center gap-2">
                         <CheckCircleIcon class="w-4 h-4 text-accent-300" />
-                        Licensed brokers
+                        Licensed land brokers
                     </div>
                     <div class="flex items-center gap-2">
                         <CheckCircleIcon class="w-4 h-4 text-accent-300" />
-                        Local expertise
+                        Bohol expertise
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Quick benefits: 3 items -->
-        <section class="py-14 bg-white">
+        <!-- Top Performing Brokers Section -->
+        <section class="py-16 bg-white" v-if="topBrokers && topBrokers.length">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="card p-6">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center mb-4"
-                        >
-                            <MapPinIcon class="w-6 h-6 text-primary-600" />
-                        </div>
-                        <h3 class="font-semibold text-neutral-900">
-                            Prime locations
-                        </h3>
-                        <p class="text-neutral-600 mt-1">
-                            Beachfront, mountain view, and urban lots across
-                            Bohol.
-                        </p>
+                <div class="text-center mb-10">
+                    <div
+                        class="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-3"
+                    >
+                        <TrophyIcon class="w-6 h-6 text-yellow-600" />
                     </div>
-                    <div class="card p-6">
+                    <h2 class="text-2xl md:text-3xl font-bold text-neutral-900">
+                        Top Performing Land Brokers
+                    </h2>
+                    <p class="text-neutral-600">
+                        Meet our most trusted PRC-licensed land brokers
+                    </p>
+                </div>
+
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    <div
+                        v-for="(broker, index) in topBrokers.slice(0, 3)"
+                        :key="broker.id"
+                        class="relative bg-white border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition p-6"
+                    >
                         <div
-                            class="w-10 h-10 rounded-xl bg-accent-50 flex items-center justify-center mb-4"
+                            class="absolute top-4 right-4 px-2 py-0.5 text-xs font-semibold rounded-full text-white"
+                            :class="{
+                                'bg-yellow-500': index === 0,
+                                'bg-gray-400': index === 1,
+                                'bg-orange-500': index === 2,
+                            }"
                         >
-                            <CheckCircleIcon class="w-6 h-6 text-accent-600" />
+                            #{{ index + 1 }}
                         </div>
-                        <h3 class="font-semibold text-neutral-900">
-                            Verified process
-                        </h3>
-                        <p class="text-neutral-600 mt-1">
-                            Title checks, due diligence, and guided
-                            transactions.
-                        </p>
-                    </div>
-                    <div class="card p-6">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-warning-50 flex items-center justify-center mb-4"
-                        >
-                            <UserGroupIcon class="w-6 h-6 text-warning-600" />
+
+                        <div class="flex flex-col items-center text-center">
+                            <div class="relative mb-4">
+                                <UserAvatar
+                                    v-if="broker"
+                                    :user="broker"
+                                    size="2xl"
+                                    bg-color="primary"
+                                    class="w-24 h-24 border-4 border-white shadow ring-2"
+                                    :class="{
+                                        'ring-yellow-400/40': index === 0,
+                                        'ring-gray-400/40': index === 1,
+                                        'ring-orange-400/40': index === 2,
+                                    }"
+                                />
+                                <div
+                                    class="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1.5 shadow border-2 border-white"
+                                >
+                                    <CheckBadgeIcon
+                                        class="w-4 h-4 text-white"
+                                    />
+                                </div>
+                            </div>
+
+                            <h3 class="text-lg font-bold text-neutral-900">
+                                {{ broker.name }}
+                            </h3>
+                            <p
+                                class="text-sm text-neutral-600 mb-4"
+                                v-if="broker.brokerage_firm_name"
+                            >
+                                {{ broker.brokerage_firm_name }}
+                            </p>
+
+                            <div class="w-full space-y-2 mb-5">
+                                <div
+                                    class="flex items-center justify-between p-2 bg-neutral-50 rounded-md border border-neutral-200"
+                                >
+                                    <span class="text-xs text-neutral-600"
+                                        >Land Sales</span
+                                    >
+                                    <span
+                                        class="text-base font-semibold text-neutral-900"
+                                        >{{
+                                            broker.finalized_transactions_count ||
+                                            broker.total_sales ||
+                                            0
+                                        }}</span
+                                    >
+                                </div>
+                                <div
+                                    class="flex items-center justify-between p-2 bg-neutral-50 rounded-md border border-neutral-200"
+                                >
+                                    <span class="text-xs text-neutral-600"
+                                        >Active Land Listings</span
+                                    >
+                                    <span
+                                        class="text-base font-semibold text-neutral-900"
+                                        >{{ broker.active_listings || 0 }}</span
+                                    >
+                                </div>
+                            </div>
+
+                            <Link
+                                :href="route('brokers.show', broker.id)"
+                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 text-neutral-800 hover:bg-neutral-50 transition"
+                            >
+                                <span>View Profile</span>
+                                <ArrowRightIcon class="w-4 h-4" />
+                            </Link>
                         </div>
-                        <h3 class="font-semibold text-neutral-900">
-                            Local experts
-                        </h3>
-                        <p class="text-neutral-600 mt-1">
-                            Work with PRC-licensed brokers who know the market.
-                        </p>
                     </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <Link
+                        :href="route('brokers.index')"
+                        class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                        View All Brokers
+                        <ArrowRightIcon class="w-5 h-5" />
+                    </Link>
                 </div>
             </div>
         </section>
@@ -224,22 +345,120 @@ const getImageUrl = (image, isVirtualTour = false) => {
         <!-- Featured properties: compact -->
         <section class="py-14 bg-neutral-50" v-if="featuredProperties.length">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-neutral-900">
-                        Featured properties
-                    </h2>
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4"
+                >
+                    <div>
+                        <h2 class="text-2xl font-bold text-neutral-900">
+                            Featured land for sale
+                        </h2>
+                        <p class="text-sm text-neutral-600 mt-1">
+                            {{ filteredProperties.length }} of
+                            {{ featuredProperties.length }} properties
+                        </p>
+                    </div>
                     <Link
                         :href="route('public.properties')"
-                        class="text-primary-600 hover:text-primary-700 font-medium"
-                        >See all</Link
+                        class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
                     >
+                        <FunnelIcon class="w-4 h-4" />
+                        Advanced Filters
+                    </Link>
                 </div>
 
+                <!-- Quick Filters -->
+                <div class="mb-6 flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <label
+                            class="block text-xs font-medium text-neutral-700 mb-2"
+                            >Price Range</label
+                        >
+                        <div class="flex flex-wrap gap-2">
+                            <button
+                                @click="selectedPriceRange = 'all'"
+                                :class="[
+                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                                    selectedPriceRange === 'all'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
+                                ]"
+                            >
+                                All Prices
+                            </button>
+                            <button
+                                @click="selectedPriceRange = 'under-1m'"
+                                :class="[
+                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                                    selectedPriceRange === 'under-1m'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
+                                ]"
+                            >
+                                Under ₱1M
+                            </button>
+                            <button
+                                @click="selectedPriceRange = '1m-5m'"
+                                :class="[
+                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                                    selectedPriceRange === '1m-5m'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
+                                ]"
+                            >
+                                ₱1M - ₱5M
+                            </button>
+                            <button
+                                @click="selectedPriceRange = '5m-10m'"
+                                :class="[
+                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                                    selectedPriceRange === '5m-10m'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
+                                ]"
+                            >
+                                ₱5M - ₱10M
+                            </button>
+                            <button
+                                @click="selectedPriceRange = 'over-10m'"
+                                :class="[
+                                    'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                                    selectedPriceRange === 'over-10m'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50',
+                                ]"
+                            >
+                                Over ₱10M
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sm:w-48">
+                        <label
+                            class="block text-xs font-medium text-neutral-700 mb-2"
+                            >Sort By</label
+                        >
+                        <select
+                            v-model="selectedSort"
+                            class="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        >
+                            <option value="featured">Featured</option>
+                            <option value="newest">Newest First</option>
+                            <option value="price-low">
+                                Price: Low to High
+                            </option>
+                            <option value="price-high">
+                                Price: High to Low
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Property Grid -->
                 <div
                     class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
                     <div
-                        v-for="prop in featuredProperties.slice(0, 3)"
+                        v-for="prop in filteredProperties"
                         :key="prop.id"
                         class="card overflow-hidden group"
                     >
@@ -301,6 +520,48 @@ const getImageUrl = (image, isVirtualTour = false) => {
                         </div>
                     </div>
                 </div>
+
+                <!-- No Results Message -->
+                <div
+                    v-if="filteredProperties.length === 0"
+                    class="text-center py-12"
+                >
+                    <div
+                        class="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-4"
+                    >
+                        <FunnelIcon class="w-8 h-8 text-neutral-400" />
+                    </div>
+                    <h3 class="text-lg font-semibold text-neutral-900 mb-2">
+                        No land found
+                    </h3>
+                    <p class="text-neutral-600 mb-4">
+                        Try adjusting your filters or browse all listings
+                    </p>
+                    <Link
+                        :href="route('public.properties')"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
+                    >
+                        Browse All Land
+                        <ArrowRightIcon class="w-4 h-4" />
+                    </Link>
+                </div>
+
+                <!-- View All CTA -->
+                <div
+                    v-if="
+                        filteredProperties.length > 0 &&
+                        featuredProperties.length > 6
+                    "
+                    class="text-center mt-8"
+                >
+                    <Link
+                        :href="route('public.properties')"
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition font-medium"
+                    >
+                        View All {{ featuredProperties.length }} Properties
+                        <ArrowRightIcon class="w-5 h-5" />
+                    </Link>
+                </div>
             </div>
         </section>
 
@@ -311,7 +572,7 @@ const getImageUrl = (image, isVirtualTour = false) => {
                     Start in minutes
                 </h2>
                 <p class="text-neutral-600 mt-2">
-                    Browse listings or list your property—our team will guide
+                    Browse land listings or list your land—our team will guide
                     you end-to-end.
                 </p>
                 <div
@@ -320,12 +581,12 @@ const getImageUrl = (image, isVirtualTour = false) => {
                     <Link
                         :href="route('public.properties')"
                         class="btn-primary px-8 py-4 text-lg"
-                        >Browse Properties</Link
+                        >Browse Land</Link
                     >
                     <Link
                         :href="route('seller-requests.create')"
                         class="btn-secondary px-8 py-4 text-lg"
-                        >List Your Property</Link
+                        >Sell Your Land</Link
                     >
                 </div>
             </div>
@@ -334,3 +595,5 @@ const getImageUrl = (image, isVirtualTour = false) => {
         <PublicFooter />
     </div>
 </template>
+
+<style scoped></style>

@@ -125,7 +125,7 @@ onUnmounted(() => {
                             currentRoute === 'brokers.index' ? 'page' : null
                         "
                     >
-                        Broker Directory
+                        Brokers
                     </Link>
                 </nav>
 

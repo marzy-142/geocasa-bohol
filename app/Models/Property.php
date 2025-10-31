@@ -495,6 +495,40 @@ class Property extends Model
     }
 
     /**
+     * Check if property has an assigned client (active transaction)
+     * Returns true if property status indicates it's no longer available for new inquiries
+     */
+    public function hasAssignedClient()
+    {
+        // Property has an assigned client if it's in any of these statuses
+        return in_array($this->status, [
+            'reserved',           // Property is reserved for a client
+            'under_negotiation',  // Property is under negotiation with a client
+            'sold',              // Property has been sold
+            'pending'            // Offer accepted, deal in progress
+        ]);
+    }
+
+    /**
+     * Get a user-friendly message explaining why property is unavailable for new inquiries
+     */
+    public function getUnavailableReasonAttribute()
+    {
+        if (!$this->hasAssignedClient()) {
+            return null;
+        }
+
+        $messages = [
+            'reserved' => 'This property is reserved and cannot accept new inquiries.',
+            'under_negotiation' => 'This property is under negotiation with a client and cannot accept new inquiries.',
+            'sold' => 'This property has been sold and cannot accept new inquiries.',
+            'pending' => 'This property has an accepted offer and cannot accept new inquiries.'
+        ];
+
+        return $messages[$this->status] ?? 'This property is not available for new inquiries.';
+    }
+
+    /**
      * Get days since sold
      */
     public function getDaysSinceSoldAttribute()

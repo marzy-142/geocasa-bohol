@@ -202,6 +202,15 @@ class TransactionController extends Controller
             'broker_notes' => 'nullable|string',
         ]);
         
+        // IMPORTANT: Check if property already has an assigned client
+        $property = Property::find($validated['property_id']);
+        if ($property && $property->hasAssignedClient()) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'This property already has an assigned client and cannot accept new transactions. ' . $property->unavailable_reason);
+        }
+        
         $validated['broker_id'] = $user->id;
         $validated['status'] = 'inquiry';
         

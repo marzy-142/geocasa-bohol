@@ -381,6 +381,74 @@ class AccountSettingsController extends Controller
     }
 
     /**
+     * Update professional profile (Broker only)
+     */
+    public function updateProfessionalProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Only allow brokers to update professional profile
+            if ($user->role !== 'broker') {
+                return back()->withErrors([
+                    'error' => 'Only brokers can update professional profile.'
+                ]);
+            }
+            
+            $validated = $request->validate([
+                'bio' => ['nullable', 'string', 'max:1000'],
+                'specializations' => ['nullable', 'array'],
+                'specializations.*' => ['string', 'in:residential,commercial,agricultural,industrial,lot,beach_resort,investment,luxury'],
+                'service_areas' => ['nullable', 'array'],
+                'service_areas.*' => ['string', 'max:100'],
+                'website' => ['nullable', 'url', 'max:255'],
+                'facebook' => ['nullable', 'url', 'max:255'],
+                'linkedin' => ['nullable', 'url', 'max:255'],
+                'availability_status' => ['required', 'in:available,limited,unavailable'],
+            ], [
+                'bio.max' => 'Bio cannot exceed 1000 characters.',
+                'website.url' => 'Please enter a valid website URL.',
+                'facebook.url' => 'Please enter a valid Facebook URL.',
+                'linkedin.url' => 'Please enter a valid LinkedIn URL.',
+                'specializations.*.in' => 'Invalid specialization selected.',
+                'availability_status.in' => 'Invalid availability status.',
+            ]);
+
+            DB::beginTransaction();
+            
+            try {
+                // Update user professional profile fields
+                $user->update($validated);
+                
+                DB::commit();
+                
+                Log::info('Professional profile updated', [
+                    'user_id' => $user->id,
+                    'updated_fields' => array_keys($validated)
+                ]);
+
+                return back()->with('success', 'Professional profile updated successfully. Changes will appear in the Broker Directory.');
+                
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+            
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Professional profile update failed', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return back()->withErrors([
+                'error' => 'Failed to update professional profile. Please try again.'
+            ])->withInput();
+        }
+    }
+
+    /**
      * Deactivate account
      */
     public function deactivateAccount(Request $request)

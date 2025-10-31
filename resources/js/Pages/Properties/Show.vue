@@ -606,7 +606,6 @@ const formatTitleType = (titleType) => {
     const types = {
         titled: "Titled",
         tax_declared: "Tax Declared",
-        mother_title: "Mother Title",
         cct: "CCT",
     };
     return types[titleType] || titleType;

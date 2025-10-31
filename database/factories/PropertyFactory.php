@@ -34,7 +34,7 @@ class PropertyFactory extends Factory
             'total_price' => function (array $attributes) {
                 return round($attributes['lot_area_sqm'] * $attributes['price_per_sqm'], 2);
             },
-            'title_type' => $this->faker->randomElement(['titled', 'tax_declared', 'mother_title', 'cct']),
+            'title_type' => $this->faker->randomElement(['titled', 'tax_declared', 'cct']),
             'title_number' => strtoupper($this->faker->bothify('T-#####')),
             'tax_declaration_number' => strtoupper($this->faker->bothify('TD-#####')),
             'zoning_classification' => $this->faker->word(),
