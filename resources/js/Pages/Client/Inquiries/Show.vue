@@ -257,55 +257,90 @@
                     <div class="p-6">
                         <!-- Property Images Gallery -->
                         <div v-if="propertyImages.length > 0" class="mb-8">
-                            <div class="relative rounded-xl overflow-hidden bg-gray-100">
+                            <div
+                                class="relative rounded-xl overflow-hidden bg-gray-100"
+                            >
                                 <!-- Main Image -->
                                 <div class="aspect-video w-full">
-                                    <img 
-                                        :src="currentImage.image_path" 
+                                    <img
+                                        :src="currentImage.image_path"
                                         :alt="inquiry.property.title"
                                         class="w-full h-full object-cover"
                                     />
                                 </div>
-                                
+
                                 <!-- Image Counter -->
-                                <div class="absolute top-4 right-4 bg-black/70 text-white px-3 py-1.5 rounded-full text-sm font-medium">
-                                    {{ currentImageIndex + 1 }} / {{ propertyImages.length }}
+                                <div
+                                    class="absolute top-4 right-4 bg-black/70 text-white px-3 py-1.5 rounded-full text-sm font-medium"
+                                >
+                                    {{ currentImageIndex + 1 }} /
+                                    {{ propertyImages.length }}
                                 </div>
-                                
+
                                 <!-- Navigation Arrows (if more than 1 image) -->
-                                <div v-if="propertyImages.length > 1" class="absolute inset-0 flex items-center justify-between p-4">
-                                    <button 
+                                <div
+                                    v-if="propertyImages.length > 1"
+                                    class="absolute inset-0 flex items-center justify-between p-4"
+                                >
+                                    <button
                                         @click="previousImage"
                                         class="bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg transition-all hover:scale-110"
                                         aria-label="Previous image"
                                     >
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        <svg
+                                            class="w-6 h-6"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M15 19l-7-7 7-7"
+                                            ></path>
                                         </svg>
                                     </button>
-                                    <button 
+                                    <button
                                         @click="nextImage"
                                         class="bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg transition-all hover:scale-110"
                                         aria-label="Next image"
                                     >
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        <svg
+                                            class="w-6 h-6"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M9 5l7 7-7 7"
+                                            ></path>
                                         </svg>
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <!-- Thumbnail Gallery -->
-                            <div v-if="propertyImages.length > 1" class="mt-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                            <div
+                                v-if="propertyImages.length > 1"
+                                class="mt-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2"
+                            >
                                 <button
                                     v-for="(image, index) in propertyImages"
                                     :key="image.id"
                                     @click="currentImageIndex = index"
                                     class="aspect-square rounded-lg overflow-hidden border-2 transition-all"
-                                    :class="currentImageIndex === index ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-400'"
+                                    :class="
+                                        currentImageIndex === index
+                                            ? 'border-blue-600 ring-2 ring-blue-200'
+                                            : 'border-gray-200 hover:border-blue-400'
+                                    "
                                 >
-                                    <img 
-                                        :src="image.image_path" 
+                                    <img
+                                        :src="image.image_path"
                                         :alt="`Property image ${index + 1}`"
                                         class="w-full h-full object-cover"
                                     />
@@ -314,12 +349,27 @@
                         </div>
 
                         <!-- No Images Placeholder -->
-                        <div v-else class="mb-8 aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
+                        <div
+                            v-else
+                            class="mb-8 aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center"
+                        >
                             <div class="text-center text-gray-400">
-                                <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                <svg
+                                    class="w-16 h-16 mx-auto mb-2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    ></path>
                                 </svg>
-                                <p class="text-sm font-medium">No images available</p>
+                                <p class="text-sm font-medium">
+                                    No images available
+                                </p>
                             </div>
                         </div>
 
@@ -1051,26 +1101,73 @@ const propertyImages = computed(() => {
     if (!images || !Array.isArray(images) || images.length === 0) {
         return [];
     }
-    
+
     // Transform images array to consistent format
-    return images.map((img, index) => {
-        // If image is a string, it's the path
-        if (typeof img === 'string') {
-            return {
-                id: index,
-                image_path: img.startsWith('/') ? img : `/storage/${img}`
-            };
-        }
-        // If image is an object, extract the path from common keys
-        if (typeof img === 'object') {
-            const path = img.url || img.path || img.src || img.image || img.filename || '';
-            return {
-                id: img.id || index,
-                image_path: path.startsWith('/') ? path : `/storage/${path}`
-            };
-        }
-        return null;
-    }).filter(img => img !== null && img.image_path);
+    return images
+        .map((img, index) => {
+            // If image is a string, it's the path
+            if (typeof img === "string") {
+                const p = img.trim();
+                if (!p) return null;
+
+                // Absolute URLs / data URIs / blobs
+                if (/^(https?:)?\/\//i.test(p) || p.startsWith("data:") || p.startsWith("blob:")) {
+                    return { id: index, image_path: p };
+                }
+
+                // Already a storage URL
+                if (p.startsWith("/storage/") ) {
+                    return { id: index, image_path: p };
+                }
+                if (p.startsWith("storage/")) {
+                    return { id: index, image_path: '/' + p };
+                }
+
+                // Strip leading public/ if present
+                let clean = p.replace(/^\/+/, "");
+                if (clean.startsWith("public/")) {
+                    clean = clean.substr(7);
+                }
+
+                // If the cleaned value already contains expected dirs, prefix /storage/
+                if (clean.includes("properties/images/") || clean.includes("properties/virtual-tours/")) {
+                    return { id: index, image_path: '/storage/' + clean };
+                }
+
+                // Fallback: assume it's a filename under properties/images
+                return { id: index, image_path: '/storage/properties/images/' + clean };
+            }
+            // If image is an object, extract the path from common keys
+            if (typeof img === "object") {
+                const raw = img.url || img.path || img.src || img.image || img.filename || "";
+                const p = String(raw || "").trim();
+                if (!p) return null;
+
+                // Absolute URLs / data URIs / blobs
+                if (/^(https?:)?\/\//i.test(p) || p.startsWith("data:") || p.startsWith("blob:")) {
+                    return { id: img.id || index, image_path: p };
+                }
+
+                // Normalize storage/public prefixes
+                if (p.startsWith('/storage/')) {
+                    return { id: img.id || index, image_path: p };
+                }
+                if (p.startsWith('storage/')) {
+                    return { id: img.id || index, image_path: '/' + p };
+                }
+
+                let clean = p.replace(/^\/+/, "");
+                if (clean.startsWith('public/')) {
+                    clean = clean.substr(7);
+                }
+                if (clean.includes("properties/images/") || clean.includes("properties/virtual-tours/")) {
+                    return { id: img.id || index, image_path: '/storage/' + clean };
+                }
+                return { id: img.id || index, image_path: '/storage/properties/images/' + clean };
+            }
+            return null;
+        })
+        .filter((img) => img !== null && img.image_path);
 });
 
 // Computed property for current image
@@ -1084,15 +1181,17 @@ const currentImage = computed(() => {
 // Image navigation methods
 const nextImage = () => {
     if (propertyImages.value.length > 0) {
-        currentImageIndex.value = (currentImageIndex.value + 1) % propertyImages.value.length;
+        currentImageIndex.value =
+            (currentImageIndex.value + 1) % propertyImages.value.length;
     }
 };
 
 const previousImage = () => {
     if (propertyImages.value.length > 0) {
-        currentImageIndex.value = currentImageIndex.value === 0 
-            ? propertyImages.value.length - 1 
-            : currentImageIndex.value - 1;
+        currentImageIndex.value =
+            currentImageIndex.value === 0
+                ? propertyImages.value.length - 1
+                : currentImageIndex.value - 1;
     }
 };
 
