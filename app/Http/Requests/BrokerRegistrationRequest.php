@@ -34,7 +34,7 @@ class BrokerRegistrationRequest extends SecureFileUploadRequest
             'role' => 'required|in:client,broker',
             
             // Professional Details
-            'prc_id' => 'required|string|max:50|unique:users,prc_id',
+            'prc_id' => 'required|string|max:20|unique:users,prc_id',
             'prc_license_expiration' => 'required|date|after:today',
             'prc_id_file' => 'nullable', // Temporarily make file upload completely optional for testing
             'years_experience' => 'nullable|integer|min:0|max:50',
@@ -141,13 +141,10 @@ class BrokerRegistrationRequest extends SecureFileUploadRequest
             'birthdate.required' => 'Birthdate is required for broker registration.',
             'birthdate.before_or_equal' => 'You must be at least 18 years old to register as a broker.',
             
-            'license_number.required' => 'PRC license number is required.',
-            'license_number.unique' => 'This license number is already registered.',
-            
             // Enhanced PRC ID file error messages
             'prc_id_file.file' => 'Please select a valid file for your PRC ID document.',
             'prc_id_file.mimes' => 'PRC ID document must be in JPG, JPEG, PNG, or PDF format. Please convert your file to one of these formats.',
-            'prc_id_file.max' => 'PRC ID document file size must not exceed 10MB. Please compress your file or use a smaller image.',
+            'prc_id_file.max' => 'PRC ID document file size must not exceed 5MB. Please compress your file or use a smaller image.',
             'prc_id_file.uploaded' => 'PRC ID document upload failed. Please try again or use a different file.',
             
             // Enhanced business permit file error messages
@@ -223,9 +220,9 @@ class BrokerRegistrationRequest extends SecureFileUploadRequest
         }
 
         // Clean license number
-        if ($this->has('license_number')) {
-            $licenseNumber = strtoupper(trim($this->license_number));
-            $this->merge(['license_number' => $licenseNumber]);
+        if ($this->has('prc_id')) {
+            $prcId = strtoupper(trim($this->prc_id));
+            $this->merge(['prc_id' => $prcId]);
         }
 
         // Parse social media JSON if provided as string
@@ -257,10 +254,10 @@ class BrokerRegistrationRequest extends SecureFileUploadRequest
             }
             
             // Validate license number format (example: PRC-123456)
-            if ($this->has('license_number')) {
-                $licenseNumber = $this->license_number;
-                if (!preg_match('/^[A-Z0-9-]{5,20}$/', $licenseNumber)) {
-                    $validator->errors()->add('license_number', 'License number format is invalid.');
+            if ($this->has('prc_id')) {
+                $prcId = $this->prc_id;
+                if (!preg_match('/^[A-Z0-9-]{5,20}$/', $prcId)) {
+                    $validator->errors()->add('prc_id', 'PRC license number format is invalid.');
                 }
             }
         });

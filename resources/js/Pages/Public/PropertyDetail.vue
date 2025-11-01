@@ -537,7 +537,7 @@
                                             clip-rule="evenodd"
                                         />
                                     </svg>
-                                    {{ property.full_address }}
+                                    {{ formatAddress(property) }}
                                 </p>
                             </div>
                             <div class="text-right">
@@ -1703,13 +1703,9 @@ const submitInquiry = () => {
             };
             inquiryForm.reset("name", "email", "phone");
             inquiryForm.message = `I'm interested in ${props.property.title}. Please provide more information about this property.`;
-            // Only show the toast after lastInquiryData is set
+            // Show the centered auth prompt modal
             setTimeout(() => {
                 showAuthPrompt.value = true;
-                showToast(
-                    "To track your inquiry and get updates, please log in or register.",
-                    "info"
-                );
             }, 0);
         },
     });
@@ -1893,6 +1889,9 @@ const getImageUrl = (image, isVirtualTour = false) => {
     } else if (cleanImage.includes("properties/images/")) {
         // If it already contains the images path structure, just add /storage/ prefix
         return `/storage/${cleanImage}`;
+    } else if (cleanImage.includes("seller-requests/images/")) {
+        // Handle images from seller requests (legacy properties)
+        return `/storage/${cleanImage}`;
     }
 
     // Determine the correct path based on context or image path patterns
@@ -1910,6 +1909,44 @@ const getImageUrl = (image, isVirtualTour = false) => {
 
 const formatPropertyType = (type) => {
     return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+// Format and deduplicate address tokens to avoid repeats and empty commas
+const formatAddress = (property) => {
+    const buildTokensFromFields = () => {
+        const country = property.country || "Philippines";
+        return [
+            property.barangay && String(property.barangay).trim(),
+            property.municipality && String(property.municipality).trim(),
+            property.province && String(property.province).trim(),
+            country && String(country).trim(),
+        ].filter(Boolean);
+    };
+
+    let tokens = [];
+    if (property.full_address && typeof property.full_address === "string") {
+        tokens = property.full_address
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s && s !== "-");
+        // If parsing results in too few tokens, fall back to fields
+        if (tokens.length < 2) {
+            tokens = buildTokensFromFields();
+        }
+    } else {
+        tokens = buildTokensFromFields();
+    }
+
+    const seen = new Set();
+    const result = [];
+    for (const t of tokens) {
+        const key = t.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            result.push(t);
+        }
+    }
+    return result.join(", ");
 };
 
 // Enhanced image gallery methods
@@ -2023,7 +2060,9 @@ const initPublicMap = () => {
         L.marker([lat, lng])
             .addTo(publicMap.value)
             .bindPopup(
-                `<b>${props.property.title}</b><br>${props.property.full_address}`
+                `<b>${props.property.title}</b><br>${formatAddress(
+                    props.property
+                )}`
             )
             .openPopup();
     }

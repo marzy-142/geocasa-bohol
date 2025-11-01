@@ -397,6 +397,8 @@ class AccountSettingsController extends Controller
             
             $validated = $request->validate([
                 'bio' => ['nullable', 'string', 'max:1000'],
+                'prc_license_number' => ['required', 'string', 'numeric', 'max:50'],
+                'office_contact_number' => ['nullable', 'string', 'max:20'],
                 'specializations' => ['nullable', 'array'],
                 'specializations.*' => ['string', 'in:residential,commercial,agricultural,industrial,lot,beach_resort,investment,luxury'],
                 'service_areas' => ['nullable', 'array'],
@@ -407,6 +409,9 @@ class AccountSettingsController extends Controller
                 'availability_status' => ['required', 'in:available,limited,unavailable'],
             ], [
                 'bio.max' => 'Bio cannot exceed 1000 characters.',
+                'prc_license_number.required' => 'PRC License Number is required for brokers.',
+                'prc_license_number.max' => 'PRC License Number cannot exceed 50 characters.',
+                'office_contact_number.max' => 'Office contact number cannot exceed 20 characters.',
                 'website.url' => 'Please enter a valid website URL.',
                 'facebook.url' => 'Please enter a valid Facebook URL.',
                 'linkedin.url' => 'Please enter a valid LinkedIn URL.',
@@ -417,6 +422,11 @@ class AccountSettingsController extends Controller
             DB::beginTransaction();
             
             try {
+                // Map UI field `prc_license_number` to database column `prc_id`
+                if (array_key_exists('prc_license_number', $validated)) {
+                    $validated['prc_id'] = $validated['prc_license_number'];
+                    unset($validated['prc_license_number']);
+                }
                 // Update user professional profile fields
                 $user->update($validated);
                 

@@ -466,9 +466,20 @@ const submitRegister = () => {
                                 <ModernInput
                                     v-model="registerForm.prc_id"
                                     type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
                                     label="PRC License Number"
-                                    placeholder="Enter your PRC license number"
+                                    placeholder="Enter your PRC license number (numbers only)"
                                     :error="registerForm.errors.prc_id"
+                                    @input="
+                                        (e) => {
+                                            registerForm.prc_id =
+                                                e.target.value.replace(
+                                                    /\D/g,
+                                                    ''
+                                                );
+                                        }
+                                    "
                                     required
                                 />
 

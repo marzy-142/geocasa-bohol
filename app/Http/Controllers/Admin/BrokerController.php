@@ -173,7 +173,7 @@ class BrokerController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $broker->id,
-            'prc_id' => 'nullable|string|max:255',
+            'prc_id' => 'nullable|string|numeric|max:255',
             'business_permit' => 'nullable|string|max:255',
             'admin_notes' => 'nullable|string|max:1000',
             // Optional: allow admin to set birthdate (must be at least 18 years ago)

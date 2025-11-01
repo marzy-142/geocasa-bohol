@@ -203,7 +203,7 @@ class SellerRequestController extends Controller
                 $status = 'assigned';
             }
 
-            // Create seller request
+            // Create seller request (aligned to simplified public form)
             $sellerRequest = SellerRequest::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -213,8 +213,9 @@ class SellerRequestController extends Controller
                 'property_description' => $validated['property_description'],
                 'property_type' => $validated['property_type'],
                 'asking_price' => $validated['asking_price'],
-                'city' => $validated['city'],
-                'province' => $validated['province'],
+                // Map municipality to city column; default province to Bohol
+                'city' => $validated['municipality'] ?? null,
+                'province' => 'Bohol',
                 'postal_code' => $validated['postal_code'] ?? null,
                 'lot_area' => $validated['lot_area'] ?? null,
                 'features' => $validated['features'] ?? null,
@@ -222,7 +223,8 @@ class SellerRequestController extends Controller
                 'property_documents' => $storedFiles['property_documents'] ?? null,
                 'ownership_documents' => $storedFiles['ownership_documents'] ?? null,
                 'availability' => $validated['availability'] ?? null,
-                'urgency' => $validated['urgency'],
+                // Urgency not collected in simplified form; default to 'medium'
+                'urgency' => $validated['urgency'] ?? 'medium',
                 'additional_notes' => $validated['additional_notes'] ?? null,
                 'marketing_consent' => $validated['marketing_consent'] ?? false,
                 'newsletter_consent' => $validated['newsletter_consent'] ?? false,
@@ -484,7 +486,7 @@ class SellerRequestController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'features' => 'nullable|array',
-            'status' => 'required|in:pending,under_review,approved,rejected,listed',
+                'status' => 'required|in:pending,under_review,assigned,approved,rejected,listed',
             'admin_notes' => 'nullable|string',
             'rejection_reason' => 'nullable|string',
             'assigned_broker_id' => 'nullable|exists:users,id'
@@ -539,14 +541,15 @@ class SellerRequestController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:pending,under_review,approved,rejected,listed',
+            // Include 'assigned' so brokers can accept/decline when pre-selected
+            'status' => 'required|in:pending,under_review,assigned,approved,rejected,listed',
             'admin_notes' => 'nullable|string|max:1000',
             'rejection_reason' => 'nullable|string|max:500|required_if:status,rejected',
             'assigned_broker_id' => 'nullable|exists:users,id'
         ]);
 
         // Validate broker assignment
-        if ($validated['assigned_broker_id']) {
+        if (!empty($validated['assigned_broker_id'])) {
             $broker = User::find($validated['assigned_broker_id']);
             if (!$broker || $broker->role !== 'broker' || !$broker->is_approved) {
                 return back()->withErrors(['assigned_broker_id' => 'Invalid broker selection.']);
@@ -582,16 +585,22 @@ class SellerRequestController extends Controller
                     // Send notification to the broker
                     $broker->notify(new BrokerSellerAssignmentNotification($sellerRequest, $user, $action));
                     // Send email to the seller
-                    if ($sellerRequest->seller_email) {
-                        Mail::to($sellerRequest->seller_email)
+                    if ($sellerRequest->email) {
+                        Mail::to($sellerRequest->email)
                             ->send(new SellerBrokerAssignedMail($sellerRequest, $broker, $user));
                     }
                 }
             }
 
+            // Prepare outgoing emails for approve/reject actions
+            $sendApprovedMail = false;
+            $sendRejectedMail = false;
+            $approvedMailProperty = null;
+            $rejectionReason = $validated['rejection_reason'] ?? null;
+
             // Auto-convert to property if approved by broker or admin and not already converted
             if (
-                $validated['status'] === 'approved' &&
+                in_array($validated['status'], ['approved']) &&
                 !$sellerRequest->property_id &&
                 in_array($user->role, ['admin', 'broker'])
             ) {
@@ -623,21 +632,22 @@ class SellerRequestController extends Controller
                     'slug' => Str::slug($sellerRequest->property_title . '-' . time()),
                     'title' => $sellerRequest->property_title,
                     'description' => $sellerRequest->property_description,
-                    'type' => $sellerRequest->property_type ?? 'land',
+                    'type' => $sellerRequest->property_type ?? 'residential_lot',
                     'status' => 'available',
                     'price_per_sqm' => $pricePerSqm ?? 0,
                     'total_price' => $totalPrice ?? 0,
                     'lot_area_sqm' => $lotAreaSqm ?? 0,
-                    'area_unit' => $sellerRequest->area_unit,
-                    'location' => $sellerRequest->property_location,
-                    'address' => $sellerRequest->property_address,
-                    'city' => $sellerRequest->city,
-                    'state' => $sellerRequest->state,
-                    'zip_code' => $sellerRequest->zip_code,
-                    'latitude' => $sellerRequest->latitude,
-                    'longitude' => $sellerRequest->longitude,
-                    'features' => $sellerRequest->features,
-                    'images' => $sellerRequest->uploaded_images,
+                    'lot_area_hectares' => $lotAreaSqm ? round($lotAreaSqm / 10000, 4) : 0,
+                    'address' => $sellerRequest->address,
+                    'municipality' => $sellerRequest->municipality,
+                    'barangay' => $sellerRequest->barangay,
+                    'title_type' => $sellerRequest->title_type,
+                    'zoning_classification' => $sellerRequest->zoning_classification,
+                    'road_access' => $sellerRequest->road_access ?? false,
+                    'water_source' => $sellerRequest->water_source ?? false,
+                    'electricity_available' => $sellerRequest->electricity_available ?? false,
+                    'internet_available' => $sellerRequest->internet_available ?? false,
+                    'images' => $sellerRequest->uploaded_images ?? $sellerRequest->images,
                     'broker_id' => $sellerRequest->assigned_broker_id ?? $user->id,
                     'is_featured' => false
                 ]);
@@ -646,9 +656,31 @@ class SellerRequestController extends Controller
                     'property_id' => $property->id,
                     'listed_at' => now()
                 ]);
+
+                // Mark to send approved mail
+                $sendApprovedMail = true;
+                $approvedMailProperty = $property;
             }
 
             DB::commit();
+
+            // Send emails after commit to ensure data is persisted
+            try {
+                if ($validated['status'] === 'rejected' && $sellerRequest->email) {
+                    Mail::to($sellerRequest->email)
+                        ->send(new \App\Mail\SellerRequestRejectedMail($sellerRequest, $rejectionReason));
+                }
+                if ($sendApprovedMail && $sellerRequest->email) {
+                    Mail::to($sellerRequest->email)
+                        ->send(new \App\Mail\SellerRequestApprovedMail($sellerRequest, $approvedMailProperty));
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send seller request status emails', [
+                    'seller_request_id' => $sellerRequest->id,
+                    'status' => $validated['status'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             return redirect()->route('seller-requests.show', $sellerRequest)
                 ->with('message', 'Request status updated successfully.');
@@ -708,21 +740,22 @@ class SellerRequestController extends Controller
                 'slug' => Str::slug($sellerRequest->property_title . '-' . time()),
                 'title' => $sellerRequest->property_title,
                 'description' => $sellerRequest->property_description,
-                'type' => $sellerRequest->property_type ?? 'land', // Use property_type from seller request, default to 'land' for GeoCasa
+                'type' => $sellerRequest->property_type ?? 'residential_lot',
                 'status' => 'available',
                 'price_per_sqm' => $pricePerSqm ?? 0,
                 'total_price' => $totalPrice ?? 0,
                 'lot_area_sqm' => $lotAreaSqm ?? 0,
-                'area_unit' => $sellerRequest->area_unit,
-                'location' => $sellerRequest->property_location,
-                'address' => $sellerRequest->property_address,
-                'city' => $sellerRequest->city,
-                'state' => $sellerRequest->state,
-                'zip_code' => $sellerRequest->zip_code,
-                'latitude' => $sellerRequest->latitude,
-                'longitude' => $sellerRequest->longitude,
-                'features' => $sellerRequest->features,
-                'images' => $sellerRequest->uploaded_images,
+                'lot_area_hectares' => $lotAreaSqm ? round($lotAreaSqm / 10000, 4) : 0,
+                'address' => $sellerRequest->address,
+                'municipality' => $sellerRequest->municipality,
+                'barangay' => $sellerRequest->barangay,
+                'title_type' => $sellerRequest->title_type,
+                'zoning_classification' => $sellerRequest->zoning_classification,
+                'road_access' => $sellerRequest->road_access ?? false,
+                'water_source' => $sellerRequest->water_source ?? false,
+                'electricity_available' => $sellerRequest->electricity_available ?? false,
+                'internet_available' => $sellerRequest->internet_available ?? false,
+                'images' => $sellerRequest->uploaded_images ?? $sellerRequest->images,
                 'broker_id' => $sellerRequest->assigned_broker_id ?? $user->id,
                 'is_featured' => false
             ]);

@@ -32,6 +32,14 @@ import {
 
 const props = defineProps({
     transaction: Object,
+    canEdit: {
+        type: Boolean,
+        default: false,
+    },
+    userRole: {
+        type: String,
+        default: "client",
+    },
 });
 
 const page = usePage();
@@ -39,9 +47,16 @@ const currentTransaction = ref(props.transaction);
 let echoChannel = null;
 
 const showStatusModal = ref(false);
+const showAdminOversightModal = ref(false);
+
 const statusForm = useForm({
     status: currentTransaction.value.status,
     notes: "",
+});
+
+const adminOversightForm = useForm({
+    oversight_note: "",
+    flag_for_review: false,
 });
 
 const updateStatus = () => {
@@ -53,6 +68,21 @@ const updateStatus = () => {
                 statusForm.reset("notes");
                 // Update the current transaction status
                 currentTransaction.value.status = statusForm.status;
+            },
+        }
+    );
+};
+
+const submitAdminOversightNote = () => {
+    adminOversightForm.post(
+        route(
+            "admin.transactions.add-oversight-note",
+            currentTransaction.value.id
+        ),
+        {
+            onSuccess: () => {
+                showAdminOversightModal.value = false;
+                adminOversightForm.reset();
             },
         }
     );
@@ -393,7 +423,9 @@ onUnmounted(() => {
                                 <div
                                     class="mt-6 lg:mt-0 lg:ml-8 flex flex-wrap gap-3"
                                 >
+                                    <!-- Edit Button - Only for brokers -->
                                     <Link
+                                        v-if="canEdit"
                                         :href="
                                             route(
                                                 'transactions.edit',
@@ -405,14 +437,27 @@ onUnmounted(() => {
                                         <PencilIcon class="w-4 h-4 mr-2" />
                                         Edit
                                     </Link>
+
+                                    <!-- Update Status Button - Only for brokers -->
                                     <button
+                                        v-if="canEdit && canUpdateStatus()"
                                         @click="showStatusModal = true"
-                                        v-if="canUpdateStatus()"
                                         class="inline-flex items-center px-4 py-2 bg-green-500/90 hover:bg-green-500 text-white rounded-lg font-medium transition-colors"
                                     >
                                         <ArrowPathIcon class="w-4 h-4 mr-2" />
                                         Update Status
                                     </button>
+
+                                    <!-- Admin Oversight Note Button - Only for admins -->
+                                    <button
+                                        v-if="userRole === 'admin'"
+                                        @click="showAdminOversightModal = true"
+                                        class="inline-flex items-center px-4 py-2 bg-amber-500/90 hover:bg-amber-500 text-white rounded-lg font-medium transition-colors"
+                                    >
+                                        <PencilIcon class="w-4 h-4 mr-2" />
+                                        Add Oversight Note
+                                    </button>
+
                                     <button
                                         class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-colors backdrop-blur-sm"
                                     >
@@ -1246,6 +1291,156 @@ onUnmounted(() => {
                                     >Updating...</span
                                 >
                                 <span v-else>Update Status</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Oversight Note Modal -->
+        <div
+            v-if="showAdminOversightModal"
+            class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
+        >
+            <div
+                class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg"
+            >
+                <!-- Modal Header -->
+                <div
+                    class="px-6 py-4 bg-gradient-to-r from-amber-600 to-orange-700 rounded-t-xl"
+                >
+                    <div class="flex items-center justify-between">
+                        <h3
+                            class="text-xl font-semibold text-white flex items-center"
+                        >
+                            <PencilIcon class="w-5 h-5 mr-2" />
+                            Add Administrative Oversight Note
+                        </h3>
+                        <button
+                            @click="showAdminOversightModal = false"
+                            class="text-white/80 hover:text-white transition-colors"
+                        >
+                            <XCircleIcon class="w-6 h-6" />
+                        </button>
+                    </div>
+                    <p class="text-amber-100 text-sm mt-1">
+                        For monitoring and oversight purposes only
+                    </p>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6">
+                    <form
+                        @submit.prevent="submitAdminOversightNote"
+                        class="space-y-6"
+                    >
+                        <!-- Warning Alert -->
+                        <div
+                            class="bg-amber-50 border border-amber-200 rounded-lg p-4"
+                        >
+                            <div class="flex gap-3">
+                                <ExclamationTriangleIcon
+                                    class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+                                />
+                                <div class="text-sm text-amber-800">
+                                    <p class="font-medium mb-1">
+                                        Read-Only Access
+                                    </p>
+                                    <p>
+                                        As an administrator, you can only add
+                                        oversight notes. You cannot modify
+                                        transaction data, status, or any
+                                        financial information.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transaction Reference -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-sm text-gray-600 mb-1">
+                                Transaction
+                            </p>
+                            <p class="font-semibold text-gray-900">
+                                {{ currentTransaction.transaction_number }}
+                            </p>
+                            <p class="text-sm text-gray-600 mt-2">
+                                {{ currentTransaction.property?.title }}
+                            </p>
+                        </div>
+
+                        <!-- Oversight Note -->
+                        <div>
+                            <label
+                                for="oversight_note"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Oversight Note
+                                <span class="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                v-model="adminOversightForm.oversight_note"
+                                id="oversight_note"
+                                rows="5"
+                                class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-amber-500 focus:border-amber-500 text-sm"
+                                placeholder="Enter your administrative oversight note here..."
+                                required
+                            ></textarea>
+                            <p class="mt-1 text-xs text-gray-500">
+                                This note will be visible to the broker and
+                                added to the transaction record with an admin
+                                timestamp.
+                            </p>
+                        </div>
+
+                        <!-- Flag for Review -->
+                        <div class="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="flag_for_review"
+                                v-model="adminOversightForm.flag_for_review"
+                                class="mt-1 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                            />
+                            <div class="flex-1">
+                                <label
+                                    for="flag_for_review"
+                                    class="text-sm font-medium text-gray-700 cursor-pointer"
+                                >
+                                    Flag this transaction for administrative
+                                    review
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    The broker will be notified that this
+                                    transaction requires administrative
+                                    attention.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div
+                            class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200"
+                        >
+                            <button
+                                type="button"
+                                @click="showAdminOversightModal = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                :disabled="
+                                    adminOversightForm.processing ||
+                                    !adminOversightForm.oversight_note
+                                "
+                                class="px-6 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <span v-if="adminOversightForm.processing"
+                                    >Adding Note...</span
+                                >
+                                <span v-else>Add Oversight Note</span>
                             </button>
                         </div>
                     </form>

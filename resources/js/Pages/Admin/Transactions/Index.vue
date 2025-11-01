@@ -105,14 +105,45 @@ const getProgressPercentage = (status) => {
     return progressMap[status] || 0;
 };
 
-const deleteTransaction = (transaction) => {
-    if (
-        confirm(
-            "Are you sure you want to delete this transaction? This action cannot be undone."
-        )
-    ) {
-        router.delete(route("admin.transactions.destroy", transaction.id));
-    }
+// Admin oversight note modal state
+const showOversightNoteModal = ref(false);
+const oversightNoteForm = ref({
+    transaction_id: null,
+    oversight_note: "",
+    flag_for_review: false,
+});
+
+const addOversightNote = (transaction) => {
+    oversightNoteForm.value = {
+        transaction_id: transaction.id,
+        oversight_note: "",
+        flag_for_review: false,
+    };
+    selectedTransaction.value = transaction;
+    showOversightNoteModal.value = true;
+};
+
+const submitOversightNote = () => {
+    router.post(
+        route(
+            "admin.transactions.add-oversight-note",
+            oversightNoteForm.value.transaction_id
+        ),
+        {
+            oversight_note: oversightNoteForm.value.oversight_note,
+            flag_for_review: oversightNoteForm.value.flag_for_review,
+        },
+        {
+            onSuccess: () => {
+                showOversightNoteModal.value = false;
+                oversightNoteForm.value = {
+                    transaction_id: null,
+                    oversight_note: "",
+                    flag_for_review: false,
+                };
+            },
+        }
+    );
 };
 
 const viewFinancialDetails = (transaction) => {
@@ -796,17 +827,13 @@ const getDaysInProgress = (transaction) => {
                                 >
                                     Financials
                                 </button>
-                                <Link
-                                    :href="
-                                        route(
-                                            'admin.transactions.edit',
-                                            transaction.id
-                                        )
-                                    "
-                                    class="flex-1 bg-blue-600 text-white text-center py-2 px-3 rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
+                                <button
+                                    @click="addOversightNote(transaction)"
+                                    class="flex-1 bg-amber-600 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-amber-700 transition-colors"
+                                    title="Add administrative oversight note"
                                 >
-                                    Edit
-                                </Link>
+                                    Add Note
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1228,6 +1255,131 @@ const getDaysInProgress = (transaction) => {
                         >
                             View Full Details
                         </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Oversight Note Modal -->
+        <div
+            v-if="showOversightNoteModal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        >
+            <div class="bg-white rounded-xl p-6 w-full max-w-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        Add Administrative Oversight Note
+                    </h3>
+                    <button
+                        @click="showOversightNoteModal = false"
+                        class="text-gray-400 hover:text-gray-600"
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                            ></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div v-if="selectedTransaction" class="space-y-4">
+                    <!-- Info Alert -->
+                    <div
+                        class="bg-amber-50 border border-amber-200 rounded-lg p-4"
+                    >
+                        <div class="flex gap-3">
+                            <svg
+                                class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                            <div class="text-sm text-amber-800">
+                                <p class="font-medium mb-1">
+                                    Administrative Oversight
+                                </p>
+                                <p>
+                                    This note is for monitoring purposes only.
+                                    You cannot modify transaction data. Notes
+                                    will be visible to the broker.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Reference -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 mb-1">Transaction</p>
+                        <p class="font-semibold text-gray-900">
+                            {{ selectedTransaction.transaction_number }}
+                        </p>
+                        <p class="text-sm text-gray-600 mt-2">
+                            {{ selectedTransaction.property?.title }}
+                        </p>
+                    </div>
+
+                    <!-- Oversight Note Textarea -->
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                            Oversight Note <span class="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            v-model="oversightNoteForm.oversight_note"
+                            rows="5"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            placeholder="Enter your administrative oversight note here..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <!-- Flag for Review Checkbox -->
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="flag_for_review"
+                            v-model="oversightNoteForm.flag_for_review"
+                            class="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                        />
+                        <label
+                            for="flag_for_review"
+                            class="text-sm text-gray-700"
+                        >
+                            Flag this transaction for administrative review
+                        </label>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div
+                        class="flex justify-end space-x-3 pt-4 border-t border-gray-200"
+                    >
+                        <button
+                            @click="showOversightNoteModal = false"
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            @click="submitOversightNote"
+                            :disabled="!oversightNoteForm.oversight_note"
+                            class="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Add Note
+                        </button>
                     </div>
                 </div>
             </div>

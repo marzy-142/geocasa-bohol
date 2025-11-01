@@ -48,7 +48,7 @@ class RegisteredUserController extends Controller
     {
         // Use enhanced authentication service for all registrations
         $authService = app(\App\Services\EnhancedAuthenticationService::class);
-        
+
         // Use secure validation for broker registration
         if ($request->role === 'broker') {
             // Create a proper BrokerRegistrationRequest instance
@@ -64,6 +64,16 @@ class RegisteredUserController extends Controller
                 'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
                 'password' => \App\Rules\StandardPassword::rules(),
                 'role' => 'required|in:client,broker',
+            ]);
+        }
+
+        // Log form data for debugging (only in development)
+        if (config('app.debug')) {
+            \Log::info('Registration form data', [
+                'role' => $request->role,
+                'has_files' => !empty($request->allFiles()),
+                'files' => array_keys($request->allFiles()),
+                'form_data_keys' => array_keys($request->all())
             ]);
         }
 
@@ -105,6 +115,7 @@ class RegisteredUserController extends Controller
             // Explicitly set broker approval fields to override database defaults
             $userData['is_approved'] = false;
             $userData['application_status'] = $prcVerificationResult['verified'] ? 'pending' : 'prc_verification_failed';
+            $userData['email_verified_at'] = now(); // Bypass email verification for brokers
 
             // Store uploaded files securely using the enhanced security service
             $storedFiles = $request->storeFilesSecurely([

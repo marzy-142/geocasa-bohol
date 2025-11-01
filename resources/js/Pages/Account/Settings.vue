@@ -128,6 +128,8 @@ const updatePrivacy = () => {
 // Professional Profile Form (Broker Only)
 const professionalProfileForm = useForm({
     bio: props.user.bio || "",
+    prc_license_number: props.user.prc_license_number || "",
+    office_contact_number: props.user.office_contact_number || "",
     specializations: props.user.specializations || [],
     service_areas: props.user.service_areas || [],
     website: props.user.website || "",
@@ -1522,6 +1524,93 @@ const getInitials = (name) => {
                                         class="mt-1 text-sm text-red-600"
                                     >
                                         {{ professionalProfileForm.errors.bio }}
+                                    </p>
+                                </div>
+
+                                <!-- PRC License Number Section -->
+                                <div>
+                                    <label
+                                        for="prc_license_number"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                    >
+                                        PRC License Number
+                                        <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        id="prc_license_number"
+                                        v-model="
+                                            professionalProfileForm.prc_license_number
+                                        "
+                                        type="text"
+                                        inputmode="numeric"
+                                        pattern="[0-9]*"
+                                        maxlength="50"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Enter your PRC license number (numbers only)"
+                                        @input="
+                                            (e) => {
+                                                professionalProfileForm.prc_license_number =
+                                                    e.target.value.replace(
+                                                        /\D/g,
+                                                        ''
+                                                    );
+                                            }
+                                        "
+                                    />
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Your Professional Regulation Commission
+                                        license number (numeric only)
+                                    </p>
+                                    <p
+                                        v-if="
+                                            professionalProfileForm.errors
+                                                .prc_license_number
+                                        "
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{
+                                            professionalProfileForm.errors
+                                                .prc_license_number
+                                        }}
+                                    </p>
+                                </div>
+
+                                <!-- Office Contact Number Section -->
+                                <div>
+                                    <label
+                                        for="office_contact_number"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                    >
+                                        Office Contact Number
+                                        <span class="text-gray-500 font-normal"
+                                            >(Optional)</span
+                                        >
+                                    </label>
+                                    <input
+                                        id="office_contact_number"
+                                        v-model="
+                                            professionalProfileForm.office_contact_number
+                                        "
+                                        type="tel"
+                                        maxlength="20"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="e.g., +63 912 345 6789"
+                                    />
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Your office or business contact number
+                                        for client inquiries
+                                    </p>
+                                    <p
+                                        v-if="
+                                            professionalProfileForm.errors
+                                                .office_contact_number
+                                        "
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{
+                                            professionalProfileForm.errors
+                                                .office_contact_number
+                                        }}
                                     </p>
                                 </div>
 

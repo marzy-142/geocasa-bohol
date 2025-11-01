@@ -392,8 +392,17 @@ const formatDate = (date) => {
                             <ModernInput
                                 v-model="profileForm.prc_id"
                                 type="text"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                placeholder="Enter PRC license number (numbers only)"
                                 required
                                 :error="profileForm.errors.prc_id"
+                                @input="
+                                    (e) => {
+                                        profileForm.prc_id =
+                                            e.target.value.replace(/\D/g, '');
+                                    }
+                                "
                             />
                         </div>
 

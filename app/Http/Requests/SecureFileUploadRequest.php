@@ -167,6 +167,28 @@ class SecureFileUploadRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'prc_id_file.file' => 'The uploaded PRC ID file is invalid or corrupted. Please try uploading a different file.',
+            'prc_id_file.mimes' => 'Invalid PRC ID file format. Allowed formats: PDF, JPG, JPEG, PNG. Please convert your file to an accepted format.',
+            'prc_id_file.max' => 'PRC ID file size too large (5MB maximum). Please compress your file or use a smaller image.',
+            'prc_id_file.image' => 'The PRC ID file must be a valid image (JPG, PNG) or PDF. Please upload a valid file.',
+            'prc_id_file.uploaded' => 'PRC ID file upload failed due to server error. Please try again or contact support if the problem persists.',
+            'prc_id_file.dimensions' => 'PRC ID image dimensions are too large. Please resize your image and try again.',
+
+            'business_permit_file.file' => 'The uploaded business permit file is invalid or corrupted. Please try uploading a different file.',
+            'business_permit_file.mimes' => 'Invalid business permit file format. Allowed formats: PDF, JPG, JPEG, PNG. Please convert your file to an accepted format.',
+            'business_permit_file.max' => 'Business permit file size too large (5MB maximum). Please compress your file or use a smaller image.',
+            'business_permit_file.image' => 'The business permit file must be a valid image (JPG, PNG) or PDF. Please upload a valid file.',
+            'business_permit_file.uploaded' => 'Business permit file upload failed due to server error. Please try again or contact support if the problem persists.',
+            'business_permit_file.dimensions' => 'Business permit image dimensions are too large. Please resize your image and try again.',
+
+            'additional_documents.*.file' => 'One or more additional document files are invalid or corrupted. Please try uploading different files.',
+            'additional_documents.*.mimes' => 'Invalid additional document format. Allowed formats: PDF, JPG, JPEG, PNG, DOC, DOCX.',
+            'additional_documents.*.max' => 'Additional document file size too large (5MB maximum). Please compress your file or use a smaller image.',
+            'additional_documents.*.image' => 'Additional document files must be valid images (JPG, PNG), PDFs, or Office documents.',
+            'additional_documents.*.uploaded' => 'One or more additional document uploads failed. Please try again or contact support if the problem persists.',
+            'additional_documents.*.dimensions' => 'Additional document image dimensions are too large. Please resize your image and try again.',
+
+            // Generic file messages (only for explicitly file fields)
             '*.file' => 'The uploaded file is invalid or corrupted. Please try uploading a different file.',
             '*.mimes' => 'Invalid file format. Allowed formats: :values. Please convert your file to an accepted format.',
             '*.max' => 'File size too large (:max KB maximum). Please compress your file or use a smaller image.',

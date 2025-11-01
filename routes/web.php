@@ -303,20 +303,25 @@ Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function
     Route::post('/compliance/{report}/resolve-investigation', [ComplianceController::class, 'resolveInvestigation'])->name('compliance.resolve-investigation');
     Route::get('/compliance/{report}/timeline', [ComplianceController::class, 'getInvestigationTimeline'])->name('compliance.timeline');
     
-    // Transaction Management Routes
+    // Transaction Management Routes (Admin - Read-Only with Oversight)
     Route::get('/transactions', [TransactionController::class, 'adminIndex'])->name('transactions.index');
-    Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
-    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
-    Route::get('/transactions/{transaction}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
-    Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
-    Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
-    Route::post('/transactions/{transaction}/update-status', [TransactionController::class, 'adminUpdateStatus'])->name('transactions.update-status');
     
-    // Admin Transaction Analytics & Management
+    // Admin Transaction Oversight (monitoring only, no data modification)
+    Route::post('/transactions/{transaction}/add-oversight-note', [TransactionController::class, 'adminAddOversightNote'])->name('transactions.add-oversight-note');
+    
+    // Admin Transaction Analytics & Reporting (Read-Only)
     Route::get('/transactions/statistics', [TransactionController::class, 'adminStatistics'])->name('transactions.statistics');
     Route::get('/transactions/export', [TransactionController::class, 'adminExport'])->name('transactions.export');
-    Route::post('/transactions/bulk-update', [TransactionController::class, 'adminBulkUpdate'])->name('transactions.bulk-update');
+    
+    // REMOVED: Admin cannot create/edit/update/delete transactions
+    // Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
+    // Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    // Route::get('/transactions/{transaction}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
+    // Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
+    // Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+    // Route::post('/transactions/{transaction}/update-status', [TransactionController::class, 'adminUpdateStatus'])->name('transactions.update-status');
+    // Route::post('/transactions/bulk-update', [TransactionController::class, 'adminBulkUpdate'])->name('transactions.bulk-update');
     
     // Reports routes
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.dashboard');

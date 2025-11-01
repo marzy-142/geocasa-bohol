@@ -2,11 +2,25 @@
     <div class="virtual-tour-viewer">
         <div class="image-viewer-container">
             <div v-if="!imageUrl" class="no-image-state">
-                <svg class="w-20 h-20 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                <svg
+                    class="w-20 h-20 text-gray-300 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    ></path>
                 </svg>
-                <p class="text-lg font-medium text-gray-600">No virtual tour available</p>
-                <p class="text-sm text-gray-500 mt-2">This property doesn't have a 360° tour yet</p>
+                <p class="text-lg font-medium text-gray-600">
+                    No virtual tour available
+                </p>
+                <p class="text-sm text-gray-500 mt-2">
+                    This property doesn't have a 360° tour yet
+                </p>
             </div>
 
             <div v-else-if="loading" class="loading-state">
@@ -15,8 +29,18 @@
             </div>
 
             <div v-else-if="loadError" class="error-state">
-                <svg class="w-16 h-16 text-red-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <svg
+                    class="w-16 h-16 text-red-400 mb-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
                 </svg>
                 <p class="error-title">Unable to load tour</p>
                 <p class="error-message">Please try refreshing the page</p>
@@ -24,7 +48,7 @@
             </div>
 
             <div v-else class="image-display">
-                <div 
+                <div
                     ref="imageContainer"
                     class="image-container"
                     @mousedown="startDrag"
@@ -49,29 +73,74 @@
 
                 <div class="controls-overlay">
                     <div class="control-buttons">
-                        <button @click="zoomIn" class="control-btn" title="Zoom In">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
+                        <button
+                            @click="zoomIn"
+                            class="control-btn"
+                            title="Zoom In"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
+                                ></path>
                             </svg>
                         </button>
-                        <button @click="zoomOut" class="control-btn" title="Zoom Out">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM7 10h6"></path>
+                        <button
+                            @click="zoomOut"
+                            class="control-btn"
+                            title="Zoom Out"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM7 10h6"
+                                ></path>
                             </svg>
                         </button>
-                        <button @click="resetView" class="control-btn" title="Reset View">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        <button
+                            @click="resetView"
+                            class="control-btn"
+                            title="Reset View"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                ></path>
                             </svg>
                         </button>
                     </div>
                 </div>
 
                 <div v-if="showHelp" class="help-tooltip">
-                    <button @click="showHelp = false" class="help-close">✕</button>
+                    <button @click="showHelp = false" class="help-close">
+                        ✕
+                    </button>
                     <div class="help-content">
                         <p class="help-text">
-                            <strong>👆 Drag</strong> to pan • <strong>🔍 Scroll</strong> to zoom
+                            <strong>👆 Drag</strong> to pan •
+                            <strong>🔍 Scroll</strong> to zoom
                         </p>
                     </div>
                 </div>
@@ -106,28 +175,30 @@ export default {
     },
     computed: {
         resolvedImageUrl() {
-            if (!this.imageUrl) return '';
+            if (!this.imageUrl) return "";
             const clean = this.imageUrl.trim();
-            
-            if (clean.startsWith('http://') || clean.startsWith('https://')) {
+
+            if (clean.startsWith("http://") || clean.startsWith("https://")) {
                 return clean;
             }
-            
-            if (clean.startsWith('/storage/')) {
+
+            if (clean.startsWith("/storage/")) {
                 return clean;
             }
-            
-            const cleanPath = clean.replace(/^\/+/, '');
-            if (cleanPath.includes('properties/virtual-tours/')) {
+
+            const cleanPath = clean.replace(/^\/+/, "");
+            if (cleanPath.includes("properties/virtual-tours/")) {
                 return `/storage/${cleanPath}`;
             }
-            
+
             return `/storage/properties/virtual-tours/${cleanPath}`;
         },
         imageStyle() {
             return {
                 transform: `scale(${this.scale}) translate(${this.translateX}px, ${this.translateY}px)`,
-                transition: this.isDragging ? 'none' : 'transform 0.3s ease-out',
+                transition: this.isDragging
+                    ? "none"
+                    : "transform 0.3s ease-out",
             };
         },
     },
@@ -158,7 +229,7 @@ export default {
             this.loadError = false;
             this.loading = true;
             this.$nextTick(() => {
-                const img = this.$el.querySelector('.tour-image');
+                const img = this.$el.querySelector(".tour-image");
                 if (img) {
                     img.src = this.resolvedImageUrl;
                 }
@@ -201,7 +272,7 @@ export default {
             e.preventDefault();
             const delta = e.deltaY > 0 ? -0.1 : 0.1;
             const newScale = Math.max(1, Math.min(4, this.scale + delta));
-            
+
             if (newScale === 1) {
                 this.scale = 1;
                 this.translateX = 0;
@@ -227,7 +298,10 @@ export default {
             if (e.touches.length === 2 && this.initialPinchDistance) {
                 const currentDistance = this.getPinchDistance(e.touches);
                 const scaleChange = currentDistance / this.initialPinchDistance;
-                this.scale = Math.max(1, Math.min(4, this.initialScale * scaleChange));
+                this.scale = Math.max(
+                    1,
+                    Math.min(4, this.initialScale * scaleChange)
+                );
             } else if (e.touches.length === 1 && this.isDragging) {
                 this.translateX = e.touches[0].clientX - this.dragStartX;
                 this.translateY = e.touches[0].clientY - this.dragStartY;
@@ -463,7 +537,9 @@ export default {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes slideDown {
@@ -481,11 +557,11 @@ export default {
     .image-viewer-container {
         height: 400px;
     }
-    
+
     .controls-overlay {
         right: 1rem;
     }
-    
+
     .control-btn {
         width: 40px;
         height: 40px;

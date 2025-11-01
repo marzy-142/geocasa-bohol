@@ -70,7 +70,13 @@ class PerformanceAnalyticsService
                 'transaction_analytics' => $this->calculateSystemTransactionAnalytics($startDate),
                 'client_analytics' => $this->calculateSystemClientAnalytics($startDate),
                 'broker_analytics' => $this->calculateSystemBrokerAnalytics($startDate),
-                'performance_trends' => $this->calculateSystemPerformanceTrends($days),
+                // Provide quantitative time series instead of textual trends
+                'performance_trends' => $this->calculateSystemTimeSeries($startDate, $days),
+                // Basic pipeline distribution (by status) for the selected period
+                'pipeline' => [
+                    'by_status' => $this->calculatePipelineByStatus($startDate),
+                    'stage_dwell_time' => $this->calculateStageDwellTimes($startDate),
+                ],
                 'insights' => $this->generateSystemInsights($startDate),
             ];
 
@@ -335,13 +341,16 @@ class PerformanceAnalyticsService
 
     protected function calculateClientManagementMetrics(User $broker, Carbon $startDate): array
     {
-        $clients = Client::where('broker_id', $broker->id)->get();
+        $totalClients = Client::where('broker_id', $broker->id)->count();
+        $activeClients = Client::where('broker_id', $broker->id)
+            ->whereHas('transactions', function($q) use ($startDate) {
+                $q->where('created_at', '>=', $startDate);
+            })
+            ->count();
         
         return [
-            'total_clients' => $clients->count(),
-            'active_clients' => $clients->whereHas('transactions', function($q) use ($startDate) {
-                $q->where('created_at', '>=', $startDate);
-            })->count(),
+            'total_clients' => $totalClients,
+            'active_clients' => $activeClients,
             'average_clients_per_month' => $this->calculateAverageClientsPerMonth($broker, $startDate),
         ];
     }
@@ -430,25 +439,176 @@ class PerformanceAnalyticsService
 
     protected function calculateSystemBrokerAnalytics(Carbon $startDate): array
     {
-        $brokers = User::where('role', 'broker')->get();
+        $totalBrokers = User::where('role', 'broker')->count();
+        $activeBrokers = User::where('role', 'broker')
+            ->whereHas('transactions', function($q) use ($startDate) {
+                $q->where('created_at', '>=', $startDate);
+            })
+            ->count();
         
         return [
-            'total_brokers' => $brokers->count(),
-            'active_brokers' => $brokers->whereHas('transactions', function($q) use ($startDate) {
-                $q->where('created_at', '>=', $startDate);
-            })->count(),
+            'total_brokers' => $totalBrokers,
+            'active_brokers' => $activeBrokers,
             'average_performance_score' => 82.3,
         ];
     }
 
     protected function calculateSystemPerformanceTrends(int $days): array
     {
+        // Deprecated in favor of calculateSystemTimeSeries
         return [
-            'overall_performance' => 'improving',
-            'client_satisfaction_trend' => 'stable',
-            'transaction_volume_trend' => 'increasing',
-            'system_reliability_trend' => 'stable',
+            'series' => [],
         ];
+    }
+
+    /**
+     * Build quantitative time series metrics for the system dashboard
+     */
+    protected function calculateSystemTimeSeries(Carbon $startDate, int $days): array
+    {
+        $labels = [];
+        $transactionsSeries = [];
+        $finalizedSeries = [];
+        $salesValueSeries = [];
+
+        for ($i = $days; $i >= 0; $i--) {
+            $date = now()->subDays($i)->startOfDay();
+            $next = $date->copy()->endOfDay();
+            $labels[] = $date->format('Y-m-d');
+
+            $transactions = Transaction::whereBetween('created_at', [$date, $next])->count();
+            $finalized = Transaction::where('status', 'finalized')
+                ->whereBetween('updated_at', [$date, $next])
+                ->count();
+            $sales = Transaction::whereBetween('created_at', [$date, $next])
+                ->sum(DB::raw('COALESCE(final_price, offered_price, 0)'));
+
+            $transactionsSeries[] = (int) $transactions;
+            $finalizedSeries[] = (int) $finalized;
+            $salesValueSeries[] = (float) $sales;
+        }
+
+        return [
+            'labels' => $labels,
+            'series' => [
+                [
+                    'label' => 'Transactions Created',
+                    'data' => $transactionsSeries,
+                    'type' => 'line',
+                ],
+                [
+                    'label' => 'Transactions Finalized',
+                    'data' => $finalizedSeries,
+                    'type' => 'line',
+                ],
+                [
+                    'label' => 'Sales Value (PHP)',
+                    'data' => $salesValueSeries,
+                    'type' => 'bar',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Pipeline distribution by status for the selected period
+     */
+    protected function calculatePipelineByStatus(Carbon $startDate): array
+    {
+        $statuses = [
+            'inquiry', 'initial_contact', 'property_viewing', 'offer_made', 'negotiation',
+            'offer_accepted', 'contract_signed', 'due_diligence', 'financing', 'closing_preparation',
+            'finalized', 'cancelled'
+        ];
+
+        $result = [];
+        foreach ($statuses as $status) {
+            $result[$status] = Transaction::where('status', $status)
+                ->where('created_at', '>=', $startDate)
+                ->count();
+        }
+        return $result;
+    }
+
+    /**
+     * Calculate median and average dwell time for each transaction stage
+     * 
+     * Analyzes status_history to determine how long transactions spend in each stage.
+     * Returns median_days, avg_days, and count for each stage.
+     */
+    protected function calculateStageDwellTimes(Carbon $startDate): array
+    {
+        $transactions = Transaction::where('created_at', '>=', $startDate)
+            ->whereNotNull('status_history')
+            ->get();
+
+        $stageDurations = [];
+        
+        foreach ($transactions as $transaction) {
+            $history = $transaction->status_history ?? [];
+            
+            if (empty($history)) {
+                continue;
+            }
+
+            // Sort history by timestamp
+            usort($history, function($a, $b) {
+                $dateA = \Carbon\Carbon::parse($a['changed_at']);
+                $dateB = \Carbon\Carbon::parse($b['changed_at']);
+                return $dateA <=> $dateB;
+            });
+
+            // Calculate duration for each stage transition
+            for ($i = 0; $i < count($history) - 1; $i++) {
+                $currentStage = $history[$i]['status'];
+                $startTime = \Carbon\Carbon::parse($history[$i]['changed_at']);
+                $endTime = \Carbon\Carbon::parse($history[$i + 1]['changed_at']);
+                
+                $durationDays = $startTime->diffInDays($endTime);
+                
+                if (!isset($stageDurations[$currentStage])) {
+                    $stageDurations[$currentStage] = [];
+                }
+                $stageDurations[$currentStage][] = $durationDays;
+            }
+
+            // Handle current/last stage (if not finalized/cancelled)
+            if (!in_array($transaction->status, ['finalized', 'cancelled'])) {
+                $lastEntry = end($history);
+                if ($lastEntry) {
+                    $currentStage = $lastEntry['status'];
+                    $startTime = \Carbon\Carbon::parse($lastEntry['changed_at']);
+                    $durationDays = $startTime->diffInDays(now());
+                    
+                    if (!isset($stageDurations[$currentStage])) {
+                        $stageDurations[$currentStage] = [];
+                    }
+                    $stageDurations[$currentStage][] = $durationDays;
+                }
+            }
+        }
+
+        // Calculate median and average for each stage
+        $result = [];
+        foreach ($stageDurations as $stage => $durations) {
+            if (empty($durations)) {
+                continue;
+            }
+
+            sort($durations);
+            $count = count($durations);
+            $median = $count % 2 === 0
+                ? ($durations[$count / 2 - 1] + $durations[$count / 2]) / 2
+                : $durations[floor($count / 2)];
+
+            $result[$stage] = [
+                'median_days' => round($median, 1),
+                'avg_days' => round(array_sum($durations) / $count, 1),
+                'count' => $count,
+            ];
+        }
+
+        return $result;
     }
 
     protected function generateSystemInsights(Carbon $startDate): array

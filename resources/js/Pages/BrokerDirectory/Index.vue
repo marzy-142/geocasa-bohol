@@ -90,106 +90,234 @@ const getMedalColor = (rank) => {
             <!-- Top Broker Spotlight -->
             <div v-if="topPerformers && topPerformers.length > 0" class="mb-16">
                 <div class="max-w-4xl mx-auto">
-                    <!-- Header -->
-                    <div class="text-center mb-6">
+                    <!-- Premium Header with Shimmer Effect -->
+                    <div class="text-center mb-8">
+                        <div
+                            class="inline-flex items-center gap-2 px-4 py-2 mb-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-full"
+                        >
+                            <TrophyIcon
+                                class="w-5 h-5 text-amber-600 animate-pulse"
+                            />
+                            <span
+                                class="text-sm font-semibold text-amber-900 uppercase tracking-wider"
+                                >Elite Performance</span
+                            >
+                        </div>
                         <h2
-                            class="text-2xl md:text-3xl font-bold text-neutral-900"
+                            class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 bg-clip-text text-transparent mb-2"
                         >
                             Top Performing Broker
                         </h2>
-                        <p class="text-neutral-600">
-                            Recognizing consistent results
+                        <p class="text-neutral-600 text-lg">
+                            Recognizing excellence and consistent results
                         </p>
                     </div>
 
-                    <!-- Simple Card -->
-                    <div
-                        class="bg-white border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition p-8"
-                    >
+                    <!-- Premium Card with Enhanced Styling -->
+                    <div class="relative group">
+                        <!-- Animated Background Glow -->
                         <div
-                            class="flex flex-col md:flex-row items-center gap-8"
-                        >
-                            <!-- Avatar -->
-                            <div class="relative flex-shrink-0">
-                                <UserAvatar
-                                    v-if="topPerformers[0]"
-                                    :user="topPerformers[0]"
-                                    size="2xl"
-                                    bg-color="primary"
-                                    class="w-32 h-32 border-4 border-white shadow ring-2 ring-amber-400/40"
-                                />
+                            class="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 animate-pulse"
+                        ></div>
+
+                        <!-- Main Card Container -->
+                        <div class="relative">
+                            <!-- Golden Border Effect -->
+                            <div
+                                class="absolute inset-0 bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-200 rounded-2xl p-[2px]"
+                            >
                                 <div
-                                    class="absolute -bottom-2 -right-2 bg-amber-500 text-white rounded-full p-2 shadow-md"
-                                >
-                                    <TrophyIcon class="w-5 h-5" />
-                                </div>
+                                    class="h-full w-full bg-white rounded-2xl"
+                                ></div>
                             </div>
 
-                            <!-- Content -->
-                            <div class="flex-1 text-center md:text-left">
-                                <h3 class="text-2xl font-bold text-neutral-900">
-                                    {{ topPerformers[0].name }}
-                                </h3>
-                                <p
-                                    v-if="topPerformers[0].brokerage_firm_name"
-                                    class="text-neutral-600"
-                                >
-                                    {{ topPerformers[0].brokerage_firm_name }}
-                                </p>
-
+                            <!-- Card Content -->
+                            <div
+                                class="relative bg-gradient-to-br from-white via-amber-50/30 to-white rounded-2xl shadow-2xl hover:shadow-amber-200/50 transition-all duration-500 overflow-hidden"
+                            >
+                                <!-- Premium Badge Ribbon -->
                                 <div
-                                    class="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-4"
+                                    class="absolute top-0 right-0 w-32 h-32 overflow-hidden"
                                 >
                                     <div
-                                        v-if="topPerformers[0].city"
-                                        class="flex items-center gap-2 text-sm text-neutral-700"
+                                        class="absolute top-6 -right-10 rotate-45 bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-xs font-bold py-1 px-12 shadow-lg"
                                     >
-                                        <MapPinIcon
-                                            class="w-4 h-4 text-neutral-400"
-                                        />
-                                        <span>{{ topPerformers[0].city }}</span>
-                                    </div>
-                                    <div
-                                        class="flex items-center gap-2 text-sm text-neutral-700"
-                                    >
-                                        <CheckBadgeIcon
-                                            class="w-4 h-4 text-green-500"
-                                        />
-                                        <span>Verified</span>
+                                        #1 BROKER
                                     </div>
                                 </div>
 
-                                <div class="mt-4 flex items-center gap-4">
+                                <!-- Decorative Elements -->
+                                <div
+                                    class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400"
+                                ></div>
+
+                                <div class="p-8 md:p-10">
                                     <div
-                                        class="px-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg"
+                                        class="flex flex-col md:flex-row items-center gap-8"
                                     >
-                                        <div
-                                            class="text-2xl font-bold text-neutral-900"
-                                        >
-                                            {{
-                                                topPerformers[0]
-                                                    .finalized_transactions_count
-                                            }}
+                                        <!-- Premium Avatar Section -->
+                                        <div class="relative flex-shrink-0">
+                                            <!-- Rotating Golden Ring -->
+                                            <div
+                                                class="absolute -inset-4 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full opacity-20 blur-xl animate-spin-slow"
+                                            ></div>
+
+                                            <!-- Avatar Container -->
+                                            <div class="relative">
+                                                <div
+                                                    class="absolute -inset-2 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full animate-pulse"
+                                                ></div>
+                                                <div
+                                                    class="relative bg-white p-2 rounded-full"
+                                                >
+                                                    <UserAvatar
+                                                        v-if="topPerformers[0]"
+                                                        :user="topPerformers[0]"
+                                                        size="2xl"
+                                                        bg-color="primary"
+                                                        class="w-32 h-32 border-4 border-white shadow-2xl"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <!-- Premium Trophy Badge -->
+                                            <div
+                                                class="absolute -bottom-2 -right-2 bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 text-white rounded-full p-3 shadow-xl ring-4 ring-white"
+                                            >
+                                                <TrophyIcon class="w-6 h-6" />
+                                            </div>
+
+                                            <!-- Sparkle Effects -->
+                                            <div
+                                                class="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"
+                                            ></div>
+                                            <div
+                                                class="absolute -bottom-1 -left-1 w-2 h-2 bg-amber-400 rounded-full animate-pulse"
+                                            ></div>
                                         </div>
+
+                                        <!-- Premium Content Section -->
                                         <div
-                                            class="text-xs text-neutral-600 uppercase tracking-wide"
+                                            class="flex-1 text-center md:text-left"
                                         >
-                                            Completed Sales
+                                            <!-- Name with Premium Styling -->
+                                            <div class="mb-3">
+                                                <h3
+                                                    class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-900 via-amber-700 to-amber-900 bg-clip-text text-transparent mb-1"
+                                                >
+                                                    {{ topPerformers[0].name }}
+                                                </h3>
+                                                <p
+                                                    v-if="
+                                                        topPerformers[0]
+                                                            .brokerage_firm_name
+                                                    "
+                                                    class="text-lg text-neutral-600 font-medium"
+                                                >
+                                                    {{
+                                                        topPerformers[0]
+                                                            .brokerage_firm_name
+                                                    }}
+                                                </p>
+                                            </div>
+
+                                            <!-- Premium Badges -->
+                                            <div
+                                                class="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6"
+                                            >
+                                                <div
+                                                    v-if="topPerformers[0].city"
+                                                    class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-full text-sm font-medium text-amber-900"
+                                                >
+                                                    <MapPinIcon
+                                                        class="w-4 h-4 text-amber-600"
+                                                    />
+                                                    <span>{{
+                                                        topPerformers[0].city
+                                                    }}</span>
+                                                </div>
+                                                <div
+                                                    class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full text-sm font-medium text-green-900"
+                                                >
+                                                    <CheckBadgeIcon
+                                                        class="w-4 h-4 text-green-600"
+                                                    />
+                                                    <span
+                                                        >Verified
+                                                        Professional</span
+                                                    >
+                                                </div>
+                                                <div
+                                                    class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 rounded-full text-sm font-bold text-amber-900 shadow-sm"
+                                                >
+                                                    <FireIcon
+                                                        class="w-4 h-4 text-amber-600"
+                                                    />
+                                                    <span>Top Performer</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Premium Stats & CTA -->
+                                            <div
+                                                class="flex flex-col sm:flex-row items-center gap-4"
+                                            >
+                                                <!-- Premium Stats Box -->
+                                                <div
+                                                    class="relative group/stats"
+                                                >
+                                                    <div
+                                                        class="absolute -inset-0.5 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-xl opacity-50 group-hover/stats:opacity-75 transition blur"
+                                                    ></div>
+                                                    <div
+                                                        class="relative px-6 py-4 bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 border-2 border-amber-300 rounded-xl shadow-lg"
+                                                    >
+                                                        <div
+                                                            class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent"
+                                                        >
+                                                            {{
+                                                                topPerformers[0]
+                                                                    .finalized_transactions_count
+                                                            }}
+                                                        </div>
+                                                        <div
+                                                            class="text-xs text-amber-900 font-bold uppercase tracking-wider mt-1"
+                                                        >
+                                                            Completed Sales
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Premium CTA Button -->
+                                                <Link
+                                                    :href="
+                                                        route(
+                                                            'brokers.show',
+                                                            topPerformers[0].id
+                                                        )
+                                                    "
+                                                    class="group/btn relative inline-flex items-center gap-2 px-6 py-3 overflow-hidden rounded-xl font-semibold text-white transition-all duration-300 hover:scale-105 active:scale-95"
+                                                >
+                                                    <!-- Button Background -->
+                                                    <div
+                                                        class="absolute inset-0 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 transition-all duration-300"
+                                                    ></div>
+                                                    <div
+                                                        class="absolute inset-0 bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"
+                                                    ></div>
+
+                                                    <!-- Button Content -->
+                                                    <span
+                                                        class="relative flex items-center gap-2"
+                                                    >
+                                                        View Premium Profile
+                                                        <ArrowRightIcon
+                                                            class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform"
+                                                        />
+                                                    </span>
+                                                </Link>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <Link
-                                        :href="
-                                            route(
-                                                'brokers.show',
-                                                topPerformers[0].id
-                                            )
-                                        "
-                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 text-neutral-800 hover:bg-neutral-50 transition"
-                                    >
-                                        View Profile
-                                        <ArrowRightIcon class="w-4 h-4" />
-                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -388,4 +516,62 @@ const getMedalColor = (rank) => {
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Premium Animations for Top Performer Card */
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 20s linear infinite;
+}
+
+.animate-shimmer {
+    animation: shimmer 3s linear infinite;
+    background-size: 1000px 100%;
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.bg-gradient-animate {
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+}
+</style>

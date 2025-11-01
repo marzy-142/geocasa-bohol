@@ -26,9 +26,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'is_approved',
         'approved_at',
-        'approved_by',
-        'prc_id',
-        'prc_license_expiration',
+    'approved_by',
+    'prc_id',
+    'prc_license_expiration',
         'prc_id_file',
         'prc_verified',
         'prc_verification_notes',
@@ -94,6 +94,16 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * Attributes that should be appended to model's array form.
+     * Ensures prc_license_number is available in Inertia props.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'prc_license_number',
+    ];
+
+    /**
      * The attributes that should be cast.
      *
      * @return array<string, string>
@@ -137,6 +147,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_active' => 'boolean',
             'deactivated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Accessor: expose prc_id as prc_license_number for views/templates.
+     */
+    public function getPrcLicenseNumberAttribute(): ?string
+    {
+        return $this->prc_id;
     }
 
     /**

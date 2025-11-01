@@ -55,19 +55,31 @@ class BrokerSellerAssignmentNotification extends Notification implements ShouldQ
     {
         $actionText = $this->action === 'reassigned' ? 'reassigned to you' : 'assigned to you';
         
+        // Build friendly location and area from available fields
+        $locationParts = array_filter([
+            $this->sellerRequest->address ?? null,
+            $this->sellerRequest->city ?? null,
+            $this->sellerRequest->province ?? null,
+        ]);
+        $location = implode(', ', $locationParts);
+
+        $area = $this->sellerRequest->lot_area
+            ? number_format((float) $this->sellerRequest->lot_area) . ' sqm'
+            : 'N/A';
+
         return (new MailMessage)
             ->subject('New Seller Request Assignment - ' . $this->sellerRequest->property_title)
             ->greeting('Hello ' . $notifiable->name . '!')
             ->line('A seller request has been ' . $actionText . '.')
             ->line('**Property Details:**')
             ->line('Title: ' . $this->sellerRequest->property_title)
-            ->line('Location: ' . $this->sellerRequest->property_location)
-            ->line('Asking Price: ₱' . number_format($this->sellerRequest->asking_price))
-            ->line('Property Area: ' . $this->sellerRequest->property_area . ' ' . $this->sellerRequest->area_unit)
+            ->line('Location: ' . ($location ?: ''))
+            ->line('Asking Price: ₱' . number_format((float) ($this->sellerRequest->asking_price ?? 0)))
+            ->line('Property Area: ' . $area)
             ->line('**Seller Contact:**')
-            ->line('Name: ' . $this->sellerRequest->seller_name)
-            ->line('Email: ' . $this->sellerRequest->seller_email)
-            ->line('Phone: ' . ($this->sellerRequest->seller_phone ?? 'Not provided'))
+            ->line('Name: ' . ($this->sellerRequest->name ?? ''))
+            ->line('Email: ' . ($this->sellerRequest->email ?? ''))
+            ->line('Phone: ' . ($this->sellerRequest->phone ?? 'Not provided'))
             ->line('Assigned by: ' . ($this->assignedBy ? $this->assignedBy->name : 'System (Auto-assignment)'))
             ->action('View Seller Request', route('seller-requests.show', $this->sellerRequest->id))
             ->line('Please reach out to the seller as soon as possible to begin assisting them with their property listing.');
@@ -81,7 +93,7 @@ class BrokerSellerAssignmentNotification extends Notification implements ShouldQ
         return new BroadcastMessage([
             'type' => 'broker_seller_assignment',
             'seller_request_id' => $this->sellerRequest->id,
-            'seller_name' => $this->sellerRequest->seller_name,
+            'seller_name' => $this->sellerRequest->name,
             'property_title' => $this->sellerRequest->property_title,
             'asking_price' => $this->sellerRequest->asking_price,
             'assigned_by' => $this->assignedBy ? $this->assignedBy->name : 'System',
@@ -98,11 +110,11 @@ class BrokerSellerAssignmentNotification extends Notification implements ShouldQ
         return [
             'type' => 'broker_seller_assignment',
             'seller_request_id' => $this->sellerRequest->id,
-            'seller_name' => $this->sellerRequest->seller_name,
-            'seller_email' => $this->sellerRequest->seller_email,
-            'seller_phone' => $this->sellerRequest->seller_phone,
+            'seller_name' => $this->sellerRequest->name,
+            'seller_email' => $this->sellerRequest->email,
+            'seller_phone' => $this->sellerRequest->phone,
             'property_title' => $this->sellerRequest->property_title,
-            'property_location' => $this->sellerRequest->property_location,
+            'property_location' => $location ?? null,
             'asking_price' => $this->sellerRequest->asking_price,
             'assigned_by' => $this->assignedBy ? $this->assignedBy->name : 'System',
             'assigned_by_id' => $this->assignedBy ? $this->assignedBy->id : null,

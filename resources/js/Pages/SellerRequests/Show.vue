@@ -52,6 +52,7 @@ const statusColor = computed(() => {
     const colors = {
         pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
         under_review: "bg-blue-100 text-blue-800 border-blue-200",
+        assigned: "bg-indigo-100 text-indigo-800 border-indigo-200",
         approved: "bg-green-100 text-green-800 border-green-200",
         rejected: "bg-red-100 text-red-800 border-red-200",
         listed: "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -210,14 +211,15 @@ const deleteRequest = () => {
                                 >← Back to List</ModernButton
                             >
                         </Link>
-                        <!-- Broker actions: Only show if assigned to this broker and status is pending/under_review -->
+                        <!-- Broker actions: Only show if assigned to this broker and status is pending/under_review/assigned -->
                         <template
                             v-if="
                                 userRole === 'broker' &&
                                 sellerRequest.assigned_broker_id ===
                                     page.props.auth.user.id &&
                                 (sellerRequest.status === 'pending' ||
-                                    sellerRequest.status === 'under_review')
+                                    sellerRequest.status === 'under_review' ||
+                                    sellerRequest.status === 'assigned')
                             "
                         >
                             <ModernButton

@@ -92,7 +92,7 @@ const verifyDocument = () => {
                 selectedBroker.value = null;
                 currentCredential.value = null;
                 // Add this line to reload the page data
-                router.reload({ only: ['pendingBrokers'] });
+                router.reload({ only: ["pendingBrokers"] });
             },
             onError: (errors) => {
                 console.error("Verification failed:", errors);
@@ -276,10 +276,26 @@ const formatDate = (date) => {
                                         />
                                     </svg>
                                 </div>
-                                <div class="text-sm text-gray-600">
+                                <div
+                                    class="text-sm font-semibold text-gray-900 mb-1"
+                                >
                                     {{ broker.prc_id || "Not provided" }}
                                 </div>
-                                <div v-if="broker.prc_id_file" class="mt-2 flex items-center justify-between">
+                                <div
+                                    v-if="broker.prc_license_expiration"
+                                    class="text-xs text-gray-500 mb-2"
+                                >
+                                    Expires:
+                                    {{
+                                        formatDate(
+                                            broker.prc_license_expiration
+                                        )
+                                    }}
+                                </div>
+                                <div
+                                    v-if="broker.prc_id_file"
+                                    class="mt-2 flex items-center justify-between"
+                                >
                                     <a
                                         :href="`/storage/${broker.prc_id_file}`"
                                         target="_blank"
@@ -301,16 +317,29 @@ const formatDate = (date) => {
                                     <!-- Add verification button -->
                                     <button
                                         v-if="broker.prc_id"
-                                        @click="openVerificationModal(broker, 'prc_id', broker.prc_verified)"
+                                        @click="
+                                            openVerificationModal(
+                                                broker,
+                                                'prc_id',
+                                                broker.prc_verified
+                                            )
+                                        "
                                         class="inline-flex items-center px-2 py-1 border border-blue-300 shadow-sm text-xs leading-4 font-medium rounded text-blue-700 bg-white hover:bg-blue-50"
                                     >
-                                        {{ broker.prc_verified ? 'Update' : 'Verify' }}
+                                        {{
+                                            broker.prc_verified
+                                                ? "Update"
+                                                : "Verify"
+                                        }}
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Business Permit -->
-                            <div v-if="broker.prc_id_file" class="bg-gray-50 rounded-lg p-4">
+                            <div
+                                v-if="broker.prc_id_file"
+                                class="bg-gray-50 rounded-lg p-4"
+                            >
                                 <div
                                     class="flex items-center justify-between mb-2"
                                 >
@@ -479,14 +508,159 @@ const formatDate = (date) => {
                             </div>
                         </div>
 
+                        <!-- Additional Broker Information -->
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <h4
+                                class="text-sm font-semibold text-gray-900 mb-4"
+                            >
+                                Contact & Professional Details
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Contact Information -->
+                                <div class="space-y-3">
+                                    <h5
+                                        class="text-xs font-medium text-gray-500 uppercase"
+                                    >
+                                        Contact
+                                    </h5>
+                                    <div class="space-y-2">
+                                        <div
+                                            v-if="broker.phone"
+                                            class="text-sm"
+                                        >
+                                            <span class="text-gray-500"
+                                                >Phone:</span
+                                            >
+                                            <span
+                                                class="ml-2 text-gray-900 font-medium"
+                                                >{{ broker.phone }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            v-if="broker.email"
+                                            class="text-sm"
+                                        >
+                                            <span class="text-gray-500"
+                                                >Email:</span
+                                            >
+                                            <span
+                                                class="ml-2 text-gray-900 font-medium break-all"
+                                                >{{ broker.email }}</span
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Location -->
+                                <div class="space-y-3">
+                                    <h5
+                                        class="text-xs font-medium text-gray-500 uppercase"
+                                    >
+                                        Location
+                                    </h5>
+                                    <div class="space-y-2">
+                                        <div v-if="broker.city" class="text-sm">
+                                            <span class="text-gray-500"
+                                                >City:</span
+                                            >
+                                            <span
+                                                class="ml-2 text-gray-900 font-medium"
+                                                >{{ broker.city }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            v-if="broker.province"
+                                            class="text-sm"
+                                        >
+                                            <span class="text-gray-500"
+                                                >Province:</span
+                                            >
+                                            <span
+                                                class="ml-2 text-gray-900 font-medium"
+                                                >{{ broker.province }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            v-if="broker.address"
+                                            class="text-sm"
+                                        >
+                                            <span class="text-gray-500"
+                                                >Address:</span
+                                            >
+                                            <span class="ml-2 text-gray-900">{{
+                                                broker.address
+                                            }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Professional Details -->
+                                <div class="space-y-3">
+                                    <h5
+                                        class="text-xs font-medium text-gray-500 uppercase"
+                                    >
+                                        Professional
+                                    </h5>
+                                    <div class="space-y-2">
+                                        <div
+                                            v-if="broker.years_experience"
+                                            class="text-sm"
+                                        >
+                                            <span class="text-gray-500"
+                                                >Experience:</span
+                                            >
+                                            <span
+                                                class="ml-2 text-gray-900 font-medium"
+                                                >{{
+                                                    broker.years_experience
+                                                }}
+                                                years</span
+                                            >
+                                        </div>
+                                        <div
+                                            v-if="broker.brokerage_firm_name"
+                                            class="text-sm"
+                                        >
+                                            <span class="text-gray-500"
+                                                >Firm:</span
+                                            >
+                                            <span
+                                                class="ml-2 text-gray-900 font-medium"
+                                                >{{
+                                                    broker.brokerage_firm_name
+                                                }}</span
+                                            >
+                                        </div>
+                                        <div
+                                            v-if="broker.business_permit"
+                                            class="text-sm"
+                                        >
+                                            <span class="text-gray-500"
+                                                >Business Permit:</span
+                                            >
+                                            <span
+                                                class="ml-2 text-gray-900 font-medium"
+                                                >{{
+                                                    broker.business_permit
+                                                }}</span
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Action Buttons -->
                         <div
-                            class="flex items-center justify-between pt-4 border-t border-gray-200"
+                            class="flex items-center justify-between pt-4 border-t border-gray-200 mt-6"
                         >
                             <div class="flex items-center space-x-4">
                                 <Link
                                     :href="
-                                        route('admin.broker-approvals.show', broker.id)
+                                        route(
+                                            'admin.broker-approvals.show',
+                                            broker.id
+                                        )
                                     "
                                     class="text-sm text-blue-600 hover:text-blue-800 font-medium"
                                 >
@@ -740,12 +914,22 @@ const formatDate = (date) => {
                     <h3
                         class="text-lg font-medium text-gray-900 text-center mb-4"
                     >
-                        Verify {{ currentCredential === 'prc_id' ? 'PRC ID' : 'Business Permit' }}
+                        Verify
+                        {{
+                            currentCredential === "prc_id"
+                                ? "PRC ID"
+                                : "Business Permit"
+                        }}
                     </h3>
                     <p class="text-sm text-gray-600 text-center mb-6">
                         Update the verification status for
-                        <strong>{{ selectedBroker?.name }}</strong>'s
-                        {{ currentCredential === 'prc_id' ? 'PRC ID' : 'Business Permit' }}.
+                        <strong>{{ selectedBroker?.name }}</strong
+                        >'s
+                        {{
+                            currentCredential === "prc_id"
+                                ? "PRC ID"
+                                : "Business Permit"
+                        }}.
                     </p>
 
                     <div class="mb-4">
@@ -762,7 +946,9 @@ const formatDate = (date) => {
                                     :value="true"
                                     class="form-radio text-green-600"
                                 />
-                                <span class="ml-2 text-sm text-gray-700">Verified</span>
+                                <span class="ml-2 text-sm text-gray-700"
+                                    >Verified</span
+                                >
                             </label>
                             <label class="inline-flex items-center">
                                 <input
@@ -771,7 +957,9 @@ const formatDate = (date) => {
                                     :value="false"
                                     class="form-radio text-red-600"
                                 />
-                                <span class="ml-2 text-sm text-gray-700">Not Verified</span>
+                                <span class="ml-2 text-sm text-gray-700"
+                                    >Not Verified</span
+                                >
                             </label>
                         </div>
                     </div>

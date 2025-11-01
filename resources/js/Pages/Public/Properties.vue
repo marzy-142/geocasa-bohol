@@ -96,6 +96,9 @@ const getImageUrl = (image, isVirtualTour = false) => {
         return `/storage/${cleanImage}`;
     } else if (cleanImage.includes("properties/images/")) {
         return `/storage/${cleanImage}`;
+    } else if (cleanImage.includes("seller-requests/images/")) {
+        // Handle images from seller requests (legacy properties)
+        return `/storage/${cleanImage}`;
     }
 
     // Determine the correct path based on context
@@ -143,6 +146,44 @@ const hasVirtualTour = (property) => {
         property.virtual_tour_images &&
         property.virtual_tour_images.length > 0
     );
+};
+
+// Format and deduplicate address tokens to avoid repeats and empty commas
+const formatAddress = (property) => {
+    const buildTokensFromFields = () => {
+        const country = property.country || "Philippines";
+        return [
+            property.barangay && String(property.barangay).trim(),
+            property.municipality && String(property.municipality).trim(),
+            property.province && String(property.province).trim(),
+            country && String(country).trim(),
+        ].filter(Boolean);
+    };
+
+    let tokens = [];
+    if (property.full_address && typeof property.full_address === "string") {
+        tokens = property.full_address
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s && s !== "-");
+        // If parsing results in too few tokens, fall back to fields
+        if (tokens.length < 2) {
+            tokens = buildTokensFromFields();
+        }
+    } else {
+        tokens = buildTokensFromFields();
+    }
+
+    const seen = new Set();
+    const result = [];
+    for (const t of tokens) {
+        const key = t.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            result.push(t);
+        }
+    }
+    return result.join(", ");
 };
 
 // Auto-search when filters change
@@ -438,7 +479,7 @@ watch(
                                     class="w-4 h-4 flex-shrink-0 text-neutral-400"
                                 />
                                 <span class="text-sm line-clamp-1">{{
-                                    property.full_address
+                                    formatAddress(property)
                                 }}</span>
                             </div>
 

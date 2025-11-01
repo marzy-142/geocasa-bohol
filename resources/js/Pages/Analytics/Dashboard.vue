@@ -224,61 +224,55 @@
                         </div>
                     </div>
 
-                    <!-- Performance Trends -->
-                    <div class="bg-white shadow rounded-lg">
+                    <!-- Performance Trends (hidden until time-series available) -->
+                    <div
+                        v-if="hasSystemTrendSeries"
+                        class="bg-white shadow rounded-lg"
+                    >
                         <div class="px-6 py-4 border-b border-gray-200">
                             <h3 class="text-lg font-medium text-gray-900">
                                 Performance Trends
                             </h3>
                         </div>
+                        <div class="px-6 py-6">
+                            <AnalyticsChart
+                                type="line"
+                                :data="systemTrendsChartData"
+                                :options="systemTrendsChartOptions"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Distribution (by status) -->
+                    <div
+                        v-if="analytics?.pipeline?.by_status"
+                        class="bg-white shadow rounded-lg"
+                    >
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                Transaction Pipeline
+                            </h3>
+                        </div>
                         <div class="px-6 py-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div>
-                                    <h4
-                                        class="text-sm font-medium text-gray-700"
+                            <div
+                                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+                            >
+                                <div
+                                    v-for="(count, status) in analytics.pipeline
+                                        .by_status"
+                                    :key="status"
+                                    class="bg-gray-50 rounded-lg p-4"
+                                >
+                                    <div
+                                        class="text-xs uppercase tracking-wide text-gray-500 mb-1"
                                     >
-                                        Overall Performance
-                                    </h4>
-                                    <p
-                                        class="mt-1 text-2xl font-semibold text-gray-900"
+                                        {{ formatStatus(status) }}
+                                    </div>
+                                    <div
+                                        class="text-xl font-semibold text-gray-900"
                                     >
-                                        {{
-                                            analytics.performance_trends
-                                                ?.overall_performance || "N/A"
-                                        }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <h4
-                                        class="text-sm font-medium text-gray-700"
-                                    >
-                                        Client Satisfaction
-                                    </h4>
-                                    <p
-                                        class="mt-1 text-2xl font-semibold text-gray-900"
-                                    >
-                                        {{
-                                            analytics.client_analytics
-                                                ?.client_satisfaction_average ||
-                                            0
-                                        }}%
-                                    </p>
-                                </div>
-                                <div>
-                                    <h4
-                                        class="text-sm font-medium text-gray-700"
-                                    >
-                                        Transaction Volume
-                                    </h4>
-                                    <p
-                                        class="mt-1 text-2xl font-semibold text-gray-900"
-                                    >
-                                        {{
-                                            analytics.performance_trends
-                                                ?.transaction_volume_trend ||
-                                            "N/A"
-                                        }}
-                                    </p>
+                                        {{ count }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -791,9 +785,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { Head, router } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import AnalyticsChart from "@/Components/AnalyticsChart.vue";
 
 const props = defineProps({
     user: Object,
@@ -830,4 +825,59 @@ const formatNumber = (number) => {
 onMounted(() => {
     console.log("Analytics Dashboard mounted");
 });
+
+// Show admin system trends only if backend provides a real time-series structure
+const hasSystemTrendSeries = computed(() => {
+    const trends = props.analytics?.performance_trends;
+    // Expect an array series like [{label, data:[]}, ...] or similar
+    return Array.isArray(trends?.series) && trends.series.length > 0;
+});
+
+// Build chart config from backend series
+const systemTrendsChartData = computed(() => {
+    const trends = props.analytics?.performance_trends || {};
+    const labels = trends.labels || [];
+    const series = trends.series || [];
+    const palette = [
+        "rgb(59, 130, 246)",
+        "rgb(16, 185, 129)",
+        "rgb(245, 158, 11)",
+        "rgb(99, 102, 241)",
+    ];
+    const datasets = series.map((s, idx) => ({
+        label: s.label,
+        data: s.data || [],
+        borderColor: palette[idx % palette.length],
+        backgroundColor: palette[idx % palette.length]
+            .replace("rgb", "rgba")
+            .replace(")", ", 0.15)"),
+        tension: 0.35,
+        fill: s.type === "line",
+        type: s.type || "line",
+        yAxisID: s.label.includes("Sales Value") ? "y1" : "y",
+    }));
+    return { labels, datasets };
+});
+
+const systemTrendsChartOptions = {
+    responsive: true,
+    interaction: { intersect: false, mode: "index" },
+    stacked: false,
+    scales: {
+        y: { beginAtZero: true, title: { display: true, text: "Count" } },
+        y1: {
+            beginAtZero: true,
+            position: "right",
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: "Sales (PHP)" },
+        },
+    },
+    plugins: { legend: { position: "top" } },
+};
+
+const formatStatus = (status) => {
+    return (status || "")
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase());
+};
 </script>

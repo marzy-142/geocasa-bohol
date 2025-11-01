@@ -152,9 +152,7 @@
                                         class="text-lg font-medium text-gray-900"
                                     >
                                         ₱{{
-                                            formatNumber(
-                                                overallStats.total_commission
-                                            )
+                                            formatNumber(totalSalesValueDisplay)
                                         }}
                                     </dd>
                                 </dl>
@@ -212,8 +210,8 @@
                     <div class="h-64">
                         <AnalyticsChart
                             type="doughnut"
-                            :data="commissionAnalyticsData"
-                            :options="commissionAnalyticsOptions"
+                            :data="salesValueAnalyticsData"
+                            :options="salesValueAnalyticsOptions"
                         />
                     </div>
                 </div>
@@ -499,7 +497,6 @@ const props = defineProps({
     overallStats: Object,
     topBrokers: Array,
     performanceTrends: Array,
-    commissionAnalytics: Object,
     propertyAnalytics: Object,
     clientAnalytics: Object,
     brokers: Array,
@@ -581,35 +578,33 @@ const formatNumber = (number) => {
 };
 
 // Chart data and options
-const performanceTrendsData = computed(() => ({
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    datasets: [
-        {
-            label: "Properties Listed",
-            data: [2, 3, 1, 4],
-            borderColor: "rgb(59, 130, 246)",
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
-            tension: 0.4,
-            fill: true,
-        },
-        {
-            label: "Transactions Completed",
-            data: [1, 2, 1, 3],
-            borderColor: "rgb(16, 185, 129)",
-            backgroundColor: "rgba(16, 185, 129, 0.1)",
-            tension: 0.4,
-            fill: true,
-        },
-        {
-            label: "Commission Earned (₱10k)",
-            data: [5, 8, 4, 12],
-            borderColor: "rgb(168, 85, 247)",
-            backgroundColor: "rgba(168, 85, 247, 0.1)",
-            tension: 0.4,
-            fill: true,
-        },
-    ],
-}));
+const performanceTrendsData = computed(() => {
+    const trends = props.performanceTrends || [];
+    const labels = trends.map((t) => t.date);
+    const propertiesData = trends.map((t) => t.properties || 0);
+    const transactionsData = trends.map((t) => t.transactions || 0);
+    return {
+        labels,
+        datasets: [
+            {
+                label: "Properties Listed",
+                data: propertiesData,
+                borderColor: "rgb(59, 130, 246)",
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                tension: 0.4,
+                fill: true,
+            },
+            {
+                label: "Transactions",
+                data: transactionsData,
+                borderColor: "rgb(16, 185, 129)",
+                backgroundColor: "rgba(16, 185, 129, 0.1)",
+                tension: 0.4,
+                fill: true,
+            },
+        ],
+    };
+});
 
 const performanceTrendsOptions = {
     plugins: {
@@ -628,27 +623,36 @@ const performanceTrendsOptions = {
     },
 };
 
-const commissionAnalyticsData = computed(() => ({
-    labels: ["Maria Santos", "Juan Dela Cruz", "Pedro Reyes"],
-    datasets: [
-        {
-            data: [150000, 108000, 0],
-            backgroundColor: [
-                "rgba(59, 130, 246, 0.8)",
-                "rgba(16, 185, 129, 0.8)",
-                "rgba(245, 158, 11, 0.8)",
-            ],
-            borderColor: [
-                "rgb(59, 130, 246)",
-                "rgb(16, 185, 129)",
-                "rgb(245, 158, 11)",
-            ],
-            borderWidth: 2,
-        },
-    ],
-}));
+const salesValueAnalyticsData = computed(() => {
+    const brokers = props.topBrokers || [];
+    const labels = brokers.map((b) => b.name);
+    const data = brokers.map((b) => b.total_sales_value || 0);
+    return {
+        labels,
+        datasets: [
+            {
+                data,
+                backgroundColor: [
+                    "rgba(59, 130, 246, 0.8)",
+                    "rgba(16, 185, 129, 0.8)",
+                    "rgba(245, 158, 11, 0.8)",
+                    "rgba(99, 102, 241, 0.8)",
+                    "rgba(244, 63, 94, 0.8)",
+                ],
+                borderColor: [
+                    "rgb(59, 130, 246)",
+                    "rgb(16, 185, 129)",
+                    "rgb(245, 158, 11)",
+                    "rgb(99, 102, 241)",
+                    "rgb(244, 63, 94)",
+                ],
+                borderWidth: 2,
+            },
+        ],
+    };
+});
 
-const commissionAnalyticsOptions = {
+const salesValueAnalyticsOptions = {
     plugins: {
         legend: {
             position: "bottom",
@@ -662,4 +666,14 @@ const commissionAnalyticsOptions = {
         },
     },
 };
+
+// Aggregate sales value for the stat card (fallback to sum of topBrokers if not provided)
+const totalSalesValueDisplay = computed(() => {
+    const fromOverall = props.overallStats?.total_sales_value;
+    if (typeof fromOverall === "number") return fromOverall;
+    return (props.topBrokers || []).reduce(
+        (sum, b) => sum + (b.total_sales_value || 0),
+        0
+    );
+});
 </script>

@@ -276,15 +276,17 @@ const validateField = (fieldName, value) => {
                 if (!value) {
                     errors.birthdate = "Birthdate is required for brokers";
                 } else {
-                    const inputDate = new Date(value);
+                    const normalized = normalizeDateToISO(value);
+                    const inputDate = normalized ? normalized.date : null;
                     const today = new Date();
                     const eighteenYearsAgo = new Date(
                         today.getFullYear() - 18,
                         today.getMonth(),
                         today.getDate()
                     );
-                    if (isNaN(inputDate.getTime())) {
-                        errors.birthdate = "Please enter a valid date";
+                    if (!inputDate || isNaN(inputDate.getTime())) {
+                        errors.birthdate =
+                            "Please enter a valid date (dd/mm/yyyy)";
                     } else if (inputDate > today) {
                         errors.birthdate = "Birthdate must be in the past";
                     } else if (inputDate > eighteenYearsAgo) {
@@ -348,9 +350,10 @@ const validateField = (fieldName, value) => {
             } else if (
                 value &&
                 typeof value === "string" &&
-                !/^PRC-\d{6}$/.test(value.trim().toUpperCase())
+                /\D/.test(value.trim())
             ) {
-                errors.prc_id = "PRC License format should be PRC-123456";
+                // Only digits allowed now
+                errors.prc_id = "PRC License number must contain digits only";
             }
             break;
 
@@ -453,6 +456,57 @@ const updateEstimatedTime = () => {
 
 // Flag to prevent multiple simultaneous validations
 let isValidationInProgress = false;
+
+// Date parsing helpers: accept dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd, yyyy/mm/dd
+const normalizeDateToISO = (value) => {
+    if (!value) return null;
+    const raw = String(value).trim();
+    let y, m, d;
+
+    // yyyy-mm-dd
+    let m1 = raw.match(/^([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})$/);
+    if (m1) {
+        y = +m1[1];
+        m = +m1[2];
+        d = +m1[3];
+    } else {
+        // dd/mm/yyyy or dd-mm-yyyy
+        let m2 = raw.match(/^([0-9]{1,2})[\/\-]([0-9]{1,2})[\/\-]([0-9]{4})$/);
+        if (m2) {
+            d = +m2[1];
+            m = +m2[2];
+            y = +m2[3];
+        } else {
+            // yyyy/mm/dd
+            let m3 = raw.match(/^([0-9]{4})[\/]([0-9]{1,2})[\/]([0-9]{1,2})$/);
+            if (m3) {
+                y = +m3[1];
+                m = +m3[2];
+                d = +m3[3];
+            } else {
+                return null;
+            }
+        }
+    }
+
+    // Validate ranges
+    if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+    const date = new Date(y, m - 1, d);
+    // Ensure date components round-trip (handles invalid like 31/02)
+    if (
+        date.getFullYear() !== y ||
+        date.getMonth() !== m - 1 ||
+        date.getDate() !== d
+    ) {
+        return null;
+    }
+    const iso = [
+        y.toString().padStart(4, "0"),
+        String(m).padStart(2, "0"),
+        String(d).padStart(2, "0"),
+    ].join("-");
+    return { iso, date };
+};
 
 // Real-time field validation
 const handleFieldInput = (fieldName, value) => {
@@ -700,7 +754,6 @@ const validateStep = (stepNumber, forceValidation = false) => {
 // Navigation functions
 const nextStep = () => {
     if (validateStep(currentStep.value, true)) {
-        // Force validation when user clicks Next
         if (currentStep.value < totalSteps.value) {
             currentStep.value++;
             updateEstimatedTime();
@@ -708,14 +761,6 @@ const nextStep = () => {
                 window.scrollTo({ top: 0, behavior: "smooth" });
             });
         }
-    } else {
-        const errorCount = Object.keys(clientValidationErrors.value).length;
-        showToast(
-            `Please fix ${errorCount} error${
-                errorCount > 1 ? "s" : ""
-            } before continuing.`,
-            "error"
-        );
     }
 };
 
@@ -795,9 +840,34 @@ const getFieldError = (field) => {
 // Form submission
 const submit = () => {
     if (validateStep(currentStep.value, true)) {
+        // Normalize birthdate to ISO before submit (supports dd/mm/yyyy input)
+        if (form.role === "broker" && form.birthdate) {
+            const normalized = normalizeDateToISO(form.birthdate);
+            if (normalized) {
+                form.birthdate = normalized.iso;
+            }
+        }
+
+        // Show submission feedback
+        showToast(
+            form.role === "client"
+                ? "Submitting your registration..."
+                : "Submitting your broker application...",
+            "info"
+        );
+
         // Force validation when user submits
         form.post(route("register"), {
             onError: (errors) => {
+                console.log("=== FORM SUBMISSION ERROR DETAILS ===");
+                console.log("All errors:", errors);
+
+                // Clear the submission toast
+                showToast(
+                    "Submission failed. Please check the errors below.",
+                    "error"
+                );
+
                 Object.keys(errors).forEach((field) => {
                     if (field.includes("file") && errors[field]) {
                         showToast(
@@ -808,10 +878,21 @@ const submit = () => {
                 });
             },
             onSuccess: (page) => {
-                // Force a full page reload to preserve session and query params
-                window.location = route("verification.notice", {
-                    registered: 1,
-                });
+                // Show success message before redirect
+                showToast(
+                    form.role === "client"
+                        ? "Registration submitted successfully! Redirecting..."
+                        : "Broker application submitted successfully! Redirecting...",
+                    "success"
+                );
+
+                // Small delay to show the success message before redirect
+                setTimeout(() => {
+                    // Force a full page reload to preserve session and query params
+                    window.location = route("verification.notice", {
+                        registered: 1,
+                    });
+                }, 1500);
             },
         });
     }
@@ -979,15 +1060,38 @@ const getStepDescription = () => {
                                 <div v-if="form.role === 'broker'" class="mb-8">
                                     <ModernInput
                                         v-model="form.birthdate"
-                                        type="date"
+                                        type="text"
+                                        inputmode="numeric"
+                                        placeholder="dd/mm/yyyy"
                                         label="Birthdate"
                                         :error="getFieldError('birthdate')"
                                         @input="
-                                            (value) =>
+                                            (e) => {
+                                                const raw =
+                                                    e && e.target
+                                                        ? e.target.value
+                                                        : '';
+                                                let v = String(raw).replace(
+                                                    /[^0-9/]/g,
+                                                    ''
+                                                );
+                                                // Auto-insert slashes for DD/MM/YYYY as user types
+                                                if (/^\d{3}$/.test(v))
+                                                    v =
+                                                        v.slice(0, 2) +
+                                                        '/' +
+                                                        v.slice(2);
+                                                if (/^\d{2}\/\d{3}$/.test(v))
+                                                    v =
+                                                        v.slice(0, 5) +
+                                                        '/' +
+                                                        v.slice(5);
+                                                form.birthdate = v;
                                                 handleFieldInput(
                                                     'birthdate',
-                                                    value
-                                                )
+                                                    v
+                                                );
+                                            }
                                         "
                                         required
                                     />
@@ -1411,20 +1515,28 @@ const getStepDescription = () => {
                                     <ModernInput
                                         v-model="form.prc_id"
                                         type="text"
+                                        inputmode="numeric"
+                                        pattern="[0-9]*"
                                         label="PRC License Number"
-                                        placeholder="Enter your PRC license number (e.g., PRC-123456)"
+                                        placeholder="Enter your PRC license number (numbers only)"
                                         :error="getFieldError('prc_id')"
                                         @input="
-                                            (value) =>
+                                            (e) => {
+                                                form.prc_id =
+                                                    e.target.value.replace(
+                                                        /\D/g,
+                                                        ''
+                                                    );
                                                 handleFieldInput(
                                                     'prc_id',
-                                                    value
-                                                )
+                                                    e.target.value
+                                                );
+                                            }
                                         "
                                         required
                                     />
                                     <p class="mt-2 text-sm text-gray-500">
-                                        Format: PRC- followed by 6 digits
+                                        Enter numeric PRC license number only
                                     </p>
                                 </div>
 

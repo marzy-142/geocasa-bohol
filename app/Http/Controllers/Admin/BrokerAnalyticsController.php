@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Property;
 use App\Models\Transaction;
 use App\Models\Inquiry;
+use App\Services\BrokerRankingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,13 @@ use Carbon\Carbon;
 
 class BrokerAnalyticsController extends Controller
 {
+    protected $brokerRankingService;
+
+    public function __construct(BrokerRankingService $brokerRankingService)
+    {
+        $this->brokerRankingService = $brokerRankingService;
+    }
+
     /**
      * Display broker analytics dashboard
      */
@@ -31,8 +39,10 @@ class BrokerAnalyticsController extends Controller
         // Calculate overall statistics
         $overallStats = $this->getOverallStats($timeRange, $brokerId);
         
-        // Get top performing brokers
-        $topBrokers = $this->getTopPerformingBrokers($timeRange);
+        // Get top performing brokers using centralized service
+        $topBrokers = $this->brokerRankingService->getTopPerformingBrokers(10, [
+            'time_range' => (int) $timeRange
+        ]);
         
         // Get broker performance trends
         $performanceTrends = $this->getPerformanceTrends($timeRange, $brokerId);
@@ -115,49 +125,25 @@ class BrokerAnalyticsController extends Controller
 
         $brokers = $query->get();
 
+        $brokerIds = $brokers->pluck('id');
+        $totalSalesValue = Transaction::whereIn('broker_id', $brokerIds)
+            ->where('created_at', '>=', $startDate)
+            ->sum(DB::raw('COALESCE(final_price, offered_price, 0)'));
+
         return [
             'total_brokers' => $brokers->count(),
             'active_brokers' => $brokers->whereNull('suspended_at')->count(),
-            'total_properties' => Property::whereIn('broker_id', $brokers->pluck('id'))
+            'total_properties' => Property::whereIn('broker_id', $brokerIds)
                 ->where('created_at', '>=', $startDate)
                 ->count(),
-            'total_transactions' => Transaction::whereIn('broker_id', $brokers->pluck('id'))
+            'total_transactions' => Transaction::whereIn('broker_id', $brokerIds)
                 ->where('created_at', '>=', $startDate)
                 ->count(),
             'avg_response_time' => $this->calculateAverageResponseTime($brokers, $timeRange),
             'conversion_rate' => $this->calculateConversionRate($brokers, $timeRange),
+            // New standardized metric for UI
+            'total_sales_value' => (float) $totalSalesValue,
         ];
-    }
-
-    /**
-     * Get top performing brokers
-     */
-    private function getTopPerformingBrokers($timeRange)
-    {
-        $startDate = Carbon::now()->subDays($timeRange);
-
-        return User::approvedBrokers()
-            ->withCount([
-                'properties as recent_properties_count' => function ($query) use ($startDate) {
-                    $query->where('created_at', '>=', $startDate);
-                },
-                'transactions as recent_transactions_count' => function ($query) use ($startDate) {
-                    $query->where('created_at', '>=', $startDate);
-                },
-            ])
-            ->orderByDesc('recent_transactions_count')
-            ->limit(10)
-            ->get()
-            ->map(function ($broker) {
-                return [
-                    'id' => $broker->id,
-                    'name' => $broker->name,
-                    'email' => $broker->email,
-                    'properties_count' => $broker->recent_properties_count,
-                    'transactions_count' => $broker->recent_transactions_count,
-                    'performance_score' => $this->calculatePerformanceScore($broker),
-                ];
-            });
     }
 
     /**

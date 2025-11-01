@@ -202,27 +202,15 @@ const validationRules = {
         maxMessage:
             "Lot area seems unreasonably large. Please verify the measurement.",
     },
-    city: {
+    // Location rules aligned to backend
+    municipality: {
         required: true,
         maxLength: 100,
-        pattern: /^[a-zA-Z\s\-\.]+$/,
-        requiredMessage: "City is required",
-        patternMessage:
-            "City name can only contain letters, spaces, hyphens, and periods",
+        requiredMessage: "Municipality is required",
     },
-    province: {
-        required: true,
+    barangay: {
+        required: false,
         maxLength: 100,
-        requiredMessage: "Province is required",
-    },
-    postal_code: {
-        maxLength: 10,
-        pattern: /^\d{4,10}$/,
-        patternMessage: "Postal code must be 4-10 digits",
-    },
-    urgency: {
-        required: true,
-        requiredMessage: "Urgency level is required",
     },
     terms_accepted: {
         required: true,
@@ -286,16 +274,17 @@ const {
         property_description: "",
         property_type: "",
         asking_price: "",
-        city: "",
-        province: "Bohol",
-        postal_code: "",
+        municipality: "",
+        barangay: "",
         lot_area: "",
+        title_type: "",
         features: [],
+        zoning_classification: "",
+        road_access: false,
+        water_source: false,
+        electricity_available: false,
+        internet_available: false,
         uploaded_images: [],
-        property_documents: [],
-        ownership_documents: [],
-        availability: "",
-        urgency: "medium",
         additional_notes: "",
         marketing_consent: false,
         newsletter_consent: false,
@@ -383,7 +372,7 @@ const getStepValidationErrors = (step) => {
             break;
 
         case 3:
-            const step3Fields = ["city", "province", "urgency"];
+            const step3Fields = ["municipality", "address"];
             step3Fields.forEach((field) => {
                 if (
                     !validationForm[field] ||
@@ -398,11 +387,6 @@ const getStepValidationErrors = (step) => {
                 }
             });
 
-            if (!validationForm.terms_accepted) {
-                errors.push(
-                    "You must accept the terms and conditions to proceed"
-                );
-            }
             break;
 
         case 4:
@@ -506,7 +490,7 @@ const isStep2Valid = computed(() => {
 });
 
 const isStep3Valid = computed(() => {
-    const step3Fields = ["city", "province", "urgency"];
+    const step3Fields = ["municipality", "address"];
     const isValid = step3Fields.every((field) => {
         const hasValue =
             validationForm[field] &&
@@ -522,8 +506,8 @@ const isStep3Valid = computed(() => {
 
         return hasValue && !hasError;
     });
-    // Special check for terms_accepted boolean
-    return isValid && validationForm.terms_accepted === true;
+    // Step 3 should not require terms acceptance; validate it on final step instead
+    return isValid;
 });
 
 const canProceed = computed(() => {
@@ -621,23 +605,16 @@ const getStepValidationClass = (step) => {
         }
 
         // Step 3 validation
-        if (!validationForm.city || validationForm.city.trim() === "") {
-            allErrors.city = ["City is required"];
-            console.log("City validation failed");
+        if (
+            !validationForm.municipality ||
+            validationForm.municipality.trim() === ""
+        ) {
+            allErrors.municipality = ["Municipality is required"];
+            console.log("Municipality validation failed");
         }
-        if (!validationForm.province || validationForm.province.trim() === "") {
-            allErrors.province = ["Province is required"];
-            console.log("Province validation failed");
-        }
-        if (!validationForm.urgency || validationForm.urgency.trim() === "") {
-            allErrors.urgency = ["Urgency level is required"];
-            console.log("Urgency validation failed");
-        }
-        if (!validationForm.terms_accepted) {
-            allErrors.terms_accepted = [
-                "You must accept the terms and conditions",
-            ];
-            console.log("Terms acceptance validation failed");
+        if (!validationForm.address || validationForm.address.trim() === "") {
+            allErrors.address = ["Complete address is required"];
+            console.log("Address validation failed (step 3)");
         }
 
         console.log("All validation errors found:", allErrors);
@@ -788,7 +765,7 @@ const getFirstInvalidField = (step) => {
                     errors.value[field]
             );
         case 3:
-            const step3Fields = ["city", "province", "urgency"];
+            const step3Fields = ["municipality", "address"];
             const invalidField = step3Fields.find(
                 (field) =>
                     !validationForm[field] ||
@@ -796,7 +773,6 @@ const getFirstInvalidField = (step) => {
                     errors.value[field]
             );
             if (invalidField) return invalidField;
-            if (!validationForm.terms_accepted) return "terms_accepted";
             break;
     }
     return null;
@@ -1525,11 +1501,12 @@ const submitForm = async () => {
                             "property_description",
                             "asking_price",
                         ];
-                        const step3Fields = [
-                            "city",
-                            "province",
-                            "urgency",
+                        const step3Fields = ["municipality", "address"];
+                        const step5Fields = [
+                            "uploaded_images",
                             "terms_accepted",
+                            "marketing_consent",
+                            "newsletter_consent",
                         ];
 
                         if (step1Fields.includes(firstErrorField)) {
@@ -1538,6 +1515,8 @@ const submitForm = async () => {
                             currentStep.value = 2;
                         } else if (step3Fields.includes(firstErrorField)) {
                             currentStep.value = 3;
+                        } else if (step5Fields.includes(firstErrorField)) {
+                            currentStep.value = 5;
                         }
 
                         // Scroll to the error field
@@ -1720,18 +1699,17 @@ const formatFieldName = (field) => {
         name: "Full Name",
         email: "Email Address",
         phone: "Phone Number",
-        address: "Current Address",
+        address: "Complete Address",
         property_title: "Property Title",
         property_description: "Property Description",
         asking_price: "Asking Price",
-        features: "Features",
         uploaded_images: "Property Images",
-        city: "City",
-        province: "Province",
-        postal_code: "Postal Code",
+        municipality: "Municipality",
+        barangay: "Barangay",
         lot_area: "Lot Area",
+        title_type: "Title Type",
+        zoning_classification: "Zoning Classification",
         property_type: "Property Type",
-        urgency: "Urgency",
         terms_accepted: "Terms Accepted",
         additional_notes: "Additional Notes",
         marketing_consent: "Marketing Consent",
@@ -1751,10 +1729,10 @@ const requiredFields = [
     "address",
     "property_title",
     "property_description",
+    "property_type",
     "asking_price",
-    "city",
-    "province",
-    "urgency",
+    "lot_area",
+    "municipality",
     "terms_accepted",
 ];
 
@@ -2544,6 +2522,150 @@ const handleFieldQuickAction = (fieldName, action) => {
                                     @blur="handleFieldBlur('lot_area')"
                                     @focus="handleFieldFocus('lot_area')"
                                 />
+
+                                <!-- Title Type -->
+                                <FormField
+                                    id="title_type"
+                                    v-model="validationForm.title_type"
+                                    label="Title Type"
+                                    type="text"
+                                    placeholder="e.g., Titled, Tax Declared, Mother Title"
+                                    :error="errors.title_type"
+                                    help-text="Enter the type of land title"
+                                    @update:model-value="
+                                        enhancedSetFieldValue(
+                                            'title_type',
+                                            $event
+                                        )
+                                    "
+                                    @blur="handleFieldBlur('title_type')"
+                                    @focus="handleFieldFocus('title_type')"
+                                />
+
+                                <!-- Zoning Classification -->
+                                <FormField
+                                    id="zoning_classification"
+                                    v-model="
+                                        validationForm.zoning_classification
+                                    "
+                                    label="Zoning Classification"
+                                    type="text"
+                                    placeholder="e.g., Residential, Agricultural, Commercial"
+                                    :error="errors.zoning_classification"
+                                    help-text="Enter the zoning classification of the property"
+                                    @update:model-value="
+                                        enhancedSetFieldValue(
+                                            'zoning_classification',
+                                            $event
+                                        )
+                                    "
+                                    @blur="
+                                        handleFieldBlur('zoning_classification')
+                                    "
+                                    @focus="
+                                        handleFieldFocus(
+                                            'zoning_classification'
+                                        )
+                                    "
+                                />
+                            </div>
+
+                            <!-- Utilities & Access Section -->
+                            <div class="mt-6">
+                                <h3
+                                    class="text-base font-semibold text-gray-900 mb-4"
+                                >
+                                    Utilities & Access
+                                </h3>
+                                <div
+                                    class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                >
+                                    <!-- Road Access -->
+                                    <label
+                                        class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            v-model="validationForm.road_access"
+                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                        <div class="flex-1">
+                                            <span
+                                                class="font-medium text-gray-900"
+                                                >Road Access</span
+                                            >
+                                            <p class="text-sm text-gray-500">
+                                                Property has road access
+                                            </p>
+                                        </div>
+                                    </label>
+
+                                    <!-- Water Source -->
+                                    <label
+                                        class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            v-model="
+                                                validationForm.water_source
+                                            "
+                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                        <div class="flex-1">
+                                            <span
+                                                class="font-medium text-gray-900"
+                                                >Water Source</span
+                                            >
+                                            <p class="text-sm text-gray-500">
+                                                Water source available
+                                            </p>
+                                        </div>
+                                    </label>
+
+                                    <!-- Electricity -->
+                                    <label
+                                        class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            v-model="
+                                                validationForm.electricity_available
+                                            "
+                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                        <div class="flex-1">
+                                            <span
+                                                class="font-medium text-gray-900"
+                                                >Electricity</span
+                                            >
+                                            <p class="text-sm text-gray-500">
+                                                Electricity available
+                                            </p>
+                                        </div>
+                                    </label>
+
+                                    <!-- Internet -->
+                                    <label
+                                        class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            v-model="
+                                                validationForm.internet_available
+                                            "
+                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        />
+                                        <div class="flex-1">
+                                            <span
+                                                class="font-medium text-gray-900"
+                                                >Internet</span
+                                            >
+                                            <p class="text-sm text-gray-500">
+                                                Internet available
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2556,163 +2678,61 @@ const handleFieldQuickAction = (fieldName, action) => {
                         </div>
 
                         <div class="space-y-6">
-                            <div class="form-grid-3">
+                            <div class="form-grid-2">
                                 <FormField
-                                    id="city"
-                                    v-model="validationForm.city"
-                                    label="City/Municipality"
+                                    id="municipality"
+                                    v-model="validationForm.municipality"
+                                    label="Municipality"
                                     type="text"
-                                    placeholder="Tagbilaran City"
-                                    :error="errors.city"
+                                    placeholder="e.g., Tagbilaran City, Panglao, Dauis"
+                                    :error="errors.municipality"
                                     :required="true"
-                                    help-text="Enter the city or municipality where your property is located"
-                                    @update:model-value="
-                                        enhancedSetFieldValue('city', $event)
-                                    "
-                                    @blur="handleFieldBlur('city')"
-                                    @focus="handleFieldFocus('city')"
-                                />
-
-                                <FormField
-                                    id="province"
-                                    v-model="validationForm.province"
-                                    label="Province"
-                                    type="text"
-                                    :readonly="true"
-                                    help-text="Province is automatically set to Bohol"
-                                />
-
-                                <FormField
-                                    id="postal_code"
-                                    v-model="validationForm.postal_code"
-                                    label="Postal Code"
-                                    type="text"
-                                    placeholder="6300"
-                                    :error="errors.postal_code"
-                                    help-text="Enter the postal code for your area"
+                                    help-text="Enter the municipality where your property is located"
                                     @update:model-value="
                                         enhancedSetFieldValue(
-                                            'postal_code',
+                                            'municipality',
                                             $event
                                         )
                                     "
-                                    @blur="handleFieldBlur('postal_code')"
-                                    @focus="handleFieldFocus('postal_code')"
+                                    @blur="handleFieldBlur('municipality')"
+                                    @focus="handleFieldFocus('municipality')"
                                 />
-                            </div>
 
-                            <div class="form-grid-2">
                                 <FormField
-                                    id="urgency"
-                                    v-model="validationForm.urgency"
-                                    label="Urgency Level"
-                                    type="select"
-                                    :error="errors.urgency"
-                                    :required="true"
-                                    help-text="How quickly do you need to sell?"
+                                    id="barangay"
+                                    v-model="validationForm.barangay"
+                                    label="Barangay"
+                                    type="text"
+                                    placeholder="e.g., Poblacion, Tawala"
+                                    :error="errors.barangay"
+                                    help-text="Enter the barangay (optional)"
                                     @update:model-value="
-                                        enhancedSetFieldValue('urgency', $event)
+                                        enhancedSetFieldValue(
+                                            'barangay',
+                                            $event
+                                        )
                                     "
-                                >
-                                    <option value="low">
-                                        No Rush (6+ months)
-                                    </option>
-                                    <option value="medium">
-                                        Moderate (3-6 months)
-                                    </option>
-                                    <option value="high">
-                                        Urgent (1-3 months)
-                                    </option>
-                                    <option value="immediate">
-                                        Immediate (ASAP)
-                                    </option>
-                                </FormField>
+                                    @blur="handleFieldBlur('barangay')"
+                                    @focus="handleFieldFocus('barangay')"
+                                />
                             </div>
 
                             <FormField
-                                id="additional_notes"
-                                v-model="validationForm.additional_notes"
-                                label="Additional Notes (Optional)"
+                                id="address"
+                                v-model="validationForm.address"
+                                label="Complete Address"
                                 type="textarea"
-                                placeholder="Any additional information about your property or special requirements..."
-                                :error="errors.additional_notes"
-                                help-text="Share any additional details that might help us serve you better"
+                                placeholder="Enter the full address of your property"
+                                :error="errors.address"
+                                :required="true"
+                                help-text="Provide detailed address information"
                                 :rows="3"
                                 @update:model-value="
-                                    enhancedSetFieldValue(
-                                        'additional_notes',
-                                        $event
-                                    )
+                                    enhancedSetFieldValue('address', $event)
                                 "
+                                @blur="handleFieldBlur('address')"
+                                @focus="handleFieldFocus('address')"
                             />
-
-                            <div class="space-y-4">
-                                <div class="flex items-start gap-3">
-                                    <input
-                                        id="terms_accepted"
-                                        v-model="validationForm.terms_accepted"
-                                        type="checkbox"
-                                        class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
-                                        :class="{
-                                            'border-red-500':
-                                                errors.terms_accepted,
-                                        }"
-                                        @change="
-                                            enhancedSetFieldValue(
-                                                'terms_accepted',
-                                                $event.target.checked
-                                            )
-                                        "
-                                    />
-                                    <label
-                                        for="terms_accepted"
-                                        class="text-sm text-neutral-700"
-                                    >
-                                        I agree to the
-                                        <a
-                                            href="#"
-                                            class="text-primary-600 hover:text-primary-700 underline"
-                                            >Terms and Conditions</a
-                                        >
-                                        and
-                                        <a
-                                            href="#"
-                                            class="text-primary-600 hover:text-primary-700 underline"
-                                            >Privacy Policy</a
-                                        >
-                                        <span class="text-red-500 ml-1">*</span>
-                                    </label>
-                                </div>
-                                <ValidationError
-                                    v-if="errors.terms_accepted"
-                                    :error="errors.terms_accepted"
-                                />
-
-                                <div class="flex items-start gap-3">
-                                    <input
-                                        id="marketing_consent"
-                                        v-model="
-                                            validationForm.marketing_consent
-                                        "
-                                        type="checkbox"
-                                        class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
-                                        @change="
-                                            enhancedSetFieldValue(
-                                                'marketing_consent',
-                                                $event.target.checked
-                                            )
-                                        "
-                                    />
-                                    <label
-                                        for="marketing_consent"
-                                        class="text-sm text-neutral-700"
-                                    >
-                                        I consent to receive marketing
-                                        communications about similar properties
-                                        and services
-                                    </label>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -2915,9 +2935,7 @@ const handleFieldQuickAction = (fieldName, action) => {
                                                 <span
                                                     class="px-2 py-1 bg-neutral-100 text-neutral-700 rounded"
                                                 >
-                                                    {{
-                                                        broker.active_listings
-                                                    }}
+                                                    {{ broker.active_listings }}
                                                     listings
                                                 </span>
                                                 <span
@@ -3213,6 +3231,72 @@ const handleFieldQuickAction = (fieldName, action) => {
                                         <XMarkIcon class="w-4 h-4" />
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Consent & Terms -->
+                        <div
+                            class="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
+                        >
+                            <h3
+                                class="text-lg font-semibold mb-4 text-neutral-900"
+                            >
+                                Consent & Terms
+                            </h3>
+                            <div class="space-y-3">
+                                <label class="flex items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        v-model="
+                                            validationForm.marketing_consent
+                                        "
+                                        class="mt-1 rounded text-primary-600 focus:ring-primary-500"
+                                    />
+                                    <span class="text-neutral-700">
+                                        I agree to receive updates about my
+                                        listing and related services.
+                                    </span>
+                                </label>
+                                <label class="flex items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        v-model="
+                                            validationForm.newsletter_consent
+                                        "
+                                        class="mt-1 rounded text-primary-600 focus:ring-primary-500"
+                                    />
+                                    <span class="text-neutral-700">
+                                        Subscribe me to the GeoCasa newsletter.
+                                    </span>
+                                </label>
+                                <label class="flex items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        v-model="validationForm.terms_accepted"
+                                        class="mt-1 rounded text-primary-600 focus:ring-primary-500"
+                                    />
+                                    <span class="text-neutral-700">
+                                        <strong class="text-red-600">*</strong>
+                                        I have read and agree to the
+                                        <a
+                                            href="/terms"
+                                            target="_blank"
+                                            class="text-primary-600 hover:underline font-medium"
+                                            >Terms and Conditions</a
+                                        >
+                                        and
+                                        <a
+                                            href="/privacy"
+                                            target="_blank"
+                                            class="text-primary-600 hover:underline font-medium"
+                                            >Privacy Policy</a
+                                        >.
+                                    </span>
+                                </label>
+                                <ValidationError
+                                    v-if="errors.terms_accepted"
+                                    :message="errors.terms_accepted"
+                                />
                             </div>
                         </div>
                     </div>

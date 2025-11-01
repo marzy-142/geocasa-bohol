@@ -26,6 +26,12 @@ class SellerRequest extends Model
         'municipality',
         'barangay',
         'lot_area',
+        'title_type',
+        'zoning_classification',
+        'road_access',
+        'water_source',
+        'electricity_available',
+        'internet_available',
         'floor_area',
         'bedrooms',
         'bathrooms',
@@ -77,6 +83,10 @@ class SellerRequest extends Model
         'marketing_consent' => 'boolean',
         'newsletter_consent' => 'boolean',
         'terms_accepted' => 'boolean',
+        'road_access' => 'boolean',
+        'water_source' => 'boolean',
+        'electricity_available' => 'boolean',
+        'internet_available' => 'boolean',
         'reviewed_at' => 'datetime',
         'listed_at' => 'datetime',
         'submission_date' => 'datetime',
@@ -142,12 +152,15 @@ class SellerRequest extends Model
     // Accessors
     public function getFormattedAskingPriceAttribute()
     {
-        return '₱' . number_format($this->asking_price, 0);
+        $price = $this->asking_price !== null ? (float) $this->asking_price : 0.0;
+        return '₱' . number_format($price, 0);
     }
 
     public function getFormattedAreaAttribute()
     {
-        return number_format($this->property_area, 1) . ' ' . $this->area_unit;
+        $area = $this->property_area !== null ? (float) $this->property_area : 0.0;
+        $unit = $this->area_unit ?? 'sqm';
+        return number_format($area, 1) . ' ' . $unit;
     }
 
     public function getStatusLabelAttribute()
@@ -160,6 +173,7 @@ class SellerRequest extends Model
         $colors = [
             'pending' => 'yellow',
             'under_review' => 'blue',
+            'assigned' => 'indigo',
             'approved' => 'green',
             'rejected' => 'red',
             'listed' => 'emerald'

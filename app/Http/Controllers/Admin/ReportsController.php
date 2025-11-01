@@ -9,6 +9,8 @@ use App\Models\Inquiry;
 use App\Models\ComplianceReport;
 use App\Models\InvestigationLog;
 use App\Models\Transaction;
+use App\Services\BrokerRankingService;
+use App\Services\PerformanceAnalyticsService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -16,6 +18,15 @@ use Illuminate\Support\Facades\DB;
 
 class ReportsController extends Controller
 {
+    protected $brokerRankingService;
+    protected $analyticsService;
+
+    public function __construct(BrokerRankingService $brokerRankingService, PerformanceAnalyticsService $analyticsService)
+    {
+        $this->brokerRankingService = $brokerRankingService;
+        $this->analyticsService = $analyticsService;
+    }
+
     public function index()
     {
         $stats = [
@@ -31,8 +42,10 @@ class ReportsController extends Controller
 
         $chartData = $this->getActivityTrends();
         $recentActivities = $this->getRecentActivities();
-        $topBrokers = $this->getTopPerformingBrokers();
+        $topBrokers = $this->brokerRankingService->getTopPerformingBrokers(10);
         $topProperties = $this->getMostInquiredProperties();
+        // System analytics (time-series + pipeline + key metrics)
+        $analytics = $this->analyticsService->generateSystemAnalytics(30);
 
         return Inertia::render('Admin/Reports/Dashboard', [
             'stats' => $stats,
@@ -40,6 +53,7 @@ class ReportsController extends Controller
             'recentActivities' => $recentActivities,
             'topBrokers' => $topBrokers,
             'topProperties' => $topProperties,
+            'analytics' => $analytics,
         ]);
     }
     
@@ -47,7 +61,7 @@ class ReportsController extends Controller
     {
         $stats = $this->getBrokerStats();
         $chartData = $this->getBrokerChartData();
-        $topBrokers = $this->getTopPerformingBrokers();
+        $topBrokers = $this->brokerRankingService->getTopPerformingBrokers(10);
         $recentActivities = $this->getRecentBrokerActivities();
 
         return Inertia::render('Admin/Reports/Brokers', [
@@ -220,23 +234,6 @@ class ReportsController extends Controller
             ->sortByDesc('created_at')
             ->take(15)
             ->values();
-    }
-
-    private function getTopPerformingBrokers()
-    {
-        return User::where('role', 'broker')
-            ->where('is_approved', true)
-            ->where('application_status', 'approved')
-            ->withCount([
-                'properties',
-                'inquiries',
-                'transactions as finalized_transactions_count' => function ($query) {
-                    $query->where('status', 'finalized');
-                }
-            ])
-            ->orderBy('properties_count', 'desc')
-            ->limit(10)
-            ->get();
     }
 
     private function getMostInquiredProperties()

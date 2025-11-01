@@ -356,27 +356,79 @@ const handleNotificationClick = (notification) => {
             });
     }
 
-    // Navigate based on notification type
-    const routes = {
-        new_inquiry: () =>
-            route("inquiries.show", notification.data.inquiry_id),
-        seller_request: () =>
-            route("seller-requests.show", notification.data.seller_request_id),
-        transaction_status: () =>
-            route("transactions.show", notification.data.transaction_id),
-        new_message: () =>
-            route("conversations.show", notification.data.conversation_id),
-        broker_approval: () => route("broker.dashboard"),
-        broker_assignment: () =>
-            route("clients.show", notification.data.client_id),
-    };
-
-    const routeFunction = routes[notification.data?.type];
-    if (routeFunction) {
-        router.visit(routeFunction());
-    }
-
+    // Close dropdown first
     showDropdown.value = false;
+
+    // Get notification type and data
+    const notifType = notification.data?.type;
+    const notifData = notification.data;
+
+    // Navigate based on notification type
+    try {
+        let targetRoute = null;
+
+        switch (notifType) {
+            case "new_inquiry":
+                if (notifData.inquiry_id) {
+                    targetRoute = route("inquiries.show", notifData.inquiry_id);
+                }
+                break;
+
+            case "seller_request":
+            case "broker_seller_assignment":
+                if (notifData.seller_request_id) {
+                    targetRoute = route(
+                        "seller-requests.show",
+                        notifData.seller_request_id
+                    );
+                }
+                break;
+
+            case "transaction_status":
+                if (notifData.transaction_id) {
+                    targetRoute = route(
+                        "transactions.show",
+                        notifData.transaction_id
+                    );
+                }
+                break;
+
+            case "new_message":
+                if (notifData.conversation_id) {
+                    targetRoute = route(
+                        "conversations.show",
+                        notifData.conversation_id
+                    );
+                }
+                break;
+
+            case "broker_approval":
+                // Redirect to broker dashboard
+                targetRoute = route("broker.dashboard");
+                break;
+
+            case "broker_assignment":
+                if (notifData.client_id) {
+                    targetRoute = route("clients.show", notifData.client_id);
+                }
+                break;
+
+            // Add more cases as needed
+            default:
+                // For unhandled types, try to redirect to notifications page
+                console.log("Unhandled notification type:", notifType);
+                targetRoute = route("notifications.index");
+                break;
+        }
+
+        if (targetRoute) {
+            router.visit(targetRoute);
+        }
+    } catch (error) {
+        console.error("Error navigating from notification:", error);
+        // Fallback to notifications page
+        router.visit(route("notifications.index"));
+    }
 };
 
 const markAllAsRead = () => {
@@ -407,6 +459,7 @@ const getNotificationIcon = (type) => {
     const icons = {
         new_inquiry: "InboxIcon",
         seller_request: "HomeIcon",
+        broker_seller_assignment: "HomeIcon",
         transaction_status: "CurrencyDollarIcon",
         new_message: "ChatBubbleBottomCenterTextIcon",
         broker_approval: "CheckCircleIcon",
@@ -419,6 +472,7 @@ const getNotificationIconClass = (type) => {
     const classes = {
         new_inquiry: "bg-blue-100 text-blue-600",
         seller_request: "bg-green-100 text-green-600",
+        broker_seller_assignment: "bg-green-100 text-green-600",
         transaction_status: "bg-yellow-100 text-yellow-600",
         new_message: "bg-indigo-100 text-indigo-600",
         broker_approval: "bg-purple-100 text-purple-600",

@@ -235,7 +235,7 @@ class TransactionController extends Controller
     {
         $user = Auth::user();
         
-        // Authorization check
+        // Authorization check for brokers
         if ($user->role === 'broker' && $transaction->broker_id !== $user->id) {
             abort(403, 'Unauthorized access to transaction.');
         }
@@ -249,6 +249,8 @@ class TransactionController extends Controller
         
         return Inertia::render('Transactions/Show', [
             'transaction' => $transaction,
+            'canEdit' => $user->role !== 'admin', // Admins cannot edit
+            'userRole' => $user->role,
         ]);
     }
 
@@ -259,7 +261,13 @@ class TransactionController extends Controller
     {
         $user = Auth::user();
         
-        // Authorization check
+        // Admins should not edit transactions - they should use oversight functions only
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.transactions.show', $transaction)
+                ->with('warning', 'Administrators cannot directly edit transactions. Use the oversight and monitoring functions instead.');
+        }
+        
+        // Authorization check for brokers
         if ($user->role === 'broker' && $transaction->broker_id !== $user->id) {
             abort(403, 'Unauthorized access to transaction.');
         }
@@ -333,6 +341,11 @@ class TransactionController extends Controller
     public function update(Request $request, Transaction $transaction)
     {
         $user = Auth::user();
+        
+        // Admins should not update transactions directly - they should use oversight functions only
+        if ($user->role === 'admin') {
+            return back()->with('error', 'Administrators cannot directly modify transactions. Use the oversight and monitoring functions instead.');
+        }
         
         // Enhanced authorization check
         $this->validateTransactionAccess($transaction, $user, 'update');
@@ -434,7 +447,12 @@ class TransactionController extends Controller
     {
         $user = Auth::user();
         
-        // Authorization check
+        // Admins should not delete transactions - they should use archive/flag functions
+        if ($user->role === 'admin') {
+            return back()->with('error', 'Administrators cannot delete transactions. Contact system administrator for data management.');
+        }
+        
+        // Authorization check for brokers
         if ($user->role === 'broker' && $transaction->broker_id !== $user->id) {
             abort(403, 'Unauthorized access to transaction.');
         }
@@ -656,7 +674,59 @@ class TransactionController extends Controller
     /**
      * Admin: Update transaction status
      */
+    /**
+     * Admin oversight: Add monitoring notes without modifying transaction data
+     * Admins can view and add oversight notes but cannot change transaction status or data
+     */
+    public function adminAddOversightNote(Request $request, Transaction $transaction)
+    {
+        $validated = $request->validate([
+            'oversight_note' => 'required|string|max:1000',
+            'flag_for_review' => 'nullable|boolean',
+        ]);
+        
+        // Add oversight note with admin identifier
+        $oversightNote = "\n\n" . now()->format('Y-m-d H:i') . " - [ADMIN OVERSIGHT] " . $validated['oversight_note'];
+        
+        // Store in a separate field if available, otherwise append to broker_notes with clear identifier
+        if (isset($transaction->admin_oversight_notes)) {
+            $transaction->admin_oversight_notes = ($transaction->admin_oversight_notes ?? '') . $oversightNote;
+        } else {
+            $transaction->broker_notes = ($transaction->broker_notes ?? '') . $oversightNote;
+        }
+        
+        // Flag for review if requested (without changing status)
+        if ($validated['flag_for_review'] ?? false) {
+            $transaction->flagged_for_admin_review = true;
+            $transaction->flagged_at = now();
+        }
+        
+        $transaction->save();
+        
+        // Optionally notify broker about admin review
+        if ($validated['flag_for_review'] ?? false) {
+            // TODO: Create TransactionFlaggedForReview notification
+            // $transaction->broker->notify(new \App\Notifications\TransactionFlaggedForReview($transaction));
+        }
+        
+        return back()->with('success', 'Oversight note added successfully.');
+    }
+
+    /**
+     * DEPRECATED: Admin should not update transaction status
+     * This method is kept for backward compatibility but redirects to oversight function
+     */
     public function adminUpdateStatus(Request $request, Transaction $transaction)
+    {
+        // Redirect admins to use oversight notes instead of modifying data
+        return back()->with('warning', 'Administrators cannot modify transaction status. Brokers manage their own transactions. You can add oversight notes for monitoring purposes.');
+    }
+    
+    /**
+     * Original adminUpdateStatus - REMOVED
+     * Admins should not modify transaction data directly
+     */
+    private function adminUpdateStatus_DEPRECATED(Request $request, Transaction $transaction)
     {
         $validated = $request->validate([
             'status' => 'required|in:inquiry,initial_contact,property_viewing,offer_made,negotiation,offer_accepted,contract_signed,due_diligence,financing,closing_preparation,finalized,cancelled',
@@ -710,9 +780,9 @@ class TransactionController extends Controller
         
         return back()->with('success', 'Transaction status updated successfully by admin.');
     }
-    
+
     /**
-     * Admin: Get comprehensive transaction statistics
+     * Admin: Get transaction statistics (Read-only analytics)
      */
     public function adminStatistics(Request $request)
     {
@@ -919,7 +989,23 @@ class TransactionController extends Controller
     /**
      * Admin: Bulk update transaction statuses
      */
+    /**
+     * DEPRECATED: Admin bulk update removed
+     * Admins should not modify transaction data in bulk
+     */
     public function adminBulkUpdate(Request $request)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'Administrators cannot bulk-modify transactions. Brokers manage their own transactions independently.'
+        ], 403);
+    }
+    
+    /**
+     * Original adminBulkUpdate - REMOVED for security
+     * Admins should not have the ability to bulk-modify transaction data
+     */
+    private function adminBulkUpdate_DEPRECATED(Request $request)
     {
         $request->validate([
             'transaction_ids' => 'required|array|min:1',

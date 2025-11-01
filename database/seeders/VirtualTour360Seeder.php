@@ -96,6 +96,7 @@ class VirtualTour360Seeder extends Seeder
                 'internet_available' => true,
                 'is_featured' => true,
                 'has_virtual_tour' => true,
+                'images' => json_encode(['https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=800&q=70']),
                 'virtual_tour_images' => $localImagePaths[0] ? json_encode([$localImagePaths[0]]) : null,
                 'gis_data' => json_encode([
                     'type' => 'beachfront',
@@ -132,6 +133,7 @@ class VirtualTour360Seeder extends Seeder
                 'internet_available' => true,
                 'is_featured' => true,
                 'has_virtual_tour' => true,
+                'images' => json_encode(['https://images.unsplash.com/photo-1586348943529-beaae6c28db9?w=800&q=70']),
                 'virtual_tour_images' => $localImagePaths[1] ? json_encode([$localImagePaths[1]]) : null,
                 'gis_data' => json_encode([
                     'type' => 'mountain',
@@ -168,6 +170,7 @@ class VirtualTour360Seeder extends Seeder
                 'internet_available' => true,
                 'is_featured' => true,
                 'has_virtual_tour' => true,
+                'images' => json_encode(['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=70']),
                 'virtual_tour_images' => $localImagePaths[2] ? json_encode([$localImagePaths[2]]) : null,
                 'broker_id' => $broker->id,
                 'nearby_landmarks' => json_encode([

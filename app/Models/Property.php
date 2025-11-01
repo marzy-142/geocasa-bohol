@@ -325,6 +325,9 @@ class Property extends Model
                 if (Str::contains($clean, 'properties/images/')) {
                     return '/storage/' . $clean;
                 }
+                if (Str::contains($clean, 'seller-requests/images/')) {
+                    return '/storage/' . $clean;
+                }
 
                 // Try a few common storage locations, prefer the first that exists
                 $candidates = [

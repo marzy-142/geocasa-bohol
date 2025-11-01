@@ -117,14 +117,50 @@ const formatPrice = (price) => {
         minimumFractionDigits: 0,
     }).format(price);
 };
+
+// Format and deduplicate address tokens to avoid repeats and empty commas
+const formatAddress = (property) => {
+    const buildTokensFromFields = () => {
+        const country = property.country || "Philippines";
+        return [
+            property.barangay && String(property.barangay).trim(),
+            property.municipality && String(property.municipality).trim(),
+            property.province && String(property.province).trim(),
+            country && String(country).trim(),
+        ].filter(Boolean);
+    };
+
+    let tokens = [];
+    if (property.full_address && typeof property.full_address === "string") {
+        tokens = property.full_address
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s && s !== "-");
+        // If parsing results in too few tokens, fall back to fields
+        if (tokens.length < 2) {
+            tokens = buildTokensFromFields();
+        }
+    } else {
+        tokens = buildTokensFromFields();
+    }
+
+    const seen = new Set();
+    const result = [];
+    for (const t of tokens) {
+        const key = t.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            result.push(t);
+        }
+    }
+    return result.join(", ");
+};
 </script>
 
 <template>
     <Head :title="`${broker.name} - GeoCasa Bohol`" />
 
-    <div
-        class="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-blue-50"
-    >
+    <div class="min-h-screen bg-neutral-50">
         <PublicNavigation :auth="auth" />
 
         <!-- Back Button Navigation -->
@@ -146,7 +182,7 @@ const formatPrice = (price) => {
 
         <!-- Hero/Profile Header -->
         <section
-            class="relative bg-gradient-to-r from-blue-700 to-accent-700 text-white py-16 shadow-lg"
+            class="relative bg-white text-neutral-900 py-14 border-b border-neutral-200"
         >
             <div
                 class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center gap-10"
@@ -154,7 +190,7 @@ const formatPrice = (price) => {
                 <!-- Profile Image & Badge -->
                 <div class="relative flex-shrink-0 mb-8 md:mb-0">
                     <div
-                        class="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-white shadow-2xl bg-white"
+                        class="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden ring-4 ring-white shadow-xl bg-white"
                     >
                         <UserAvatar
                             v-if="broker"
@@ -165,7 +201,7 @@ const formatPrice = (price) => {
                         />
                     </div>
                     <span
-                        class="absolute -bottom-3 -right-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-lg border-2 border-white"
+                        class="absolute -bottom-3 -right-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 shadow-md border border-green-200"
                     >
                         <CheckBadgeIcon class="w-4 h-4 mr-1" /> Verified
                     </span>
@@ -174,23 +210,20 @@ const formatPrice = (price) => {
                 <!-- Main Info -->
                 <div class="flex-1 text-center md:text-left">
                     <h1
-                        class="text-4xl md:text-5xl font-extrabold mb-2 tracking-tight drop-shadow-lg"
+                        class="text-4xl md:text-5xl font-semibold mb-2 tracking-tight"
                     >
                         {{ broker.name }}
                     </h1>
                     <p
                         v-if="broker.brokerage_firm_name"
-                        class="text-lg md:text-2xl text-blue-100 mb-3 font-medium"
+                        class="text-lg md:text-xl text-neutral-600 mb-2 font-medium"
                     >
                         {{ broker.brokerage_firm_name }}
                     </p>
                     <div
-                        class="flex flex-wrap gap-4 justify-center md:justify-start mb-4"
+                        class="flex flex-wrap gap-4 justify-center md:justify-start mb-4 text-neutral-600"
                     >
-                        <div
-                            v-if="broker.city"
-                            class="flex items-center text-blue-100"
-                        >
+                        <div v-if="broker.city" class="flex items-center">
                             <MapPinIcon class="w-5 h-5 mr-2" />
                             <span
                                 >{{ broker.city }}, {{ broker.province }}</span
@@ -198,7 +231,7 @@ const formatPrice = (price) => {
                         </div>
                         <div
                             v-if="broker.years_experience"
-                            class="flex items-center text-blue-100"
+                            class="flex items-center"
                         >
                             <BriefcaseIcon class="w-5 h-5 mr-2" />
                             <span
@@ -209,7 +242,7 @@ const formatPrice = (price) => {
                     </div>
                     <div
                         :class="[
-                            'inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-md',
+                            'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium shadow-sm border',
                             getAvailabilityColor(broker.availability_status),
                         ]"
                     >
@@ -226,20 +259,22 @@ const formatPrice = (price) => {
                 <!-- Left/Main Column -->
                 <div class="lg:col-span-2 space-y-10">
                     <!-- About Section -->
-                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <div
+                        class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8"
+                    >
                         <h2
-                            class="text-2xl font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                            class="text-2xl font-semibold text-neutral-900 mb-4 flex items-center gap-2"
                         >
-                            <BriefcaseIcon class="w-6 h-6 text-blue-400" />
+                            <BriefcaseIcon class="w-6 h-6 text-neutral-400" />
                             About
                         </h2>
                         <p
                             v-if="broker.bio"
-                            class="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg"
+                            class="text-neutral-700 leading-relaxed whitespace-pre-wrap text-lg"
                         >
                             {{ broker.bio }}
                         </p>
-                        <p v-else class="text-gray-400 italic">
+                        <p v-else class="text-neutral-400 italic">
                             No biography available.
                         </p>
                     </div>
@@ -250,19 +285,19 @@ const formatPrice = (price) => {
                             broker.specializations &&
                             broker.specializations.length > 0
                         "
-                        class="bg-white rounded-2xl shadow-lg p-8"
+                        class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8"
                     >
                         <h2
-                            class="text-2xl font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                            class="text-2xl font-semibold text-neutral-900 mb-4 flex items-center gap-2"
                         >
-                            <ChartBarIcon class="w-6 h-6 text-blue-400" />
+                            <ChartBarIcon class="w-6 h-6 text-neutral-400" />
                             Specializations
                         </h2>
                         <div class="flex flex-wrap gap-3">
                             <span
                                 v-for="spec in broker.specializations"
                                 :key="spec"
-                                class="inline-flex items-center px-4 py-2 text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-100 rounded-full shadow-sm"
+                                class="inline-flex items-center px-4 py-1.5 text-sm font-medium bg-neutral-100 text-neutral-700 border border-neutral-200 rounded-full"
                             >
                                 {{ spec }}
                             </span>
@@ -275,19 +310,19 @@ const formatPrice = (price) => {
                             broker.service_areas &&
                             broker.service_areas.length > 0
                         "
-                        class="bg-white rounded-2xl shadow-lg p-8"
+                        class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8"
                     >
                         <h2
-                            class="text-2xl font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                            class="text-2xl font-semibold text-neutral-900 mb-4 flex items-center gap-2"
                         >
-                            <MapPinIcon class="w-6 h-6 text-purple-400" />
+                            <MapPinIcon class="w-6 h-6 text-neutral-400" />
                             Service Areas
                         </h2>
                         <div class="flex flex-wrap gap-3">
                             <span
                                 v-for="area in broker.service_areas"
                                 :key="area"
-                                class="inline-flex items-center px-4 py-2 text-sm font-semibold bg-purple-50 text-purple-700 border border-purple-100 rounded-full shadow-sm"
+                                class="inline-flex items-center px-4 py-1.5 text-sm font-medium bg-neutral-100 text-neutral-700 border border-neutral-200 rounded-full"
                             >
                                 <MapPinIcon class="w-4 h-4 mr-1" />
                                 {{ area }}
@@ -298,12 +333,12 @@ const formatPrice = (price) => {
                     <!-- Active Listings -->
                     <div
                         v-if="broker.properties && broker.properties.length > 0"
-                        class="bg-white rounded-2xl shadow-lg p-8"
+                        class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8"
                     >
                         <h2
-                            class="text-2xl font-extrabold text-blue-900 mb-6 flex items-center gap-2"
+                            class="text-2xl font-semibold text-neutral-900 mb-6 flex items-center gap-2"
                         >
-                            <HomeIcon class="w-6 h-6 text-blue-400" />
+                            <HomeIcon class="w-6 h-6 text-neutral-400" />
                             Active Listings
                         </h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -320,31 +355,22 @@ const formatPrice = (price) => {
                                 "
                                 :aria-disabled="!property.slug"
                                 :class="[
-                                    'group bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl overflow-hidden transition-all border border-blue-100',
+                                    'group bg-white rounded-xl overflow-hidden transition-all border border-neutral-200',
                                     property.slug
-                                        ? 'hover:shadow-xl hover:border-blue-300'
-                                        : 'opacity-95 pointer-events-none',
+                                        ? 'hover:shadow-md hover:border-neutral-300'
+                                        : 'opacity-90 pointer-events-none',
                                 ]"
                             >
                                 <div
                                     class="h-48 bg-gray-200 overflow-hidden relative"
                                 >
-                                    <template
-                                        v-if="
-                                            property.images &&
-                                            property.images.length > 0 &&
-                                            property.images[0]
-                                        "
-                                    >
-                                        <img
-                                            :src="
-                                                getImageUrl(property.images[0])
-                                            "
-                                            :alt="property.title"
-                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            @error="onImageError"
-                                        />
-                                    </template>
+                                    <img
+                                        v-if="property.main_image"
+                                        :src="getImageUrl(property.main_image)"
+                                        :alt="property.title"
+                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        @error="onImageError"
+                                    />
                                     <div
                                         v-else
                                         class="w-full h-full flex items-center justify-center bg-gray-100"
@@ -352,13 +378,6 @@ const formatPrice = (price) => {
                                         <HomeIcon
                                             class="w-16 h-16 text-gray-400"
                                         />
-                                        <p
-                                            class="absolute bottom-2 text-xs text-red-500 break-all px-2"
-                                        >
-                                            {{
-                                                JSON.stringify(property.images)
-                                            }}
-                                        </p>
                                     </div>
                                     <span
                                         v-if="property.status === 'sold'"
@@ -368,17 +387,16 @@ const formatPrice = (price) => {
                                 </div>
                                 <div class="p-4">
                                     <h3
-                                        class="font-semibold text-blue-900 mb-1 group-hover:text-blue-700 transition-colors text-lg"
+                                        class="font-semibold text-neutral-900 mb-1 group-hover:text-neutral-700 transition-colors text-lg"
                                     >
                                         {{ property.title }}
                                     </h3>
-                                    <p class="text-sm text-gray-600 mb-2">
-                                        {{
-                                            property.full_address ||
-                                            property.municipality
-                                        }}
+                                    <p class="text-sm text-neutral-600 mb-2">
+                                        {{ formatAddress(property) }}
                                     </p>
-                                    <p class="text-lg font-bold text-blue-700">
+                                    <p
+                                        class="text-lg font-semibold text-neutral-900"
+                                    >
                                         {{
                                             property.formatted_total_price ||
                                             formatPrice(property.total_price)
@@ -395,7 +413,7 @@ const formatPrice = (price) => {
                             "
                             class="mt-6 text-center"
                         >
-                            <p class="text-gray-600 font-medium">
+                            <p class="text-neutral-600 font-medium">
                                 +{{
                                     broker.active_listings -
                                     broker.properties.length
@@ -410,39 +428,39 @@ const formatPrice = (price) => {
                 <div class="space-y-6">
                     <!-- Statistics Card -->
                     <div
-                        class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl shadow-lg p-6 border border-blue-100"
+                        class="bg-white rounded-xl shadow-sm p-6 border border-neutral-200"
                     >
                         <h3
-                            class="text-lg font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                            class="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2"
                         >
-                            <ChartBarIcon class="w-5 h-5 text-blue-400" />
+                            <ChartBarIcon class="w-5 h-5 text-neutral-400" />
                             Statistics
                         </h3>
                         <div class="space-y-4">
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-600"
+                                <span class="text-neutral-600"
                                     >Active Listings</span
                                 >
                                 <span
-                                    class="text-2xl font-bold text-blue-700"
+                                    class="text-2xl font-semibold text-neutral-900"
                                     >{{ broker.active_listings }}</span
                                 >
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-600"
+                                <span class="text-neutral-600"
                                     >Total Listings</span
                                 >
                                 <span
-                                    class="text-2xl font-bold text-blue-900"
+                                    class="text-2xl font-semibold text-neutral-900"
                                     >{{ broker.total_listings }}</span
                                 >
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-600"
+                                <span class="text-neutral-600"
                                     >Properties Sold</span
                                 >
                                 <span
-                                    class="text-2xl font-bold text-green-600"
+                                    class="text-2xl font-semibold text-neutral-900"
                                     >{{ broker.sold_properties }}</span
                                 >
                             </div>
@@ -450,31 +468,55 @@ const formatPrice = (price) => {
                     </div>
 
                     <!-- Contact Information Card -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-6 border border-neutral-200"
+                    >
                         <h3
-                            class="text-lg font-extrabold text-blue-900 mb-4 flex items-center gap-2"
+                            class="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2"
                         >
-                            <EnvelopeIcon class="w-5 h-5 text-blue-400" />
+                            <EnvelopeIcon class="w-5 h-5 text-neutral-400" />
                             Contact Information
                         </h3>
                         <div class="space-y-4">
-                            <div
-                                v-if="broker.prc_license_number"
-                                class="flex items-start"
-                            >
+                            <!-- PRC License -->
+                            <div class="flex items-start">
                                 <CheckBadgeIcon
-                                    class="w-5 h-5 text-green-600 mr-3 mt-0.5"
+                                    class="w-5 h-5 text-neutral-500 mr-3 mt-0.5"
                                 />
                                 <div>
-                                    <p class="text-sm text-gray-600">
-                                        PRC License
+                                    <p class="text-sm text-neutral-500">
+                                        PRC License Number
                                     </p>
-                                    <p class="font-medium text-gray-900">
-                                        {{ broker.prc_license_number }}
+                                    <p
+                                        class="text-base font-medium text-neutral-900"
+                                    >
+                                        {{
+                                            broker.prc_license_number ||
+                                            "Not provided"
+                                        }}
                                     </p>
                                 </div>
                             </div>
 
+                            <!-- Email -->
+                            <div class="flex items-start" v-if="broker.email">
+                                <EnvelopeIcon
+                                    class="w-5 h-5 text-neutral-500 mr-3 mt-0.5"
+                                />
+                                <div>
+                                    <p class="text-sm text-neutral-500">
+                                        Email
+                                    </p>
+                                    <a
+                                        :href="`mailto:${broker.email}`"
+                                        class="text-base font-medium text-neutral-900 hover:text-neutral-700 break-all"
+                                    >
+                                        {{ broker.email }}
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Phone -->
                             <div
                                 v-if="
                                     broker.show_phone &&
@@ -483,47 +525,34 @@ const formatPrice = (price) => {
                                 class="flex items-start"
                             >
                                 <PhoneIcon
-                                    class="w-5 h-5 text-blue-600 mr-3 mt-0.5"
+                                    class="w-5 h-5 text-neutral-500 mr-3 mt-0.5"
                                 />
                                 <div>
-                                    <p class="text-sm text-gray-600">Phone</p>
+                                    <p class="text-sm text-neutral-500">
+                                        Phone
+                                    </p>
                                     <a
                                         :href="`tel:${broker.office_contact_number}`"
-                                        class="font-medium text-blue-600 hover:text-blue-800"
+                                        class="text-base font-medium text-neutral-900 hover:text-neutral-700"
                                     >
                                         {{ broker.office_contact_number }}
                                     </a>
                                 </div>
                             </div>
 
-                            <div
-                                v-if="broker.show_email && broker.email"
-                                class="flex items-start"
-                            >
-                                <EnvelopeIcon
-                                    class="w-5 h-5 text-blue-600 mr-3 mt-0.5"
-                                />
-                                <div>
-                                    <p class="text-sm text-gray-600">Email</p>
-                                    <a
-                                        :href="`mailto:${broker.email}`"
-                                        class="font-medium text-blue-600 hover:text-blue-800 break-all"
-                                    >
-                                        {{ broker.email }}
-                                    </a>
-                                </div>
-                            </div>
-
+                            <!-- Website -->
                             <div v-if="broker.website" class="flex items-start">
                                 <GlobeAltIcon
-                                    class="w-5 h-5 text-blue-600 mr-3 mt-0.5"
+                                    class="w-5 h-5 text-neutral-500 mr-3 mt-0.5"
                                 />
                                 <div>
-                                    <p class="text-sm text-gray-600">Website</p>
+                                    <p class="text-sm text-neutral-500">
+                                        Website
+                                    </p>
                                     <a
                                         :href="broker.website"
                                         target="_blank"
-                                        class="font-medium text-blue-600 hover:text-blue-800 break-all"
+                                        class="text-base font-medium text-neutral-900 hover:text-neutral-700 break-all"
                                     >
                                         {{ broker.website }}
                                     </a>
@@ -534,17 +563,19 @@ const formatPrice = (price) => {
                         <!-- Social Links -->
                         <div
                             v-if="broker.facebook || broker.linkedin"
-                            class="mt-6 pt-6 border-t border-blue-100"
+                            class="mt-6 pt-6 border-t border-neutral-200"
                         >
-                            <p class="text-sm text-blue-700 mb-3 font-semibold">
-                                Connect on Social Media
+                            <p
+                                class="text-sm text-neutral-600 mb-3 font-medium"
+                            >
+                                Connect
                             </p>
                             <div class="flex gap-3">
                                 <a
                                     v-if="broker.facebook"
                                     :href="broker.facebook"
                                     target="_blank"
-                                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-700 transition-colors font-semibold shadow"
+                                    class="flex-1 px-4 py-2 rounded-lg text-center border border-neutral-300 text-neutral-800 hover:bg-neutral-50 transition-colors font-medium"
                                 >
                                     Facebook
                                 </a>
@@ -552,32 +583,12 @@ const formatPrice = (price) => {
                                     v-if="broker.linkedin"
                                     :href="broker.linkedin"
                                     target="_blank"
-                                    class="flex-1 bg-blue-800 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-900 transition-colors font-semibold shadow"
+                                    class="flex-1 px-4 py-2 rounded-lg text-center border border-neutral-300 text-neutral-800 hover:bg-neutral-50 transition-colors font-medium"
                                 >
                                     LinkedIn
                                 </a>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Contact CTA -->
-                    <div
-                        v-if="broker.accept_inquiries"
-                        class="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg p-6 text-white"
-                    >
-                        <h3 class="text-lg font-bold mb-2">
-                            Interested in working together?
-                        </h3>
-                        <p class="text-blue-100 mb-4">
-                            Send {{ broker.name.split(" ")[0] }} a message and
-                            start your property journey today.
-                        </p>
-                        <button
-                            @click="showContactModal = true"
-                            class="w-full bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors"
-                        >
-                            Send Message
-                        </button>
                     </div>
                 </div>
             </div>

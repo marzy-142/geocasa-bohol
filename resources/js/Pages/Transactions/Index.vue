@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import { Link } from "@inertiajs/vue3";
 import Pagination from "@/Components/Pagination.vue";
@@ -44,6 +44,10 @@ const dateTo = ref(props.filters.date_to || "");
 const showFilters = ref(false);
 const sortBy = ref(props.filters.sort_by || "created_at");
 const sortOrder = ref(props.filters.sort_order || "desc");
+
+// Determine if current user is admin to conditionally hide edit/delete actions
+const page = usePage();
+const isAdmin = computed(() => page.props?.auth?.user?.role === "admin");
 
 // Computed properties for better UX
 const filteredTransactions = computed(() => {
@@ -742,6 +746,7 @@ onMounted(() => {
                             </Button>
                             <div class="flex items-center gap-3">
                                 <Button
+                                    v-if="!isAdmin"
                                     as="a"
                                     :href="
                                         route(
@@ -756,6 +761,7 @@ onMounted(() => {
                                     Edit
                                 </Button>
                                 <Button
+                                    v-if="!isAdmin"
                                     @click="deleteTransaction(transaction)"
                                     variant="ghost"
                                     size="sm"

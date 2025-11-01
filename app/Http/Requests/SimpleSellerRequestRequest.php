@@ -23,32 +23,29 @@ class SimpleSellerRequestRequest extends FormRequest
             // Property info
             'property_title' => 'required|string|max:255|min:5',
             'property_description' => 'required|string|max:2000|min:20',
-            'property_type' => 'required|string|in:residential_lot,agricultural_land,commercial_lot,industrial_lot,beachfront,mountain_view,rice_field,coconut_plantation,subdivision_lot,titled_land,tax_declared',
+            'property_type' => 'required|string|in:residential_lot,agricultural_land,commercial_lot,industrial_lot,beachfront,mountain_view,rice_field,coconut_plantation,subdivision_lot',
             'asking_price' => 'required|numeric|min:50000|max:999999999',
+            'lot_area' => 'required|numeric|min:1|max:999999',
             
             // Location
-            'city' => 'required|string|max:100|min:2',
-            'province' => 'required|string|max:100|min:2',
-            'postal_code' => 'nullable|string|max:10',
-            'lot_area' => 'nullable|numeric|min:1|max:999999',
+            'municipality' => 'required|string|max:100|min:2',
+            'barangay' => 'nullable|string|max:100',
             
-            // Features
-            'features' => 'nullable|array|max:20',
-            'features.*' => 'string|max:100|min:2',
+            // Title and Zoning
+            'title_type' => 'nullable|string|max:100',
+            'zoning_classification' => 'nullable|string|max:100',
             
-            // Files - SIMPLIFIED
+            // Utilities & Access
+            'road_access' => 'boolean',
+            'water_source' => 'boolean',
+            'electricity_available' => 'boolean',
+            'internet_available' => 'boolean',
+            
+            // Files
             'uploaded_images' => 'required|array|min:1|max:15',
             'uploaded_images.*' => 'required|image|mimes:jpeg,png,jpg|max:5120',
             
-            'property_documents' => 'nullable|array|max:10',
-            'property_documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
-            
-            'ownership_documents' => 'nullable|array|max:5',
-            'ownership_documents.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240',
-            
-            // Preferences
-            'availability' => 'nullable|string|max:500',
-            'urgency' => 'required|in:low,medium,high,immediate',
+            // Additional info
             'additional_notes' => 'nullable|string|max:1000',
             
             // Consent
@@ -71,9 +68,10 @@ class SimpleSellerRequestRequest extends FormRequest
             'address.required' => 'Property address is required.',
             'property_title.required' => 'Property title is required.',
             'property_description.required' => 'Property description is required.',
+            'property_type.required' => 'Property type is required.',
             'asking_price.required' => 'Asking price is required.',
-            'city.required' => 'City is required.',
-            'province.required' => 'Province is required.',
+            'lot_area.required' => 'Lot area is required.',
+            'municipality.required' => 'Municipality is required.',
             'uploaded_images.required' => 'At least one property image is required.',
             'uploaded_images.*.image' => 'Each file must be a valid image.',
             'uploaded_images.*.mimes' => 'Images must be in JPEG, PNG, or JPG format.',

@@ -1,25 +1,25 @@
 <script setup>
-import { computed } from 'vue';
-import { 
-    CheckCircleIcon, 
+import { computed } from "vue";
+import {
+    CheckCircleIcon,
     ExclamationTriangleIcon,
-    InformationCircleIcon 
-} from '@heroicons/vue/24/outline';
+    InformationCircleIcon,
+} from "@heroicons/vue/24/outline";
 
 const props = defineProps({
     value: [String, Number, Boolean, Array],
     rules: {
         type: Array,
-        default: () => []
+        default: () => [],
     },
     field: String,
     showHelp: {
         type: Boolean,
-        default: true
-    }
+        default: true,
+    },
 });
 
-const emit = defineEmits(['validation-result']);
+const emit = defineEmits(["validation-result"]);
 
 const validationResult = computed(() => {
     const errors = [];
@@ -27,55 +27,58 @@ const validationResult = computed(() => {
     const suggestions = [];
 
     // Run validation rules
-    props.rules.forEach(rule => {
+    props.rules.forEach((rule) => {
         const result = rule(props.value);
         if (result) {
-            if (result.type === 'error') {
+            if (result.type === "error") {
                 errors.push(result.message);
-            } else if (result.type === 'warning') {
+            } else if (result.type === "warning") {
                 warnings.push(result.message);
-            } else if (result.type === 'suggestion') {
+            } else if (result.type === "suggestion") {
                 suggestions.push(result.message);
             }
         }
     });
 
     // Emit validation result to parent
-    emit('validation-result', {
+    emit("validation-result", {
         field: props.field,
         errors,
         warnings,
         suggestions,
-        isValid: errors.length === 0
+        isValid: errors.length === 0,
     });
 
     return {
         errors,
         warnings,
         suggestions,
-        isValid: errors.length === 0
+        isValid: errors.length === 0,
     };
 });
 
 // Common validation rules
 const commonRules = {
     required: (value) => {
-        if (!value || (typeof value === 'string' && !value.trim())) {
-            return { type: 'error', message: 'This field is required' };
+        if (!value || (typeof value === "string" && !value.trim())) {
+            return { type: "error", message: "This field is required" };
         }
         return null;
     },
 
     email: (value) => {
         if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            return { type: 'error', message: 'Please enter a valid email address' };
+            return {
+                type: "error",
+                message: "Please enter a valid email address",
+            };
         }
         return null;
     },
 
     passwordStrength: (value) => {
         if (!value) return null;
-        
+
         const hasLower = /[a-z]/.test(value);
         const hasUpper = /[A-Z]/.test(value);
         const hasNumber = /\d/.test(value);
@@ -83,16 +86,16 @@ const commonRules = {
         const hasLength = value.length >= 12;
 
         const missing = [];
-        if (!hasLower) missing.push('lowercase letter');
-        if (!hasUpper) missing.push('uppercase letter');
-        if (!hasNumber) missing.push('number');
-        if (!hasSpecial) missing.push('special character');
-        if (!hasLength) missing.push('12+ characters');
+        if (!hasLower) missing.push("lowercase letter");
+        if (!hasUpper) missing.push("uppercase letter");
+        if (!hasNumber) missing.push("number");
+        if (!hasSpecial) missing.push("special character");
+        if (!hasLength) missing.push("12+ characters");
 
         if (missing.length > 0) {
-            return { 
-                type: 'warning', 
-                message: `Password needs: ${missing.join(', ')}` 
+            return {
+                type: "warning",
+                message: `Password needs: ${missing.join(", ")}`,
             };
         }
         return null;
@@ -100,12 +103,12 @@ const commonRules = {
 
     phoneFormat: (value) => {
         if (!value) return null;
-        
+
         const phoneRegex = /^(\+63|0)[0-9]{10}$/;
-        if (!phoneRegex.test(value.replace(/[\s-]/g, ''))) {
-            return { 
-                type: 'warning', 
-                message: 'Phone format: +639123456789 or 09123456789' 
+        if (!phoneRegex.test(value.replace(/[\s-]/g, ""))) {
+            return {
+                type: "warning",
+                message: "Phone format: +639123456789 or 09123456789",
             };
         }
         return null;
@@ -113,12 +116,13 @@ const commonRules = {
 
     prcIdFormat: (value) => {
         if (!value) return null;
-        
-        const prcRegex = /^PRC-[0-9]{6}$/i;
-        if (!prcRegex.test(value)) {
-            return { 
-                type: 'warning', 
-                message: 'PRC ID format: PRC-123456 (6 digits after PRC-)' 
+
+        // New rule: numeric-only PRC license number
+        const numericOnly = /^\d+$/;
+        if (!numericOnly.test(String(value).trim())) {
+            return {
+                type: "warning",
+                message: "PRC License number should contain digits only",
             };
         }
         return null;
@@ -126,22 +130,28 @@ const commonRules = {
 
     minLength: (min) => (value) => {
         if (value && value.length < min) {
-            return { type: 'error', message: `Minimum ${min} characters required` };
+            return {
+                type: "error",
+                message: `Minimum ${min} characters required`,
+            };
         }
         return null;
     },
 
     maxLength: (max) => (value) => {
         if (value && value.length > max) {
-            return { type: 'error', message: `Maximum ${max} characters allowed` };
+            return {
+                type: "error",
+                message: `Maximum ${max} characters allowed`,
+            };
         }
         return null;
-    }
+    },
 };
 
 // Expose common rules
 defineExpose({
-    commonRules
+    commonRules,
 });
 </script>
 
@@ -172,7 +182,10 @@ defineExpose({
         </div>
 
         <!-- Success Messages -->
-        <div v-if="validationResult.isValid && props.value && showHelp" class="flex items-center gap-2 text-sm text-green-600">
+        <div
+            v-if="validationResult.isValid && props.value && showHelp"
+            class="flex items-center gap-2 text-sm text-green-600"
+        >
             <CheckCircleIcon class="w-4 h-4 flex-shrink-0" />
             <span>Looks good!</span>
         </div>
@@ -190,5 +203,3 @@ defineExpose({
         </div>
     </div>
 </template>
-
-

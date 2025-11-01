@@ -161,6 +161,44 @@ const formatDate = (date) => {
     });
 };
 
+// Format and deduplicate address tokens to avoid repeats and empty commas
+const formatAddress = (property) => {
+    const buildTokensFromFields = () => {
+        const country = property.country || "Philippines";
+        return [
+            property.barangay && String(property.barangay).trim(),
+            property.municipality && String(property.municipality).trim(),
+            property.province && String(property.province).trim(),
+            country && String(country).trim(),
+        ].filter(Boolean);
+    };
+
+    let tokens = [];
+    if (property.full_address && typeof property.full_address === "string") {
+        tokens = property.full_address
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s && s !== "-");
+        // If parsing results in too few tokens, fall back to fields
+        if (tokens.length < 2) {
+            tokens = buildTokensFromFields();
+        }
+    } else {
+        tokens = buildTokensFromFields();
+    }
+
+    const seen = new Set();
+    const result = [];
+    for (const t of tokens) {
+        const key = t.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            result.push(t);
+        }
+    }
+    return result.join(", ");
+};
+
 // Image navigation
 const previousImage = () => {
     if (safeImages.value.length === 0) return;
@@ -525,9 +563,7 @@ onUnmounted(() => {
 
                     <div class="flex items-center text-neutral-600 mb-6">
                         <MapPinIcon class="w-5 h-5 mr-2" />
-                        <span>{{
-                            property.full_address || property.municipality
-                        }}</span>
+                        <span>{{ formatAddress(property) }}</span>
                     </div>
 
                     <div class="mb-6">

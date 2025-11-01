@@ -468,10 +468,20 @@ const canSubmit = computed(() => {
                             <ModernInput
                                 v-model="form.prc_id"
                                 type="text"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
                                 label="PRC License Number"
-                                placeholder="Enter your PRC license number"
+                                placeholder="Enter your PRC license number (numbers only)"
                                 :error="getFieldError('prc_id')"
-                                @input="clearValidationError('prc_id')"
+                                @input="
+                                    (e) => {
+                                        form.prc_id = e.target.value.replace(
+                                            /\D/g,
+                                            ''
+                                        );
+                                        clearValidationError('prc_id');
+                                    }
+                                "
                                 required
                             />
                         </div>

@@ -221,122 +221,156 @@ const getImageUrl = (image, isVirtualTour = false) => {
             </div>
         </section>
 
-        <!-- Top Performing Brokers Section -->
-        <section class="py-16 bg-white" v-if="topBrokers && topBrokers.length">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-10">
-                    <div
-                        class="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-3"
-                    >
-                        <TrophyIcon class="w-6 h-6 text-yellow-600" />
-                    </div>
-                    <h2 class="text-2xl md:text-3xl font-bold text-neutral-900">
-                        Top Performing Land Brokers
-                    </h2>
-                    <p class="text-neutral-600">
-                        Meet our most trusted PRC-licensed land brokers
-                    </p>
-                </div>
-
-                <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                >
-                    <div
-                        v-for="(broker, index) in topBrokers.slice(0, 3)"
-                        :key="broker.id"
-                        class="relative bg-white border border-neutral-200 rounded-xl shadow-sm hover:shadow-md transition p-6"
-                    >
-                        <div
-                            class="absolute top-4 right-4 px-2 py-0.5 text-xs font-semibold rounded-full text-white"
-                            :class="{
-                                'bg-yellow-500': index === 0,
-                                'bg-gray-400': index === 1,
-                                'bg-orange-500': index === 2,
-                            }"
+        <!-- Top Performing Broker Section -->
+        <section class="py-20 bg-white" v-if="topBrokers && topBrokers.length">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <div class="inline-block mb-3">
+                        <span
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-full text-yellow-800 font-medium"
                         >
-                            #{{ index + 1 }}
-                        </div>
+                            <TrophyIcon class="w-5 h-5" />
+                            Top Performer
+                        </span>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-neutral-900">
+                        This Month's Leading Broker
+                    </h2>
+                </div>
 
-                        <div class="flex flex-col items-center text-center">
-                            <div class="relative mb-4">
-                                <UserAvatar
-                                    v-if="broker"
-                                    :user="broker"
-                                    size="2xl"
-                                    bg-color="primary"
-                                    class="w-24 h-24 border-4 border-white shadow ring-2"
-                                    :class="{
-                                        'ring-yellow-400/40': index === 0,
-                                        'ring-gray-400/40': index === 1,
-                                        'ring-orange-400/40': index === 2,
-                                    }"
-                                />
-                                <div
-                                    class="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1.5 shadow border-2 border-white"
+                <!-- Unique Card Design -->
+                <div class="max-w-4xl mx-auto">
+                    <div
+                        class="bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl"
+                    >
+                        <div class="grid md:grid-cols-2 gap-0">
+                            <!-- Left: Photo Section -->
+                            <div
+                                class="relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 p-8 md:p-12 flex items-center justify-center"
+                            >
+                                <div class="relative">
+                                    <!-- Large Avatar -->
+                                    <div class="relative">
+                                        <UserAvatar
+                                            v-if="topBrokers[0]"
+                                            :user="topBrokers[0]"
+                                            size="2xl"
+                                            bg-color="primary"
+                                            class="w-56 h-56 md:w-64 md:h-64 border-8 border-white/20 shadow-2xl backdrop-blur"
+                                        />
+                                        <!-- Verified Badge -->
+                                        <div
+                                            class="absolute -bottom-4 -right-4 bg-white rounded-2xl p-3 shadow-xl"
+                                        >
+                                            <CheckBadgeIcon
+                                                class="w-8 h-8 text-green-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <!-- Decorative Elements -->
+                                    <div
+                                        class="absolute -top-6 -left-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"
+                                    ></div>
+                                    <div
+                                        class="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Info Section -->
+                            <div
+                                class="p-8 md:p-12 bg-white flex flex-col justify-center"
+                            >
+                                <!-- Rank Badge -->
+                                <div class="mb-6">
+                                    <span
+                                        class="inline-block px-6 py-2 bg-yellow-400 text-neutral-900 font-bold rounded-full text-sm tracking-wide"
+                                    >
+                                        #1 RANKED
+                                    </span>
+                                </div>
+
+                                <!-- Name & Firm -->
+                                <h3
+                                    class="text-3xl font-bold text-neutral-900 mb-2"
                                 >
-                                    <CheckBadgeIcon
-                                        class="w-4 h-4 text-white"
+                                    {{ topBrokers[0].name }}
+                                </h3>
+                                <p
+                                    class="text-neutral-600 mb-8 text-lg"
+                                    v-if="topBrokers[0].brokerage_firm_name"
+                                >
+                                    {{ topBrokers[0].brokerage_firm_name }}
+                                </p>
+
+                                <!-- Stats -->
+                                <div class="grid grid-cols-2 gap-4 mb-8">
+                                    <div
+                                        class="border-l-4 border-yellow-400 pl-4"
+                                    >
+                                        <div
+                                            class="text-4xl font-bold text-neutral-900 mb-1"
+                                        >
+                                            {{
+                                                topBrokers[0]
+                                                    .finalized_transactions_count ||
+                                                topBrokers[0].total_sales ||
+                                                0
+                                            }}
+                                        </div>
+                                        <div
+                                            class="text-sm text-neutral-600 font-medium"
+                                        >
+                                            Land Sales
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="border-l-4 border-primary-500 pl-4"
+                                    >
+                                        <div
+                                            class="text-4xl font-bold text-neutral-900 mb-1"
+                                        >
+                                            {{
+                                                topBrokers[0].active_listings ||
+                                                0
+                                            }}
+                                        </div>
+                                        <div
+                                            class="text-sm text-neutral-600 font-medium"
+                                        >
+                                            Active Listings
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CTA -->
+                                <Link
+                                    :href="
+                                        route('brokers.show', topBrokers[0].id)
+                                    "
+                                    class="inline-flex items-center justify-center gap-3 px-8 py-4 bg-neutral-900 text-white font-semibold rounded-xl hover:bg-neutral-800 transition-all group"
+                                >
+                                    <span>View Full Profile</span>
+                                    <ArrowRightIcon
+                                        class="w-5 h-5 group-hover:translate-x-1 transition-transform"
                                     />
-                                </div>
+                                </Link>
                             </div>
-
-                            <h3 class="text-lg font-bold text-neutral-900">
-                                {{ broker.name }}
-                            </h3>
-                            <p
-                                class="text-sm text-neutral-600 mb-4"
-                                v-if="broker.brokerage_firm_name"
-                            >
-                                {{ broker.brokerage_firm_name }}
-                            </p>
-
-                            <div class="w-full space-y-2 mb-5">
-                                <div
-                                    class="flex items-center justify-between p-2 bg-neutral-50 rounded-md border border-neutral-200"
-                                >
-                                    <span class="text-xs text-neutral-600"
-                                        >Land Sales</span
-                                    >
-                                    <span
-                                        class="text-base font-semibold text-neutral-900"
-                                        >{{
-                                            broker.finalized_transactions_count ||
-                                            broker.total_sales ||
-                                            0
-                                        }}</span
-                                    >
-                                </div>
-                                <div
-                                    class="flex items-center justify-between p-2 bg-neutral-50 rounded-md border border-neutral-200"
-                                >
-                                    <span class="text-xs text-neutral-600"
-                                        >Active Land Listings</span
-                                    >
-                                    <span
-                                        class="text-base font-semibold text-neutral-900"
-                                        >{{ broker.active_listings || 0 }}</span
-                                    >
-                                </div>
-                            </div>
-
-                            <Link
-                                :href="route('brokers.show', broker.id)"
-                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 text-neutral-800 hover:bg-neutral-50 transition"
-                            >
-                                <span>View Profile</span>
-                                <ArrowRightIcon class="w-4 h-4" />
-                            </Link>
                         </div>
                     </div>
                 </div>
 
-                <div class="text-center mt-8">
+                <!-- Link to All Brokers -->
+                <div class="text-center mt-12">
                     <Link
                         :href="route('brokers.index')"
-                        class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
+                        class="inline-flex items-center gap-2 text-neutral-600 hover:text-neutral-900 font-medium text-base group"
                     >
-                        View All Brokers
-                        <ArrowRightIcon class="w-5 h-5" />
+                        <span>Explore all our brokers</span>
+                        <ArrowRightIcon
+                            class="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                        />
                     </Link>
                 </div>
             </div>

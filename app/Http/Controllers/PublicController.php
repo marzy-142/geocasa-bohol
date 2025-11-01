@@ -10,12 +10,20 @@ use App\Models\Transaction;
 use App\Models\Conversation;
 use App\Notifications\NewInquiryNotification;
 use App\Events\NewInquiryReceived;
+use App\Services\BrokerRankingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PublicController extends Controller
 {
+    protected $brokerRankingService;
+
+    public function __construct(BrokerRankingService $brokerRankingService)
+    {
+        $this->brokerRankingService = $brokerRankingService;
+    }
+
     /**
      * Display the home page with featured properties and stats
      */
@@ -37,8 +45,8 @@ class PublicController extends Controller
             'successRate' => 95 // This could be calculated based on actual transactions
         ];
 
-        // Get top performing brokers for leaderboard display
-        $topBrokers = $this->getTopBrokersForHome();
+        // Get top performing brokers using centralized service
+        $topBrokers = $this->brokerRankingService->getTopPerformingBrokers(1);
 
         return Inertia::render('Home', [
             'featuredProperties' => $featuredProperties,
@@ -264,43 +272,5 @@ class PublicController extends Controller
         ]);
 
         return back()->with('success', 'Inquiry data stored successfully');
-    }
-
-    /**
-     * Get top brokers for home page display
-     */
-    private function getTopBrokersForHome($limit = 5)
-    {
-        return User::where('role', 'broker')
-            ->where('is_approved', true)
-            ->withCount([
-                'transactions as total_sales' => function ($query) {
-                    $query->where('status', 'finalized');
-                },
-                'properties as active_listings' => function ($query) {
-                    $query->where('status', 'available');
-                }
-            ])
-            ->withSum([
-                'transactions as total_sales_value' => function ($query) {
-                    $query->where('status', 'finalized');
-                }
-            ], DB::raw('COALESCE(final_price, offered_price)'))
-            ->get()
-            ->map(function ($broker) {
-                $broker->total_sales_value = $broker->total_sales_value ?? 0;
-                // Map backend fields to frontend expected fields
-                $broker->total_properties = $broker->total_sales; // Properties sold
-                $broker->total_transactions = $broker->total_sales; // Happy clients (same as properties sold)
-                
-                // Add avatar fields for UserAvatar component
-                $broker->avatar_url = $broker->avatar ? asset('storage/' . $broker->avatar) . '?v=' . time() : null;
-                
-                return $broker;
-            })
-            // Rank by total sales count (not commission)
-            ->sortByDesc('total_sales')
-            ->take($limit)
-            ->values();
     }
 }
