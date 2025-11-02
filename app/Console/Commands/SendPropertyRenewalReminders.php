@@ -34,7 +34,7 @@ class SendPropertyRenewalReminders extends Command
         $isDryRun = $this->option('dry-run');
         
         // Get properties that need reminders
-        $properties = Property::needsReminder()->with('broker')->get();
+        $properties = Property::query()->needsReminder()->with('broker')->get();
         
         if ($properties->isEmpty()) {
             $this->info('No properties need renewal reminders at this time.');

@@ -94,7 +94,7 @@ const getStatusColor = (status) => {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <Link
                 :href="route('client.properties')"
-                class="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-blue-500 hover:shadow-lg transition-all duration-300 group"
+                class="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-blue-500 hover:shadow-lg transition-all duration-300 group h-full"
             >
                 <MagnifyingGlassIcon
                     class="w-10 h-10 mb-4 text-gray-700 group-hover:text-blue-600 transition-colors"
@@ -107,7 +107,7 @@ const getStatusColor = (status) => {
 
             <Link
                 :href="route('client.properties.saved')"
-                class="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-blue-500 hover:shadow-lg transition-all duration-300 group"
+                class="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-blue-500 hover:shadow-lg transition-all duration-300 group h-full"
             >
                 <HeartIcon
                     class="w-10 h-10 mb-4 text-gray-700 group-hover:text-blue-600 transition-colors"
@@ -120,7 +120,7 @@ const getStatusColor = (status) => {
 
             <Link
                 :href="route('client.seller-requests.create')"
-                class="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-blue-500 hover:shadow-lg transition-all duration-300 group"
+                class="bg-white border-2 border-gray-200 rounded-xl p-8 hover:border-blue-500 hover:shadow-lg transition-all duration-300 group h-full"
             >
                 <PlusIcon
                     class="w-10 h-10 mb-4 text-gray-700 group-hover:text-blue-600 transition-colors"
@@ -136,7 +136,7 @@ const getStatusColor = (status) => {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <!-- Active Inquiries -->
             <div
-                class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-all duration-300"
+                class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-all duration-300 flex flex-col h-full"
             >
                 <div class="flex items-center justify-between mb-5">
                     <div
@@ -159,7 +159,7 @@ const getStatusColor = (status) => {
                 <p class="text-sm text-gray-600 mb-4">Active Inquiries</p>
                 <Link
                     :href="route('client.inquiries.index')"
-                    class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium group"
+                    class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium group mt-auto"
                 >
                     View all
                     <ArrowRightIcon
@@ -170,7 +170,7 @@ const getStatusColor = (status) => {
 
             <!-- Saved Properties -->
             <div
-                class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-all duration-300"
+                class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-all duration-300 flex flex-col h-full"
             >
                 <div class="flex items-center justify-between mb-5">
                     <div
@@ -185,7 +185,7 @@ const getStatusColor = (status) => {
                 <p class="text-sm text-gray-600 mb-4">Saved Properties</p>
                 <Link
                     :href="route('client.properties.saved')"
-                    class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium group"
+                    class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium group mt-auto"
                 >
                     View favorites
                     <ArrowRightIcon
@@ -196,7 +196,7 @@ const getStatusColor = (status) => {
 
             <!-- Listing Requests -->
             <div
-                class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-all duration-300"
+                class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-all duration-300 flex flex-col h-full"
             >
                 <div class="flex items-center justify-between mb-5">
                     <div
@@ -219,7 +219,7 @@ const getStatusColor = (status) => {
                 <p class="text-sm text-gray-600 mb-4">Listing Requests</p>
                 <Link
                     :href="route('client.seller-requests.index')"
-                    class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium group"
+                    class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium group mt-auto"
                 >
                     View requests
                     <ArrowRightIcon
@@ -231,7 +231,7 @@ const getStatusColor = (status) => {
             <!-- Broker Card -->
             <div
                 v-if="broker"
-                class="bg-gray-900 text-white rounded-xl p-6 hover:shadow-md transition-all duration-300"
+                class="bg-gray-900 text-white rounded-xl p-6 hover:shadow-md transition-all duration-300 flex flex-col h-full"
             >
                 <div class="flex items-center gap-3 mb-5">
                     <div
@@ -246,7 +246,7 @@ const getStatusColor = (status) => {
                 </div>
                 <Link
                     :href="route('client.broker')"
-                    class="inline-flex items-center gap-2 text-sm text-white hover:text-gray-300 font-medium group"
+                    class="inline-flex items-center gap-2 text-sm text-white hover:text-gray-300 font-medium group mt-auto"
                 >
                     Contact broker
                     <ArrowRightIcon
@@ -297,7 +297,7 @@ const getStatusColor = (status) => {
                             :href="
                                 route('client.properties.show', property.slug)
                             "
-                            class="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:border-blue-200 hover:shadow-2xl transition-all duration-300 group"
+                            class="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden hover:border-blue-200 hover:shadow-2xl transition-all duration-300 group h-full flex flex-col"
                         >
                             <div
                                 class="relative aspect-video overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100"
@@ -306,6 +306,7 @@ const getStatusColor = (status) => {
                                     v-if="property.main_image"
                                     :src="property.main_image"
                                     :alt="property.title"
+                                    loading="lazy"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 />
                                 <div
@@ -332,7 +333,7 @@ const getStatusColor = (status) => {
                                 ></div>
                             </div>
 
-                            <div class="p-5">
+                            <div class="p-5 flex-1 flex flex-col">
                                 <h3
                                     class="font-bold text-lg text-gray-900 mb-3 line-clamp-1 group-hover:text-blue-600 transition-colors"
                                 >
@@ -352,6 +353,7 @@ const getStatusColor = (status) => {
 
                                 <div
                                     class="flex items-center justify-between pt-4 border-t border-gray-100"
+                                    :class="'mt-auto'"
                                 >
                                     <div>
                                         <div

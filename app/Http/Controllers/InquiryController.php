@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Events\InquiryStatusUpdated;
 use App\Events\NewInquiryReceived;
+use App\Events\TransactionCreated;
 use App\Mail\InquiryResponseMail;
 
 class InquiryController extends Controller
@@ -160,10 +161,10 @@ class InquiryController extends Controller
         }
         
         $inquiry->load([
-            'property:id,title,slug,address,municipality,total_price,broker_id',
+            'property:id,title,slug,address,municipality,type,total_price,broker_id,images',
             'property.broker:id,name,email',
             'client:id,name,email,phone',
-            'transaction:id,status,transaction_number',
+            'transaction:id,inquiry_id,status,transaction_number,created_at,updated_at,inquiry_date,first_contact_date,viewing_date,offer_date,acceptance_date,contract_date,closing_date,finalized_date,offered_price,final_price',
             'conversation:id,type,last_message_at'
         ]);
         
@@ -253,6 +254,14 @@ class InquiryController extends Controller
         // Set timestamps based on status changes
         if ($validated['status'] === 'contacted' && $inquiry->status !== 'contacted') {
             $validated['contacted_at'] = now();
+        }
+        
+        // 🆕 AUTO-SET scheduled_at when status changes to 'scheduled'
+        if ($validated['status'] === 'scheduled' && $inquiry->status !== 'scheduled') {
+            // Auto-set to now if not manually provided
+            if (empty($validated['scheduled_at'])) {
+                $validated['scheduled_at'] = now();
+            }
         }
         
         if ($validated['broker_response'] && !$inquiry->responded_at) {
@@ -416,7 +425,12 @@ class InquiryController extends Controller
             $updateData['contacted_at'] = now();
         }
 
-        if (!empty($validated['scheduled_at'])) {
+        // 🆕 AUTO-SET scheduled_at when status changes to 'scheduled'
+        if ($validated['status'] === 'scheduled' && $inquiry->status !== 'scheduled') {
+            // Only set if not already set or if manually provided
+            $updateData['scheduled_at'] = $validated['scheduled_at'] ?? now();
+        } elseif (!empty($validated['scheduled_at'])) {
+            // Manual override: broker can still provide a specific date
             $updateData['scheduled_at'] = $validated['scheduled_at'];
         }
 
@@ -441,6 +455,20 @@ class InquiryController extends Controller
         }
 
         $inquiry->update($updateData);
+
+        // 🆕 AUTO-CREATE TRANSACTION IF INQUIRY WON
+        $autoCreatedTransaction = null;
+        if ($validated['status'] === 'completed' && 
+            isset($validated['completion_outcome']) && 
+            $validated['completion_outcome'] === 'won') {
+            
+            try {
+                $autoCreatedTransaction = $this->autoCreateTransaction($inquiry, $user);
+            } catch (\Exception $e) {
+                \Log::error('Auto-transaction creation failed: ' . $e->getMessage());
+                // Don't fail the whole request, just log the error
+            }
+        }
 
         // Create or get conversation for ongoing communication
         $conversation = $inquiry->conversation;
@@ -480,6 +508,92 @@ class InquiryController extends Controller
 
         return redirect()->route('inquiries.show', $inquiry)
             ->with('success', 'Response sent successfully and client has been notified via email.');
+    }
+
+    /**
+     * Quick status update (no message required)
+     */
+    public function updateStatus(Request $request, Inquiry $inquiry)
+    {
+        $user = Auth::user();
+
+        // Authorization check
+        if (!in_array($user->role, ['admin', 'broker'])) {
+            abort(403);
+        }
+
+        if ($user->role === 'broker' && $inquiry->assigned_broker_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:new,contacted,scheduled,completed,closed',
+        ]);
+
+        $previousStatus = $inquiry->status;
+
+        // Auto-set timestamps based on status
+        $updateData = ['status' => $validated['status']];
+
+        if ($validated['status'] === 'contacted' && $inquiry->status !== 'contacted') {
+            $updateData['contacted_at'] = now();
+        }
+
+        if ($validated['status'] === 'scheduled' && $inquiry->status !== 'scheduled') {
+            $updateData['scheduled_at'] = $inquiry->scheduled_at ?? now();
+        }
+
+        $inquiry->update($updateData);
+
+        // Broadcast status change
+        broadcast(new InquiryStatusUpdated(
+            $inquiry->fresh(['property']),
+            $previousStatus,
+            $inquiry->status,
+            $user->name
+        ));
+
+        return redirect()->back()
+            ->with('success', 'Status updated successfully.');
+    }
+
+    /**
+     * Mark inquiry as won and auto-create transaction
+     */
+    public function markAsWon(Inquiry $inquiry)
+    {
+        $user = Auth::user();
+
+        // Authorization check
+        if (!in_array($user->role, ['admin', 'broker'])) {
+            abort(403);
+        }
+
+        if ($user->role === 'broker' && $inquiry->assigned_broker_id !== $user->id) {
+            abort(403);
+        }
+
+        // Check if already has transaction
+        if ($inquiry->transaction) {
+            return redirect()->route('transactions.show', $inquiry->transaction->id)
+                ->with('info', 'This inquiry already has a transaction.');
+        }
+
+        $previousStatus = $inquiry->status;
+
+        // Mark as completed with won outcome
+        $inquiry->update([
+            'status' => 'completed',
+            'completion_outcome' => 'won',
+            'responded_at' => $inquiry->responded_at ?? now(),
+            'contacted_at' => $inquiry->contacted_at ?? now(),
+        ]);
+
+        // Auto-create transaction (will be handled by InquiryObserver)
+        // The observer watches for completion_outcome === 'won' and creates transaction
+
+        return redirect()->route('inquiries.show', $inquiry)
+            ->with('success', 'Inquiry marked as won! Transaction has been created automatically.');
     }
 
     /**
@@ -829,5 +943,124 @@ class InquiryController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Automatically create transaction from successful inquiry
+     */
+    protected function autoCreateTransaction(Inquiry $inquiry, User $user)
+    {
+        // Check if transaction already exists
+        if ($inquiry->transaction) {
+            return $inquiry->transaction;
+        }
+
+        DB::beginTransaction();
+        try {
+            // Generate transaction number
+            $transactionNumber = 'TXN-' . strtoupper(Str::random(8));
+
+            // Create transaction with inquiry data
+            $transaction = Transaction::create([
+                // Link to inquiry
+                'inquiry_id' => $inquiry->id,
+                
+                // Auto-populated from inquiry
+                'property_id' => $inquiry->property_id,
+                'client_id' => $inquiry->client_id,
+                'broker_id' => $inquiry->property->broker_id,
+                
+                // Transaction details
+                'transaction_number' => $transactionNumber,
+                'transaction_type' => $inquiry->inquiry_type === 'purchase' ? 'sale' : 'sale',
+                
+                // Start at "offer_made" stage (skipping inquiry stages)
+                'status' => 'offer_made',
+                
+                // Transfer inquiry timeline data
+                'inquiry_date' => $inquiry->created_at,
+                'first_contact_date' => $inquiry->contacted_at,
+                'viewing_date' => $inquiry->scheduled_at,
+                'offer_date' => now(), // Transaction creation date = offer date
+                
+                // Initial offer (can be updated later)
+                'offered_price' => $inquiry->property->total_price,
+                
+                // Transfer notes
+                'broker_notes' => $this->buildInitialTransactionNotes($inquiry),
+            ]);
+
+            // Update inquiry status to reflect transaction
+            $inquiry->update([
+                'status' => 'in_transaction',
+            ]);
+
+            // Link conversation to transaction
+            if ($inquiry->conversation) {
+                $inquiry->conversation->update([
+                    'transaction_id' => $transaction->id,
+                ]);
+                
+                // Add system message to conversation
+                Message::create([
+                    'conversation_id' => $inquiry->conversation->id,
+                    'sender_id' => null,
+                    'content' => "🎉 Great news! Transaction #{$transaction->transaction_number} has been created automatically. You're now in the offer stage. {$user->name} will guide you through the next steps.",
+                    'is_system_message' => true,
+                ]);
+            }
+
+            // Broadcast transaction created event
+            broadcast(new TransactionCreated($transaction));
+
+            DB::commit();
+
+            \Log::info("Auto-created transaction #{$transaction->transaction_number} from inquiry #{$inquiry->id}");
+
+            return $transaction;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Auto-transaction creation failed: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Build initial transaction notes from inquiry data
+     */
+    protected function buildInitialTransactionNotes(Inquiry $inquiry): string
+    {
+        $notes = "=== AUTO-CREATED FROM INQUIRY #{$inquiry->id} ===\n\n";
+        
+        $notes .= "Client Interest:\n";
+        $notes .= "Type: " . ucfirst($inquiry->inquiry_type) . "\n";
+        $notes .= "Initial Message: {$inquiry->message}\n\n";
+        
+        if ($inquiry->broker_notes) {
+            $notes .= "Broker Notes (from inquiry):\n";
+            $notes .= $inquiry->broker_notes . "\n\n";
+        }
+        
+        if ($inquiry->completion_notes) {
+            $notes .= "Completion Notes:\n";
+            $notes .= $inquiry->completion_notes . "\n\n";
+        }
+        
+        if ($inquiry->scheduled_at) {
+            $notes .= "Viewing scheduled/conducted: " . $inquiry->scheduled_at->format('M d, Y g:i A') . "\n\n";
+        }
+        
+        $notes .= "Timeline:\n";
+        $notes .= "- Inquiry received: " . $inquiry->created_at->format('M d, Y g:i A') . "\n";
+        if ($inquiry->contacted_at) {
+            $notes .= "- First contact: " . $inquiry->contacted_at->format('M d, Y g:i A') . "\n";
+        }
+        if ($inquiry->responded_at) {
+            $notes .= "- Broker responded: " . $inquiry->responded_at->format('M d, Y g:i A') . "\n";
+        }
+        $notes .= "- Marked as won: " . now()->format('M d, Y g:i A') . "\n";
+        
+        return $notes;
     }
 }

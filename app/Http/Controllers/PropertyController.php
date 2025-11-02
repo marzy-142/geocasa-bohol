@@ -67,7 +67,8 @@ class PropertyController extends Controller
                 $query->where('is_featured', true);
             });
     
-        $properties = $query->latest()->paginate(12)->withQueryString();
+    // Preserve query string consistently across Laravel versions
+    $properties = $query->latest()->paginate(12)->appends($request->query());
         
         // Get cached filter options and statistics
         $filterOptions = $this->optimizationService->getPropertyFilterOptions();
@@ -355,9 +356,10 @@ class PropertyController extends Controller
             'validated_virtual_tour_images' => $validated['virtual_tour_images'] ?? 'not_set'
         ]);
 
-        // Keep brokers from hiding properties from public inadvertently
+        // Preserve status for brokers to avoid breaking transaction-driven visibility.
+        // Brokers edit content/media, while lifecycle statuses are managed by transactions/observers.
         if (auth()->user()->role === 'broker') {
-            $validated['status'] = 'available';
+            $validated['status'] = $property->status; // keep existing status
         }
 
         $property->update($validated);
@@ -373,18 +375,24 @@ class PropertyController extends Controller
     {
         $this->authorize('delete', $property);
     
-        // Delete associated files
+        // Delete associated files (handle both array and JSON string safely)
         if ($property->images) {
-            $images = is_array($property->images) ? $property->images : json_decode($property->images, true);
+            $images = $property->images;
+            if (is_string($images)) {
+                $images = json_decode($images, true) ?: [];
+            }
             if (is_array($images)) {
                 foreach ($images as $image) {
                     Storage::disk('public')->delete($image);
                 }
             }
         }
-    
+
         if ($property->documents) {
-            $documents = is_array($property->documents) ? $property->documents : json_decode($property->documents, true);
+            $documents = $property->documents;
+            if (is_string($documents)) {
+                $documents = json_decode($documents, true) ?: [];
+            }
             if (is_array($documents)) {
                 foreach ($documents as $document) {
                     Storage::disk('public')->delete($document);
@@ -498,118 +506,6 @@ class PropertyController extends Controller
         ]);
     }
 
-    /**
-     * Show property renewals dashboard for broker
-     */
-    public function renewals()
-    {
-        $broker = Auth::user();
-        
-        // Get properties expiring in the next 30 days
-        $expiringProperties = Property::where('broker_id', $broker->id)
-            ->where('expiry_date', '>', now())
-            ->where('expiry_date', '<=', now()->addDays(30))
-            ->where('status', '!=', 'pending_renewal')
-            ->with(['inquiries' => function($query) {
-                $query->where('created_at', '>=', now()->subDays(30));
-            }])
-            ->orderBy('expiry_date', 'asc')
-            ->get()
-            ->map(function($property) {
-                $property->expires_at_human = $property->expiry_date->diffForHumans();
-                $property->days_until_expiry = now()->diffInDays($property->expiry_date, false);
-                return $property;
-            });
-        
-        // Get expired properties
-        $expiredProperties = Property::where('broker_id', $broker->id)
-            ->where('expiry_date', '<', now())
-            ->where('status', '!=', 'pending_renewal')
-            ->with(['inquiries' => function($query) {
-                $query->where('created_at', '>=', now()->subDays(30));
-            }])
-            ->orderBy('expiry_date', 'desc')
-            ->get()
-            ->map(function($property) {
-                $property->expires_at_human = $property->expiry_date->diffForHumans();
-                $property->days_until_expiry = now()->diffInDays($property->expiry_date, false);
-                return $property;
-            });
-        
-        // Get recently renewed properties (last 30 days)
-        $renewedProperties = Property::where('broker_id', $broker->id)
-            ->where('renewed_at', '>=', now()->subDays(30))
-            ->with(['inquiries' => function($query) {
-                $query->where('created_at', '>=', now()->subDays(30));
-            }])
-            ->orderBy('renewed_at', 'desc')
-            ->get()
-            ->map(function($property) {
-                $property->expires_at_human = $property->expiry_date->diffForHumans();
-                $property->renewed_at_human = $property->renewed_at->diffForHumans();
-                return $property;
-            });
-        
-        // Calculate stats
-        $stats = [
-            'expiring_soon' => $expiringProperties->count(),
-            'expired' => $expiredProperties->count(),
-            'renewed' => $renewedProperties->count(),
-            'total_properties' => Property::where('broker_id', $broker->id)->count()
-        ];
-        
-        return Inertia::render('Broker/PropertyRenewals', [
-            'expiring_properties' => $expiringProperties,
-            'expired_properties' => $expiredProperties,
-            'renewed_properties' => $renewedProperties,
-            'stats' => $stats
-        ]);
-    }
-
-    /**
-     * Renew a property listing
-     */
-    public function renew(Property $property)
-    {
-        $broker = Auth::user();
-        
-        // Ensure the property belongs to the authenticated broker
-        if ($property->broker_id !== $broker->id) {
-            abort(403, 'Unauthorized access to property.');
-        }
-        
-        try {
-            // Set new expiry date (90 days from now)
-            $property->setExpiryDate(90);
-            
-            // Update status to active if it was expired or pending renewal
-            if (in_array($property->status, ['expired', 'pending_renewal'])) {
-                $property->status = 'active';
-            }
-            
-            // Set renewed timestamp
-            $property->renewed_at = now();
-            $property->save();
-            
-            \Log::info('Property renewed successfully', [
-                'property_id' => $property->id,
-                'broker_id' => $broker->id,
-                'new_expiry_date' => $property->expiry_date,
-                'renewed_at' => $property->renewed_at
-            ]);
-            
-            return redirect()->back()->with('success', 'Property renewed successfully! Your listing is now active for another 90 days.');
-            
-        } catch (\Exception $e) {
-            \Log::error('Property renewal failed', [
-                'property_id' => $property->id,
-                'broker_id' => $broker->id,
-                'error' => $e->getMessage()
-            ]);
-            
-            return redirect()->back()->with('error', 'Failed to renew property. Please try again.');
-        }
-    }
 
     /**
      * Toggle featured status of a property

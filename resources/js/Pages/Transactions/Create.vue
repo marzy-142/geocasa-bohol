@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from "vue";
-import { useForm, usePage } from "@inertiajs/vue3";
+import { useForm, usePage, Link } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import NotificationService from "@/Services/NotificationService";
 import {
@@ -11,6 +11,7 @@ import {
     DocumentTextIcon,
     ArrowRightIcon,
     CheckCircleIcon,
+    InformationCircleIcon,
 } from "@heroicons/vue/24/outline";
 
 const props = defineProps({
@@ -23,24 +24,22 @@ const props = defineProps({
 
 const page = usePage();
 
-const form = useForm({
-    property_id: "",
-    client_id: "",
-    inquiry_id: "",
-    broker_id: "",
-    offered_price: "",
-    inquiry_date: "",
-    broker_notes: "",
-    status: "inquiry",
-});
+// Determine if we're converting from an inquiry
+const isFromInquiry = computed(() => !!props.selectedInquiry);
 
-// Auto-populate form if inquiry is selected
-if (props.selectedInquiry) {
-    form.property_id = props.selectedInquiry.property_id;
-    form.client_id = props.selectedInquiry.client_id;
-    form.inquiry_id = props.selectedInquiry.id;
-    form.inquiry_date = new Date().toISOString().split("T")[0];
-}
+// Smart form initialization
+const form = useForm({
+    property_id: props.selectedInquiry?.property_id || "",
+    client_id: props.selectedInquiry?.client_id || "",
+    inquiry_id: props.selectedInquiry?.id || "",
+    broker_id: page.props.auth.user.id, // Always use current user
+    offered_price: props.selectedInquiry?.property?.total_price || "",
+    inquiry_date:
+        props.selectedInquiry?.created_at?.split("T")[0] ||
+        new Date().toISOString().split("T")[0],
+    broker_notes: "",
+    status: "offer_made",
+});
 
 const submit = () => {
     form.post(route("transactions.store"), {
@@ -122,7 +121,7 @@ const formatDate = (date) => {
                     <div
                         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
                     >
-                            <div>
+                        <div>
                             <div class="flex items-center gap-4 mb-3">
                                 <div
                                     class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm"
@@ -272,175 +271,120 @@ const formatDate = (date) => {
                 </div>
 
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
-                    <div class="p-6 sm:px-20">
+                    <div class="p-8">
+                        <!-- Information Banner -->
+                        <div
+                            class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"
+                        >
+                            <div class="flex items-start gap-3">
+                                <InformationCircleIcon
+                                    class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                                />
+                                <div class="text-sm text-blue-900">
+                                    <p v-if="isFromInquiry" class="font-medium">
+                                        All details have been automatically
+                                        filled from the inquiry.
+                                    </p>
+                                    <p v-else class="font-medium">
+                                        Please provide the transaction details
+                                        below.
+                                    </p>
+                                    <p class="mt-1 text-blue-700">
+                                        Review the information and adjust the
+                                        offer price if needed.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         <form @submit.prevent="submit" class="space-y-6">
-                            <!-- Property Selection -->
-                            <div>
-                                <label
-                                    for="property_id"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Property</label
-                                >
-                                <select
-                                    v-model="form.property_id"
-                                    id="property_id"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    required
-                                >
-                                    <option value="">Select a property</option>
-                                    <option
-                                        v-for="property in properties"
-                                        :key="property.id"
-                                        :value="property.id"
+                            <!-- Only show selectors if NOT from inquiry -->
+                            <div v-if="!isFromInquiry" class="space-y-6">
+                                <!-- Property Selection -->
+                                <div>
+                                    <label
+                                        for="property_id"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
                                     >
-                                        {{ property.title }} -
-                                        {{ formatPrice(property.price) }}
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.property_id"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.property_id }}
-                                </div>
-                            </div>
-
-                            <!-- Property Details (if selected) -->
-                            <div
-                                v-if="selectedProperty"
-                                class="bg-gray-50 p-4 rounded-lg"
-                            >
-                                <h4 class="font-medium text-gray-900">
-                                    Property Details
-                                </h4>
-                                <div
-                                    class="mt-2 grid grid-cols-2 gap-4 text-sm"
-                                >
-                                    <div>
-                                        <span class="font-medium">Type:</span>
-                                        {{ selectedProperty.type }}
-                                    </div>
-                                    <div>
-                                        <span class="font-medium"
-                                            >Location:</span
+                                        Property
+                                        <span class="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        v-model="form.property_id"
+                                        id="property_id"
+                                        class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a property
+                                        </option>
+                                        <option
+                                            v-for="property in properties"
+                                            :key="property.id"
+                                            :value="property.id"
                                         >
-                                        {{ selectedProperty.location }}
+                                            {{ property.title }} -
+                                            {{ formatPrice(property.price) }}
+                                        </option>
+                                    </select>
+                                    <div
+                                        v-if="form.errors.property_id"
+                                        class="text-red-600 text-sm mt-1"
+                                    >
+                                        {{ form.errors.property_id }}
                                     </div>
-                                    <div>
-                                        <span class="font-medium"
-                                            >Listed Price:</span
+                                </div>
+
+                                <!-- Client Selection -->
+                                <div>
+                                    <label
+                                        for="client_id"
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                    >
+                                        Client
+                                        <span class="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        v-model="form.client_id"
+                                        id="client_id"
+                                        class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a client
+                                        </option>
+                                        <option
+                                            v-for="client in clients"
+                                            :key="client.id"
+                                            :value="client.id"
                                         >
-                                        {{
-                                            formatPrice(selectedProperty.price)
-                                        }}
+                                            {{ client.name }} -
+                                            {{ client.email }}
+                                        </option>
+                                    </select>
+                                    <div
+                                        v-if="form.errors.client_id"
+                                        class="text-red-600 text-sm mt-1"
+                                    >
+                                        {{ form.errors.client_id }}
                                     </div>
-                                    <div>
-                                        <span class="font-medium">Status:</span>
-                                        {{ selectedProperty.status }}
-                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Client Selection -->
-                            <div>
-                                <label
-                                    for="client_id"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Client</label
-                                >
-                                <select
-                                    v-model="form.client_id"
-                                    id="client_id"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    required
-                                >
-                                    <option value="">Select a client</option>
-                                    <option
-                                        v-for="client in clients"
-                                        :key="client.id"
-                                        :value="client.id"
-                                    >
-                                        {{ client.name }} - {{ client.email }}
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.client_id"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.client_id }}
-                                </div>
-                            </div>
-
-                            <!-- Inquiry Selection (Optional) -->
-                            <div>
-                                <label
-                                    for="inquiry_id"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Related Inquiry (Optional)</label
-                                >
-                                <select
-                                    v-model="form.inquiry_id"
-                                    id="inquiry_id"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">No related inquiry</option>
-                                    <option
-                                        v-for="inquiry in inquiries"
-                                        :key="inquiry.id"
-                                        :value="inquiry.id"
-                                    >
-                                        {{ inquiry.name }} -
-                                        {{ inquiry.inquiry_type }} ({{
-                                            inquiry.created_at
-                                        }})
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.inquiry_id"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.inquiry_id }}
-                                </div>
-                            </div>
-
-                            <!-- Broker Assignment -->
-                            <div>
-                                <label
-                                    for="broker_id"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Assigned Broker</label
-                                >
-                                <select
-                                    v-model="form.broker_id"
-                                    id="broker_id"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    required
-                                >
-                                    <option value="">Select a broker</option>
-                                    <option
-                                        v-for="broker in brokers"
-                                        :key="broker.id"
-                                        :value="broker.id"
-                                    >
-                                        {{ broker.name }} - {{ broker.email }}
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.broker_id"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.broker_id }}
-                                </div>
-                            </div>
-
-                            <!-- Offered Price -->
+                            <!-- Offered Price (Always shown, editable) -->
                             <div>
                                 <label
                                     for="offered_price"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Offered Price</label
+                                    class="block text-sm font-medium text-gray-700 mb-2"
                                 >
-                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    {{
+                                        isFromInquiry
+                                            ? "Initial Offer Price"
+                                            : "Offered Price"
+                                    }}
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative rounded-lg shadow-sm">
                                     <div
                                         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                                     >
@@ -452,12 +396,24 @@ const formatDate = (date) => {
                                         v-model="form.offered_price"
                                         type="number"
                                         id="offered_price"
-                                        step="0.01"
-                                        class="pl-7 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="0.00"
+                                        step="1000"
+                                        min="0"
+                                        class="pl-8 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="0"
                                         required
                                     />
                                 </div>
+                                <p
+                                    v-if="isFromInquiry && selectedProperty"
+                                    class="mt-1.5 text-xs text-gray-500"
+                                >
+                                    Listed price:
+                                    {{
+                                        formatPrice(
+                                            selectedProperty.total_price
+                                        )
+                                    }}
+                                </p>
                                 <div
                                     v-if="form.errors.offered_price"
                                     class="text-red-600 text-sm mt-1"
@@ -466,75 +422,80 @@ const formatDate = (date) => {
                                 </div>
                             </div>
 
-                            <!-- Initial Status -->
+                            <!-- Broker Notes (Optional) -->
                             <div>
                                 <label
-                                    for="status"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Initial Status</label
+                                    for="broker_notes"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
                                 >
-                                <select
-                                    v-model="form.status"
-                                    id="status"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="pending">Pending</option>
-                                    <option value="negotiating">
-                                        Negotiating
-                                    </option>
-                                    <option value="under_review">
-                                        Under Review
-                                    </option>
-                                </select>
-                                <div
-                                    v-if="form.errors.status"
-                                    class="text-red-600 text-sm mt-1"
-                                >
-                                    {{ form.errors.status }}
-                                </div>
-                            </div>
-
-                            <!-- Notes -->
-                            <div>
-                                <label
-                                    for="notes"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Initial Notes</label
-                                >
+                                    Initial Notes
+                                    <span class="text-gray-400 text-xs"
+                                        >(Optional)</span
+                                    >
+                                </label>
                                 <textarea
-                                    v-model="form.notes"
-                                    id="notes"
+                                    v-model="form.broker_notes"
+                                    id="broker_notes"
                                     rows="4"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    placeholder="Add any initial notes about this transaction..."
+                                    class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Add any initial notes about this transaction, negotiation points, or special considerations..."
                                 ></textarea>
+                                <p class="mt-1.5 text-xs text-gray-500">
+                                    These notes are private and only visible to
+                                    you and admins.
+                                </p>
                                 <div
-                                    v-if="form.errors.notes"
+                                    v-if="form.errors.broker_notes"
                                     class="text-red-600 text-sm mt-1"
                                 >
-                                    {{ form.errors.notes }}
+                                    {{ form.errors.broker_notes }}
                                 </div>
                             </div>
 
-                            <!-- Submit Button -->
+                            <!-- Submit Buttons -->
                             <div
-                                class="flex items-center justify-end space-x-4"
+                                class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200"
                             >
-                                <a
+                                <Link
                                     :href="route('transactions.index')"
-                                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                                    class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                                 >
                                     Cancel
-                                </a>
+                                </Link>
                                 <button
                                     type="submit"
                                     :disabled="form.processing"
-                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                                    class="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
                                 >
-                                    <span v-if="form.processing"
-                                        >Creating...</span
+                                    <CheckCircleIcon
+                                        v-if="!form.processing"
+                                        class="w-5 h-5"
+                                    />
+                                    <svg
+                                        v-else
+                                        class="w-5 h-5 animate-spin"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
                                     >
-                                    <span v-else>Create Transaction</span>
+                                        <circle
+                                            class="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            stroke-width="4"
+                                        ></circle>
+                                        <path
+                                            class="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                        ></path>
+                                    </svg>
+                                    <span>{{
+                                        form.processing
+                                            ? "Creating Transaction..."
+                                            : "Create Transaction"
+                                    }}</span>
                                 </button>
                             </div>
                         </form>

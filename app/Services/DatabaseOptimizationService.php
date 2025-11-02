@@ -32,10 +32,10 @@ class DatabaseOptimizationService
                 'activeInquiries' => DB::table('inquiries')
                     ->join('properties', 'inquiries.property_id', '=', 'properties.id')
                     ->where('properties.broker_id', $brokerId)
-                    ->where('inquiries.status', 'pending')
+                    ->whereIn('inquiries.status', ['new', 'contacted', 'scheduled'])
                     ->count(),
                 'completedTransactions' => Transaction::where('broker_id', $brokerId)
-                    ->where('status', 'completed')
+                    ->where('status', 'finalized')
                     ->count(),
             ];
         });

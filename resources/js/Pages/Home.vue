@@ -118,29 +118,24 @@ const getImageUrl = (image, isVirtualTour = false) => {
 
     let clean = image.trim();
     if (!clean) return placeholderImg;
-    if (clean.startsWith("http://") || clean.startsWith("https://"))
+
+    // If already a full URL or data URI, return as-is
+    if (
+        clean.startsWith("http://") ||
+        clean.startsWith("https://") ||
+        clean.startsWith("data:")
+    ) {
         return clean;
-    if (clean.startsWith("/storage/")) return clean;
+    }
 
-    // normalize to avoid double slashes
+    // If already starts with /storage/, return as-is
+    if (clean.startsWith("/storage/")) {
+        return clean;
+    }
+
+    // For any other case, prepend /storage/ (legacy support)
     clean = clean.replace(/^\/+/, "");
-
-    if (
-        clean.includes("properties/virtual-tours/") ||
-        clean.includes("properties/images/")
-    ) {
-        return `/storage/${clean}`;
-    }
-
-    // default to images folder; most main_image filenames are bare names
-    if (
-        isVirtualTour ||
-        clean.toLowerCase().includes("virtual") ||
-        clean.toLowerCase().includes("tour")
-    ) {
-        return `/storage/properties/virtual-tours/${clean}`;
-    }
-    return `/storage/properties/images/${clean}`;
+    return `/storage/${clean}`;
 };
 </script>
 

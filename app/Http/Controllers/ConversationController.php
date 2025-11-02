@@ -121,6 +121,13 @@ class ConversationController extends Controller
         $message->load('sender');
 
         // Broadcast the message
+        \Log::info('Broadcasting MessageSent event', [
+            'message_id' => $message->id,
+            'conversation_id' => $conversation->id,
+            'sender_id' => $user->id,
+            'content_preview' => substr($message->content, 0, 50)
+        ]);
+        
         broadcast(new MessageSent($message))->toOthers();
 
         // Send notifications to other participants

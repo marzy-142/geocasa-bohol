@@ -5,46 +5,62 @@
         <!-- Broker Header -->
         <div class="card card-elevated p-8 mb-8">
             <div
-                class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+                class="relative rounded-2xl p-6 bg-gradient-to-r from-primary-50 to-white border border-primary-100"
             >
-                <div>
-                    <div class="flex items-center gap-4 mb-3">
-                        <div
-                            class="w-16 h-16 bg-accent-50 rounded-xl flex items-center justify-center border border-accent-200"
-                        >
-                            <BuildingOfficeIcon
-                                class="w-8 h-8 text-accent-600"
-                            />
-                        </div>
-                        <div>
-                            <h1 class="text-3xl font-bold text-neutral-900">
-                                Broker Dashboard
-                            </h1>
-                            <div class="flex items-center gap-3">
-                                <span
-                                    class="w-3 h-3 bg-accent-500 rounded-full animate-pulse-subtle"
-                                ></span>
-                                <span
-                                    class="text-neutral-600 text-base font-medium"
-                                    >Broker Active & Available</span
-                                >
-                            </div>
+                <div
+                    class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+                >
+                    <!-- Greeting + Summary (no profile photo) -->
+                    <div>
+                        <h1 class="text-3xl font-bold text-neutral-900">
+                            Hello, {{ brokerName }}!
+                        </h1>
+                        <p class="text-neutral-600 mt-1">
+                            Here’s your dashboard overview
+                        </p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <span
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-primary-100 text-sm text-neutral-700"
+                            >
+                                <BuildingOfficeIcon
+                                    class="w-4 h-4 text-primary-600"
+                                />
+                                <strong>{{
+                                    stats?.activeProperties || 0
+                                }}</strong>
+                                Active listings
+                            </span>
+                            <span
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-accent-100 text-sm text-neutral-700"
+                            >
+                                <DocumentTextIcon
+                                    class="w-4 h-4 text-accent-600"
+                                />
+                                <strong>{{
+                                    stats?.activeInquiries || 0
+                                }}</strong>
+                                Active inquiries
+                            </span>
+                            <span
+                                v-if="
+                                    stats?.completedTransactions &&
+                                    stats.completedTransactions > 0
+                                "
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-green-100 text-sm text-neutral-700"
+                            >
+                                <CurrencyDollarIcon
+                                    class="w-4 h-4 text-green-600"
+                                />
+                                <strong>{{
+                                    stats.completedTransactions
+                                }}</strong>
+                                Deals completed
+                            </span>
                         </div>
                     </div>
-                    <p class="text-neutral-600 text-lg">
-                        Manage your property portfolio and client relationships
-                        with professional tools
-                    </p>
-                </div>
-                <div class="flex items-center gap-3">
+
+                    <!-- Primary Action (kept minimal for clean layout) -->
                     <div class="flex items-center gap-3">
-                        <Link
-                            :href="route('transactions.create')"
-                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                        >
-                            <PlusIcon class="w-4 h-4" />
-                            New Transaction
-                        </Link>
                         <Link
                             :href="route('broker.properties.create')"
                             class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
@@ -125,7 +141,7 @@
                 Quick Actions
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="card card-hover p-6">
+                <div class="card card-hover p-6 flex flex-col h-full">
                     <div class="flex items-center gap-4 mb-4">
                         <div
                             class="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center"
@@ -142,7 +158,7 @@
                         Add, edit, or view your property listings
                     </p>
                     <button
-                        class="btn-primary-sm w-full"
+                        class="btn-primary-sm w-full mt-auto"
                         @click="
                             $inertia.visit(route('broker.properties.index'))
                         "
@@ -151,7 +167,7 @@
                     </button>
                 </div>
 
-                <div class="card card-hover p-6">
+                <div class="card card-hover p-6 flex flex-col h-full">
                     <div class="flex items-center gap-4 mb-4">
                         <div
                             class="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center"
@@ -166,10 +182,32 @@
                         Track and manage your client relationships
                     </p>
                     <button
-                        class="btn-primary-sm w-full"
+                        class="btn-primary-sm w-full mt-auto"
                         @click="$inertia.visit(route('clients.index'))"
                     >
                         View Clients
+                    </button>
+                </div>
+
+                <div class="card card-hover p-6 flex flex-col h-full">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div
+                            class="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center"
+                        >
+                            <DocumentTextIcon class="w-6 h-6 text-orange-600" />
+                        </div>
+                        <h3 class="font-semibold text-neutral-900">
+                            Inquiries
+                        </h3>
+                    </div>
+                    <p class="text-neutral-600 text-sm mb-4">
+                        Review and respond to buyer inquiries
+                    </p>
+                    <button
+                        class="btn-primary-sm w-full mt-auto"
+                        @click="$inertia.visit(route('inquiries.index'))"
+                    >
+                        View Inquiries
                     </button>
                 </div>
             </div>
@@ -193,13 +231,14 @@
                     </div>
                 </template>
                 <div v-if="recentInquiries?.length > 0" class="space-y-4">
-                    <div
+                    <Link
                         v-for="inquiry in recentInquiries.slice(0, 5)"
                         :key="inquiry.id"
-                        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        :href="route('inquiries.show', inquiry.id)"
+                        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                         <div class="flex-1">
-                            <p class="font-medium text-gray-900">
+                            <p class="font-medium text-gray-900 line-clamp-1">
                                 {{
                                     inquiry.property?.title ||
                                     "Property Inquiry"
@@ -213,7 +252,7 @@
                         <StandardBadge :status="inquiry.status">
                             {{ formatStatus(inquiry.status) }}
                         </StandardBadge>
-                    </div>
+                    </Link>
                 </div>
                 <div v-else class="text-center py-8">
                     <DocumentTextIcon
@@ -239,13 +278,14 @@
                     </div>
                 </template>
                 <div v-if="recentTransactions?.length > 0" class="space-y-4">
-                    <div
+                    <Link
                         v-for="transaction in recentTransactions.slice(0, 5)"
                         :key="transaction.id"
-                        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        :href="route('transactions.show', transaction.id)"
+                        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                         <div class="flex-1">
-                            <p class="font-medium text-gray-900">
+                            <p class="font-medium text-gray-900 line-clamp-1">
                                 {{
                                     transaction.property?.title ||
                                     "Property Sale"
@@ -268,7 +308,7 @@
                                 {{ formatStatus(transaction.status) }}
                             </p>
                         </div>
-                    </div>
+                    </Link>
                 </div>
                 <div v-else class="text-center py-8">
                     <CurrencyDollarIcon
@@ -316,6 +356,7 @@ const props = defineProps({
 });
 
 const page = usePage();
+const brokerName = computed(() => page.props?.auth?.user?.name || "Broker");
 
 // Performance monitoring
 const performanceMeasurement = ref(null);

@@ -1,540 +1,173 @@
 <template>
     <ModernDashboardLayout>
-        <!-- Header Section -->
-        <div
-            class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg mb-6"
-        >
-            <div class="flex justify-between items-start">
-                <div>
-                    <h1 class="text-3xl font-bold mb-2">
-                        {{ property.title }}
-                    </h1>
-                    <p class="text-blue-100 mb-4">
-                        📍 {{ property.full_address }}
-                    </p>
-                    <div class="flex items-center space-x-4">
-                        <span
-                            class="px-3 py-1 rounded-full text-sm font-medium text-white"
-                            :class="getStatusColor(property.status)"
-                        >
-                            {{ formatStatus(property.status) }}
-                        </span>
-                        <span
-                            class="px-3 py-1 bg-white/20 text-white rounded-full text-sm font-medium"
-                        >
-                            {{ formatType(property.type) }}
-                        </span>
-                        <span
-                            v-if="property.is_featured"
-                            class="px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-sm font-medium"
-                        >
-                            ⭐ Featured
-                        </span>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <div class="text-3xl font-bold mb-1">
+        <div class="max-w-5xl mx-auto p-4">
+            <!-- Title -->
+            <div class="bg-white p-6 rounded mb-4">
+                <h1 class="text-3xl font-bold mb-2">{{ property.title }}</h1>
+                <p class="text-gray-600 mb-3">{{ property.full_address }}</p>
+                <div class="flex gap-3 items-center">
+                    <div class="text-2xl font-bold text-blue-600">
                         {{ property.formatted_total_price }}
                     </div>
-                    <div class="text-blue-100">
-                        {{ property.formatted_price_per_sqm }}/sqm
-                    </div>
+                    <span
+                        :class="getStatusColor(property.status)"
+                        class="px-3 py-1 rounded text-sm text-white"
+                    >
+                        {{ formatStatus(property.status) }}
+                    </span>
                 </div>
             </div>
-        </div>
 
-        <!-- Image Gallery -->
-        <div
-            v-if="property.images && property.images.length > 0"
-            class="bg-white rounded-lg shadow-sm p-6 mb-6"
-        >
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                Property Images
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <img
-                    v-for="(image, index) in property.images"
-                    :key="index"
-                    :src="property.images[0]"
-                    :alt="property.title"
-                    class="w-full h-48 object-cover"
-                />
-            </div>
-        </div>
-
-        <!-- Property Details -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Left Column -->
-                <div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                        Property Details
-                    </h3>
-                    <div class="space-y-3">
-                        <div
-                            class="flex justify-between py-2 border-b border-gray-100"
-                        >
-                            <span class="text-gray-600">Lot Area:</span>
-                            <span class="font-medium">{{
-                                property.formatted_area
-                            }}</span>
-                        </div>
-                        <div
-                            class="flex justify-between py-2 border-b border-gray-100"
-                        >
-                            <span class="text-gray-600">Municipality:</span>
-                            <span class="font-medium">{{
-                                property.municipality
-                            }}</span>
-                        </div>
-                        <div
-                            class="flex justify-between py-2 border-b border-gray-100"
-                        >
-                            <span class="text-gray-600">Barangay:</span>
-                            <span class="font-medium">{{
-                                property.barangay
-                            }}</span>
-                        </div>
-                        <div
-                            v-if="property.title_type"
-                            class="flex justify-between py-2 border-b border-gray-100"
-                        >
-                            <span class="text-gray-600">Title Type:</span>
-                            <span class="font-medium">{{
-                                formatTitleType(property.title_type)
-                            }}</span>
-                        </div>
-                        <div
-                            v-if="property.title_number"
-                            class="flex justify-between py-2 border-b border-gray-100"
-                        >
-                            <span class="text-gray-600">Title Number:</span>
-                            <span class="font-medium">{{
-                                property.title_number
-                            }}</span>
-                        </div>
-                        <div
-                            v-if="property.zoning_classification"
-                            class="flex justify-between py-2 border-b border-gray-100"
-                        >
-                            <span class="text-gray-600">Zoning:</span>
-                            <span class="font-medium">{{
-                                property.zoning_classification
-                            }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Utilities & Access -->
-                    <h4 class="text-lg font-semibold text-gray-900 mt-6 mb-3">
-                        Utilities & Access
-                    </h4>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div
-                            class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg"
-                        >
-                            <span
-                                :class="
-                                    property.road_access
-                                        ? 'text-green-500'
-                                        : 'text-red-500'
-                                "
-                            >
-                                {{ property.road_access ? "✅" : "❌" }}
-                            </span>
-                            <span class="text-sm font-medium">Road Access</span>
-                        </div>
-                        <div
-                            class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg"
-                        >
-                            <span
-                                :class="
-                                    property.electricity_available
-                                        ? 'text-green-500'
-                                        : 'text-red-500'
-                                "
-                            >
-                                {{
-                                    property.electricity_available ? "✅" : "❌"
-                                }}
-                            </span>
-                            <span class="text-sm font-medium">Electricity</span>
-                        </div>
-                        <div
-                            class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg"
-                        >
-                            <span
-                                :class="
-                                    property.water_source
-                                        ? 'text-green-500'
-                                        : 'text-red-500'
-                                "
-                            >
-                                {{ property.water_source ? "✅" : "❌" }}
-                            </span>
-                            <span class="text-sm font-medium"
-                                >Water Source</span
-                            >
-                        </div>
-                        <div
-                            class="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg"
-                        >
-                            <span
-                                :class="
-                                    property.internet_available
-                                        ? 'text-green-500'
-                                        : 'text-red-500'
-                                "
-                            >
-                                {{ property.internet_available ? "✅" : "❌" }}
-                            </span>
-                            <span class="text-sm font-medium">Internet</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column -->
-                <div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                        Description
-                    </h3>
-                    <p
-                        class="text-gray-700 leading-relaxed mb-6 p-4 bg-gray-50 rounded-lg"
-                    >
-                        {{ property.description }}
-                    </p>
-
-                    <!-- Nearby Landmarks -->
-                    <div
-                        v-if="
-                            property.nearby_landmarks &&
-                            property.nearby_landmarks.length > 0
-                        "
-                    >
-                        <h4 class="text-lg font-semibold text-gray-900 mb-3">
-                            Nearby Landmarks
-                        </h4>
-                        <ul
-                            class="list-disc list-inside space-y-1 text-gray-700 p-4 bg-gray-50 rounded-lg"
-                        >
-                            <li
-                                v-for="landmark in property.nearby_landmarks"
-                                :key="landmark"
-                            >
-                                {{ landmark }}
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Google Maps Link -->
-                    <div v-if="property.google_maps_link" class="mt-6">
-                        <a
-                            :href="property.google_maps_link"
-                            target="_blank"
-                            class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
-                        >
-                            🗺️ View on Google Maps
-                        </a>
-                    </div>
-
-                    <!-- Broker Information -->
-                    <div
-                        class="mt-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100"
-                    >
-                        <h4 class="text-lg font-semibold text-gray-900 mb-2">
-                            Listed by
-                        </h4>
-                        <div class="flex items-center space-x-3">
-                            <UserAvatar
-                                v-if="property.broker"
-                                :user="property.broker"
-                                size="lg"
-                                bg-color="purple"
-                            />
-                            <div>
-                                <p class="font-medium text-gray-900">
-                                    {{ property.broker.name }}
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    Licensed Broker
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div class="flex flex-wrap gap-4">
-                <button
-                    class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
-                >
-                    📞 Contact Broker
-                </button>
-                <button
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
-                >
-                    💬 Send Inquiry
-                </button>
-                <button
-                    class="border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
-                >
-                    ❤️ Save Property
-                </button>
-            </div>
-
-            <!-- Admin/Broker Actions -->
+            <!-- Photos -->
             <div
-                v-if="canEditProperty"
-                class="mt-6 pt-6 border-t border-gray-200"
+                v-if="property.images && property.images.length > 0"
+                class="bg-white p-6 rounded mb-4"
             >
-                <div class="flex flex-wrap gap-4">
-                    <Link
-                        :href="route('broker.properties.edit', property.slug)"
-                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
-                    >
-                        ✏️ Edit Property
-                    </Link>
-                    <button
-                        @click="toggleFeatured"
-                        :class="
-                            property.is_featured
-                                ? 'bg-gray-500 hover:bg-gray-600'
-                                : 'bg-yellow-500 hover:bg-yellow-600'
-                        "
-                        class="text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
-                    >
-                        {{
-                            property.is_featured
-                                ? "⭐ Remove Featured"
-                                : "⭐ Make Featured"
-                        }}
-                    </button>
-                    <button
-                        @click="deleteProperty"
-                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
-                    >
-                        🗑️ Delete Property
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bohol Inspiration Section -->
-        <div
-            class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border border-green-100"
-        >
-            <div class="text-center">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                    🏝️ Discover Bohol's Beauty
-                </h3>
-                <p class="text-gray-600 text-sm">
-                    Experience the tropical paradise of Bohol with its pristine
-                    beaches, chocolate hills, and rich cultural heritage. Your
-                    dream property awaits in this island paradise.
-                </p>
-            </div>
-        </div>
-        <!-- Enhanced Image Gallery -->
-        <div class="bg-white rounded-xl shadow-soft overflow-hidden mb-8">
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-neutral-900 mb-6">
-                    Property Images
-                </h2>
-                <div
-                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                >
+                <h2 class="font-semibold mb-3">Photos</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                     <div
                         v-for="(image, index) in property.images"
                         :key="index"
-                        class="relative group cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                        @click="openImageModal(image)"
+                        class="relative"
                     >
                         <img
-                            :src="asset('storage/' + image)"
-                            :alt="`Property image ${index + 1}`"
-                            class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
+                            :src="getImageUrl(image)"
+                            :alt="`Photo ${index + 1}`"
+                            class="w-full h-40 object-cover rounded"
+                            @error="handleImageError($event, image)"
                         />
-                        <div
-                            class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center"
-                        >
-                            <svg
-                                class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                ></path>
-                            </svg>
-                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- GIS Mapping Section -->
-        <div
-            v-if="property.coordinates_lat && property.coordinates_lng"
-            class="bg-white rounded-xl shadow-soft overflow-hidden mb-8"
-        >
-            <div class="p-6">
-                <h2
-                    class="text-2xl font-bold text-neutral-900 mb-6 flex items-center"
-                >
-                    <svg
-                        class="w-6 h-6 mr-3 text-primary-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        ></path>
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        ></path>
-                    </svg>
-                    Property Location
-                </h2>
 
-                <!-- Interactive Map -->
-                <div class="mb-6">
-                    <div
-                        ref="mapContainer"
-                        class="w-full h-96 rounded-lg border border-gray-200 overflow-hidden"
-                    ></div>
-                </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- Main Content -->
+                <div class="lg:col-span-2 space-y-4">
+                    <!-- Description -->
+                    <div class="bg-white p-6 rounded">
+                        <h2 class="font-semibold mb-2">Description</h2>
+                        <p class="text-gray-700">{{ property.description }}</p>
+                    </div>
 
-                <!-- Location Information & Actions -->
-                <div class="space-y-4">
-                    <!-- Location Description -->
-                    <div
-                        class="p-4 bg-blue-50 rounded-lg border border-blue-200"
-                    >
-                        <div class="flex items-start gap-3">
-                            <div
-                                class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                            >
-                                <svg
-                                    class="w-4 h-4 text-blue-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    ></path>
-                                </svg>
+                    <!-- Details -->
+                    <div class="bg-white p-6 rounded">
+                        <h2 class="font-semibold mb-3">Details</h2>
+                        <div class="space-y-2 text-sm">
+                            <div>
+                                <span class="text-gray-500">Area:</span>
+                                <strong>{{ property.formatted_area }}</strong>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-blue-900 mb-1">
-                                    Easy Location Guide
-                                </h4>
-                                <p
-                                    class="text-sm text-blue-800 leading-relaxed"
+                                <span class="text-gray-500">Location:</span>
+                                <strong
+                                    >{{ property.municipality }},
+                                    {{ property.barangay }}</strong
                                 >
-                                    This property is located in
-                                    <strong>{{
-                                        property.municipality || "Bohol"
-                                    }}</strong
-                                    >. Use the map below or click the button to
-                                    get directions from your current location.
-                                    The map will show you exactly where to go
-                                    with step-by-step directions.
-                                </p>
+                            </div>
+                            <div v-if="property.title_type">
+                                <span class="text-gray-500">Title:</span>
+                                <strong>{{
+                                    formatTitleType(property.title_type)
+                                }}</strong>
+                            </div>
+                        </div>
+
+                        <div v-if="hasUtilities" class="mt-4 pt-4 border-t">
+                            <div class="flex gap-2 flex-wrap">
+                                <span
+                                    v-if="property.road_access"
+                                    class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs"
+                                    >✓ Road</span
+                                >
+                                <span
+                                    v-if="property.electricity_available"
+                                    class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs"
+                                    >✓ Electric</span
+                                >
+                                <span
+                                    v-if="property.water_source"
+                                    class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs"
+                                    >✓ Water</span
+                                >
+                                <span
+                                    v-if="property.internet_available"
+                                    class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs"
+                                    >✓ Internet</span
+                                >
                             </div>
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Map -->
+                    <div
+                        v-if="
+                            property.coordinates_lat && property.coordinates_lng
+                        "
+                        class="bg-white p-6 rounded"
+                    >
+                        <h2 class="font-semibold mb-3">Location</h2>
+                        <div
+                            ref="mapContainer"
+                            class="w-full h-48 bg-gray-200 rounded mb-3"
+                        ></div>
                         <a
                             :href="`https://www.google.com/maps/dir/?api=1&destination=${property.coordinates_lat},${property.coordinates_lng}`"
                             target="_blank"
-                            class="inline-flex items-center justify-center px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                            class="inline-block px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                         >
-                            <svg
-                                class="w-5 h-5 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"
-                                ></path>
-                            </svg>
                             Get Directions
                         </a>
-                        <a
-                            :href="`https://www.google.com/maps?q=${property.coordinates_lat},${property.coordinates_lng}`"
-                            target="_blank"
-                            class="inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                        >
-                            <svg
-                                class="w-5 h-5 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                ></path>
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                ></path>
-                            </svg>
-                            View on Map
-                        </a>
                     </div>
+                </div>
 
-                    <!-- Helpful Tips -->
-                    <div
-                        class="p-3 bg-green-50 rounded-lg border border-green-200"
-                    >
-                        <div class="flex items-start gap-2">
-                            <svg
-                                class="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                                ></path>
-                            </svg>
-                            <div class="text-sm text-green-800">
-                                <strong>Tip:</strong> Click "Get Directions" to
-                                open Google Maps with turn-by-turn directions
-                                from your current location. The app will guide
-                                you step-by-step to reach this property.
+                <!-- Sidebar -->
+                <div>
+                    <div class="bg-white p-6 rounded sticky top-4">
+                        <h3 class="font-semibold mb-3">Broker</h3>
+                        <div class="mb-4">
+                            <div class="font-medium">
+                                {{ property.broker?.name }}
                             </div>
+                            <div class="text-sm text-gray-500">
+                                Licensed Broker
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <button
+                                class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Send Inquiry
+                            </button>
+                            <button
+                                class="w-full py-2 border rounded hover:bg-gray-50"
+                            >
+                                Call
+                            </button>
+                        </div>
+
+                        <!-- Admin -->
+                        <div
+                            v-if="canEditProperty"
+                            class="mt-4 pt-4 border-t space-y-2"
+                        >
+                            <Link
+                                :href="
+                                    route(
+                                        'broker.properties.edit',
+                                        property.slug
+                                    )
+                                "
+                                class="block w-full py-2 bg-yellow-500 text-white text-center rounded hover:bg-yellow-600"
+                            >
+                                Edit
+                            </Link>
+                            <button
+                                @click="deleteProperty"
+                                class="w-full py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -545,13 +178,11 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import { Head, Link, useForm, usePage } from "@inertiajs/vue3";
+import { Link, usePage, router } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
-import UserAvatar from "@/Components/UserAvatar.vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix for default markers in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl:
@@ -567,10 +198,8 @@ const props = defineProps({
     canEdit: Boolean,
 });
 
-// Map functionality
 const mapContainer = ref(null);
 const map = ref(null);
-
 const page = usePage();
 
 const canEditProperty = computed(() => {
@@ -583,6 +212,37 @@ const canEditProperty = computed(() => {
     );
 });
 
+const hasUtilities = computed(() => {
+    return (
+        props.property.road_access ||
+        props.property.electricity_available ||
+        props.property.water_source ||
+        props.property.internet_available
+    );
+});
+
+const getImageUrl = (image) => {
+    // Debug: log the image value
+    console.log("Image path:", image);
+
+    // Try different path formats
+    if (image.startsWith("http")) {
+        return image;
+    } else if (image.startsWith("properties/")) {
+        return `/storage/${image}`;
+    } else if (image.startsWith("/storage/")) {
+        return image;
+    } else {
+        return `/storage/properties/images/${image}`;
+    }
+};
+
+const handleImageError = (event, image) => {
+    console.error("Image failed to load:", image);
+    console.error("Attempted URL:", event.target.src);
+    event.target.src = "/images/placeholder.jpg";
+};
+
 const getStatusColor = (status) => {
     const colors = {
         available: "bg-green-500",
@@ -592,10 +252,6 @@ const getStatusColor = (status) => {
         off_market: "bg-gray-500",
     };
     return colors[status] || "bg-gray-500";
-};
-
-const formatType = (type) => {
-    return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
 const formatStatus = (status) => {
@@ -611,25 +267,12 @@ const formatTitleType = (titleType) => {
     return types[titleType] || titleType;
 };
 
-const asset = (path) => {
-    return `/${path}`;
-};
-
-const toggleFeatured = () => {
-    router.post(route("properties.toggle-featured", props.property.slug));
-};
-
 const deleteProperty = () => {
     if (confirm("Are you sure you want to delete this property?")) {
-        router.delete(route("properties.destroy", props.property.slug));
+        router.delete(route("broker.properties.destroy", props.property.slug));
     }
 };
 
-const openImageModal = (image) => {
-    window.open(image, "_blank");
-};
-
-// Initialize map when component mounts
 const initMap = () => {
     if (
         props.property.coordinates_lat &&
@@ -640,11 +283,9 @@ const initMap = () => {
         const lng = parseFloat(props.property.coordinates_lng);
 
         map.value = L.map(mapContainer.value).setView([lat, lng], 15);
-
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: "© OpenStreetMap contributors",
         }).addTo(map.value);
-
         L.marker([lat, lng])
             .addTo(map.value)
             .bindPopup(
@@ -655,6 +296,8 @@ const initMap = () => {
 };
 
 onMounted(() => {
+    console.log("Property data:", props.property);
+    console.log("Images array:", props.property.images);
     initMap();
 });
 

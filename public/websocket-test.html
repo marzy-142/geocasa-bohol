@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="csrf-token" content="" />
+        <title>WebSocket Test</title>
+        <script src="https://cdn.jsdelivr.net/npm/pusher-js@8.4.0-rc2/dist/web/pusher.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+            .status {
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 5px;
+            }
+            .connected {
+                background: #d4edda;
+                color: #155724;
+            }
+            .disconnected {
+                background: #f8d7da;
+                color: #721c24;
+            }
+            .log {
+                background: white;
+                padding: 15px;
+                margin: 10px 0;
+                border-radius: 5px;
+                max-height: 400px;
+                overflow-y: auto;
+                font-family: monospace;
+                font-size: 12px;
+            }
+            .log-entry {
+                padding: 5px 0;
+                border-bottom: 1px solid #eee;
+            }
+            .timestamp {
+                color: #666;
+                margin-right: 10px;
+            }
+            input,
+            button {
+                padding: 10px;
+                margin: 5px;
+                font-size: 14px;
+            }
+            input {
+                width: 100px;
+            }
+            button {
+                background: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>🔌 Real-Time Messaging WebSocket Test</h1>
+
+        <div id="status" class="status disconnected">❌ Not Connected</div>
+
+        <div>
+            <label
+                >Conversation ID:
+                <input type="number" id="conversationId" value="5"
+            /></label>
+            <button onclick="connectToConversation()">Connect</button>
+            <button onclick="disconnect()">Disconnect</button>
+        </div>
+
+        <h3>📡 Connection Log:</h3>
+        <div id="log" class="log"></div>
+
+        <script>
+            let echo = null;
+            let conversationChannel = null;
+
+            function log(message, type = "info") {
+                const logDiv = document.getElementById("log");
+                const entry = document.createElement("div");
+                entry.className = "log-entry";
+
+                const timestamp = new Date().toLocaleTimeString();
+                const color =
+                    type === "error"
+                        ? "#dc3545"
+                        : type === "success"
+                        ? "#28a745"
+                        : "#007bff";
+
+                entry.innerHTML = `<span class="timestamp">[${timestamp}]</span><span style="color: ${color}">${message}</span>`;
+                logDiv.insertBefore(entry, logDiv.firstChild);
+            }
+
+            function updateStatus(connected) {
+                const statusDiv = document.getElementById("status");
+                if (connected) {
+                    statusDiv.className = "status connected";
+                    statusDiv.textContent = "✅ Connected to WebSocket";
+                } else {
+                    statusDiv.className = "status disconnected";
+                    statusDiv.textContent = "❌ Not Connected";
+                }
+            }
+
+            function initializeEcho() {
+                log("Initializing Laravel Echo...");
+
+                // Get CSRF token from meta tag or cookie
+                let csrfToken = document.querySelector(
+                    'meta[name="csrf-token"]'
+                )?.content;
+                if (!csrfToken) {
+                    // Try to get from cookie
+                    const cookies = document.cookie.split(";");
+                    for (let cookie of cookies) {
+                        const [name, value] = cookie.trim().split("=");
+                        if (name === "XSRF-TOKEN") {
+                            csrfToken = decodeURIComponent(value);
+                            break;
+                        }
+                    }
+                }
+
+                echo = new Echo({
+                    broadcaster: "reverb",
+                    key: "reverb_key",
+                    wsHost: "127.0.0.1",
+                    wsPort: 8080,
+                    wssPort: 8080,
+                    forceTLS: false,
+                    enabledTransports: ["ws", "wss"],
+                    authEndpoint: "http://localhost/broadcasting/auth",
+                    auth: {
+                        headers: {
+                            "X-CSRF-TOKEN": csrfToken,
+                            Accept: "application/json",
+                        },
+                    },
+                });
+
+                // Connection event handlers
+                echo.connector.pusher.connection.bind("connected", () => {
+                    log("✅ WebSocket connected successfully!", "success");
+                    updateStatus(true);
+                });
+
+                echo.connector.pusher.connection.bind("error", (error) => {
+                    log(
+                        "❌ WebSocket error: " + JSON.stringify(error),
+                        "error"
+                    );
+                    updateStatus(false);
+                });
+
+                echo.connector.pusher.connection.bind("disconnected", () => {
+                    log("⚠️ WebSocket disconnected", "error");
+                    updateStatus(false);
+                });
+
+                echo.connector.pusher.connection.bind(
+                    "state_change",
+                    (states) => {
+                        log(
+                            `Connection state changed: ${states.previous} → ${states.current}`
+                        );
+                    }
+                );
+            }
+
+            function connectToConversation() {
+                const conversationId =
+                    document.getElementById("conversationId").value;
+
+                if (!conversationId) {
+                    alert("Please enter a conversation ID");
+                    return;
+                }
+
+                if (!echo) {
+                    initializeEcho();
+                }
+
+                // Leave previous channel if exists
+                if (conversationChannel) {
+                    log("Leaving previous channel...");
+                    echo.leave(`conversation.${conversationChannel}`);
+                }
+
+                conversationChannel = conversationId;
+                log(
+                    `🔌 Connecting to private channel: conversation.${conversationId}`,
+                    "success"
+                );
+
+                echo.private(`conversation.${conversationId}`)
+                    .listen("MessageSent", (e) => {
+                        log(
+                            "📨 MESSAGE RECEIVED: " +
+                                JSON.stringify(e, null, 2),
+                            "success"
+                        );
+                        console.log("Full message event:", e);
+                    })
+                    .error((error) => {
+                        log(
+                            "❌ Channel error: " + JSON.stringify(error),
+                            "error"
+                        );
+                    });
+            }
+
+            function disconnect() {
+                if (echo && conversationChannel) {
+                    echo.leave(`conversation.${conversationChannel}`);
+                    log("Disconnected from conversation channel");
+                    conversationChannel = null;
+                }
+            }
+
+            // Auto-initialize on page load
+            window.onload = () => {
+                log(
+                    'Page loaded. Click "Connect" to start listening for messages.'
+                );
+            };
+        </script>
+    </body>
+</html>

@@ -61,8 +61,21 @@ class PublicController extends Controller
     public function properties(Request $request)
     {
         $query = Property::with(['broker'])
+            ->withCount([
+                // Count active (in-progress) transactions to robustly flag under-transaction listings
+                'transactions as active_transactions_count' => function ($q) {
+                    $q->whereNotIn('status', ['finalized', 'cancelled']);
+                },
+            ])
             ->select('properties.*') // Ensure all columns from properties table are selected
-            ->where('status', 'available')
+            // Visibility rules:
+            // - Default: show available + in-transaction states (under_negotiation, reserved)
+            // - When include_sold=true: show ONLY sold listings
+            ->when($request->boolean('include_sold'), function ($q) {
+                $q->where('status', 'sold');
+            }, function ($q) {
+                $q->whereIn('status', ['available', 'under_negotiation', 'reserved']);
+            })
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -130,7 +143,8 @@ class PublicController extends Controller
             'properties' => $properties,
             'filters' => $request->only([
                 'search', 'type', 'municipality', 'min_price', 'max_price', 
-                'min_area', 'max_area', 'utilities', 'virtual_tour', 'sort', 'featured' // include featured
+                'min_area', 'max_area', 'utilities', 'virtual_tour', 'sort', 'featured',
+                'include_sold' // new toggle to show sold
             ]),
             'types' => Property::TYPES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
@@ -142,9 +156,15 @@ class PublicController extends Controller
      */
     public function showProperty($slug)
     {
+        // Allow viewing of available, in-transaction (under_negotiation, reserved), and sold properties
         $property = Property::with(['broker', 'client'])
+            ->withCount([
+                'transactions as active_transactions_count' => function ($q) {
+                    $q->whereNotIn('status', ['finalized', 'cancelled']);
+                }
+            ])
             ->where('slug', $slug)
-            ->where('status', 'available')
+            ->whereIn('status', ['available', 'under_negotiation', 'reserved', 'sold'])
             ->firstOrFail();
         
         // Ensure broker relationship is loaded with fallback
@@ -174,9 +194,17 @@ class PublicController extends Controller
      */
     public function storeInquiry(Request $request, Property $property)
     {
-        // Only allow inquiries for available properties
-        if ($property->status !== 'available') {
-            abort(404);
+        // Only allow inquiries for properties that are truly available
+        // Block if status is not 'available' OR if there is any active transaction
+        if ($property->status !== 'available' || $property->is_under_transaction) {
+            $message = 'This property is currently not accepting new inquiries.';
+            if ($request->expectsJson() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+            return back()->withErrors(['property' => $message]);
         }
 
         $validated = $request->validate([

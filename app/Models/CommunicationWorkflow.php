@@ -218,7 +218,7 @@ class CommunicationWorkflow extends Model
     /**
      * Complete the workflow
      */
-    public function complete(string $notes = null): void
+    public function complete(?string $notes = null): void
     {
         $this->update([
             'status' => 'completed',
@@ -230,7 +230,7 @@ class CommunicationWorkflow extends Model
     /**
      * Cancel the workflow
      */
-    public function cancel(string $reason = null): void
+    public function cancel(?string $reason = null): void
     {
         $this->update([
             'status' => 'cancelled',
@@ -242,7 +242,7 @@ class CommunicationWorkflow extends Model
     /**
      * Escalate the workflow
      */
-    public function escalate(string $reason = null): void
+    public function escalate(?string $reason = null): void
     {
         $this->update([
             'status' => 'escalated',
@@ -296,9 +296,9 @@ class CommunicationWorkflow extends Model
             'by_status' => $workflows->groupBy('status')->map->count(),
             'by_type' => $workflows->groupBy('workflow_type')->map->count(),
             'overdue_count' => $workflows->where('is_overdue', true)->count(),
-            'completion_rate' => $this->calculateCompletionRate($workflows),
-            'average_duration_minutes' => $this->calculateAverageDuration($workflows),
-            'escalation_rate' => $this->calculateEscalationRate($workflows),
+            'completion_rate' => self::calculateCompletionRate($workflows),
+            'average_duration_minutes' => self::calculateAverageDuration($workflows),
+            'escalation_rate' => self::calculateEscalationRate($workflows),
         ];
     }
 
@@ -318,9 +318,9 @@ class CommunicationWorkflow extends Model
             'by_status' => $workflows->groupBy('status')->map->count(),
             'by_type' => $workflows->groupBy('workflow_type')->map->count(),
             'overdue_count' => $workflows->where('is_overdue', true)->count(),
-            'completion_rate' => $this->calculateCompletionRate($workflows),
-            'average_duration_minutes' => $this->calculateAverageDuration($workflows),
-            'response_rate' => $this->calculateResponseRate($workflows),
+            'completion_rate' => self::calculateCompletionRate($workflows),
+            'average_duration_minutes' => self::calculateAverageDuration($workflows),
+            'response_rate' => self::calculateResponseRate($workflows),
         ];
     }
 

@@ -56,4 +56,3 @@ const badgeClasses = computed(() => {
     return `${baseClasses} ${statusClasses} ${sizeClasses[props.size]}`;
 });
 </script>
-

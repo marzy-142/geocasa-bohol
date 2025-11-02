@@ -121,7 +121,7 @@ class BrokerClientRelationship extends Model
     /**
      * End the relationship
      */
-    public function end(string $reason = null): void
+    public function end(?string $reason = null): void
     {
         $this->update([
             'ended_at' => now(),
@@ -200,7 +200,7 @@ class BrokerClientRelationship extends Model
             'by_method' => $relationships->groupBy('assignment_method')->map->count(),
             'average_duration_days' => $relationships->whereNotNull('ended_at')->avg('duration_in_days'),
             'longest_relationship_days' => $relationships->max('duration_in_days'),
-            'relationship_turnover_rate' => $this->calculateTurnoverRate($relationships),
+            'relationship_turnover_rate' => self::calculateTurnoverRate($relationships),
         ];
     }
 

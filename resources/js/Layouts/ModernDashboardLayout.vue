@@ -28,7 +28,6 @@ import {
     PlusIcon,
     ExclamationTriangleIcon,
     HomeModernIcon,
-    ClockIcon,
     PresentationChartBarIcon, // Add for Broker Analytics
     UserPlusIcon, // Add for Client Assignments
     DocumentDuplicateIcon, // Add for Seller Requests
@@ -402,12 +401,6 @@ const navigationSections = computed(() => {
                         icon: PlusIcon,
                         current: route().current("broker.properties.create"),
                     },
-                    {
-                        name: "Property Renewals",
-                        href: route("broker.properties.renewals"),
-                        icon: ClockIcon,
-                        current: route().current("broker.properties.renewals"),
-                    },
                 ],
             },
             {
@@ -499,12 +492,6 @@ const navigationSections = computed(() => {
                         href: route("client.inquiries.index"),
                         icon: ChatBubbleLeftRightIcon,
                         current: route().current("client.inquiries.*"),
-                    },
-                    {
-                        name: "My Broker",
-                        href: route("client.broker"),
-                        icon: UserGroupIcon,
-                        current: route().current("client.broker"),
                     },
                     {
                         name: "Messages",

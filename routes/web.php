@@ -13,7 +13,6 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Broker\DashboardController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\PropertyController as ClientPropertyController;
-use App\Http\Controllers\Client\BrokerController as ClientBrokerController;
 use App\Http\Controllers\Client\TransactionController as ClientTransactionController;
 use App\Http\Controllers\Client\DocumentController as ClientDocumentController;
 use App\Http\Controllers\Client\MeetingController as ClientMeetingController;
@@ -47,6 +46,11 @@ Route::get('/test-verification-banner', function() {
     return \Inertia\Inertia::render('Auth/VerifyEmail')
         ->with('success', 'Registration successful! Please check your email and click the verification link to complete your registration.');
 })->name('test.verification');
+
+// DEBUG: Echo test page
+Route::get('/echo-test', function() {
+    return view('echo-test');
+})->middleware('auth')->name('echo.test');
 
 // Public routes
 Route::get('/', [PublicController::class, 'home'])->name('home');
@@ -102,6 +106,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:client')->prefix('client')->name('client.')->group(function () {
         Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/original', [ClientDashboardController::class, 'dashboard'])->name('dashboard.original');
+        // Fallback route for legacy 'client.broker' links used across the client UI
+        // Redirects to the Conversations index, which is the current place to contact your broker
+        Route::get('/broker', function () {
+            return redirect()->route('conversations.index');
+        })->name('broker');
         Route::get('/properties', [\App\Http\Controllers\Client\PropertyController::class, 'index'])->name('properties');
         // Specific routes MUST come before dynamic routes
         Route::get('/properties/saved', [\App\Http\Controllers\Client\PropertyController::class, 'saved'])->name('properties.saved');
@@ -167,10 +176,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/inquiries', [ClientInquiryController::class, 'store'])->name('inquiries.store');
         Route::get('/inquiries/{inquiry}', [ClientInquiryController::class, 'show'])->name('inquiries.show');
         Route::put('/inquiries/{inquiry}', [ClientInquiryController::class, 'update'])->name('inquiries.update');
-        Route::get('/broker', [ClientBrokerController::class, 'show'])->name('broker');
-        Route::post('/broker/message', [ClientBrokerController::class, 'sendMessage'])->name('broker.message');
-        Route::post('/broker/meeting', [ClientBrokerController::class, 'scheduleMeeting'])->name('broker.meeting');
-        Route::delete('/broker/meeting/{meeting}', [ClientBrokerController::class, 'cancelMeeting'])->name('broker.meeting.cancel');
     });
 
     // Broker routes - EXPANDED
@@ -199,15 +204,11 @@ Route::middleware(['auth', 'role:broker', 'broker.approved'])->group(function ()
     Route::get('/properties/create', [PropertyController::class, 'create'])->name('broker.properties.create');
     Route::post('/properties', [PropertyController::class, 'store'])->name('broker.properties.store');
     
-    // Property Renewal Routes - MUST come before parameterized routes
-    Route::get('/properties/renewals', [PropertyController::class, 'renewals'])->name('broker.properties.renewals');
-    
-    // Parameterized routes - MUST come after specific routes
+    // Parameterized routes
     Route::get('/properties/{property}', [PropertyController::class, 'brokerShow'])->name('broker.properties.show');
     Route::get('/properties/{property}/edit', [PropertyController::class, 'edit'])->name('broker.properties.edit');
     Route::put('/properties/{property}', [PropertyController::class, 'update'])->name('broker.properties.update');
     Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])->name('broker.properties.destroy');
-    Route::post('/properties/{property}/renew', [PropertyController::class, 'renew'])->name('broker.properties.renew');
     
     // Featured Property Routes
     Route::post('/properties/{property}/toggle-featured', [PropertyController::class, 'toggleFeatured'])->name('broker.properties.toggle-featured');
@@ -401,6 +402,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('inquiries', InquiryController::class);
     Route::post('inquiries/{inquiry}/respond', [InquiryController::class, 'respond'])
         ->name('inquiries.respond');
+    Route::put('inquiries/{inquiry}/update-status', [InquiryController::class, 'updateStatus'])
+        ->name('inquiries.update-status');
+    Route::put('inquiries/{inquiry}/mark-as-won', [InquiryController::class, 'markAsWon'])
+        ->name('inquiries.mark-as-won');
     Route::post('inquiries/{inquiry}/accept', [InquiryController::class, 'accept'])
         ->name('inquiries.accept');
 });
@@ -485,7 +490,7 @@ require __DIR__.'/auth.php';
 
 // Add broadcasting auth routes
 // Broadcasting routes (should be after auth middleware is applied)
-Broadcast::routes(['middleware' => ['web', 'auth']]);
+Broadcast::routes(['middleware' => ['web', 'auth', \App\Http\Middleware\LogBroadcastAuth::class]]);
 // Add these routes in the admin group section
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Existing routes...

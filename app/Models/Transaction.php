@@ -78,7 +78,7 @@ class Transaction extends Model
         static::created(function ($transaction) {
             // Sync inquiry status on creation
             if ($transaction->inquiry) {
-                $transaction->inquiry->update(['status' => 'in transaction']);
+                $transaction->inquiry->update(['status' => 'in_transaction']);
             }
         });
 
@@ -109,13 +109,13 @@ class Transaction extends Model
                     case 'due_diligence':
                     case 'financing':
                     case 'closing_preparation':
-                        $inquiryStatus = 'in transaction';
+                        $inquiryStatus = 'in_transaction';
                         break;
                     case 'finalized':
-                        $inquiryStatus = 'closed';
+                        $inquiryStatus = 'completed';
                         break;
                     case 'cancelled':
-                        $inquiryStatus = 'not converted';
+                        $inquiryStatus = 'closed';
                         break;
                 }
                 if ($inquiryStatus) {

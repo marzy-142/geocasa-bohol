@@ -76,6 +76,60 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 <!-- Main Content -->
                 <div class="lg:col-span-2 space-y-6">
+                    <!-- Availability Status Banner -->
+                    <div
+                        v-if="
+                            property.status !== 'available' ||
+                            isUnderTransaction
+                        "
+                        class="rounded-xl border shadow-sm p-4"
+                        :class="{
+                            'bg-amber-50 border-amber-200 text-amber-800':
+                                property.status === 'reserved' ||
+                                property.status === 'under_negotiation' ||
+                                isUnderTransaction,
+                            'bg-rose-50 border-rose-200 text-rose-800':
+                                property.status === 'sold',
+                        }"
+                    >
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">🔔</span>
+                            <div>
+                                <div class="font-semibold">
+                                    <span v-if="property.status === 'reserved'"
+                                        >This property is currently
+                                        reserved.</span
+                                    >
+                                    <span
+                                        v-else-if="
+                                            property.status ===
+                                                'under_negotiation' ||
+                                            isUnderTransaction
+                                        "
+                                        >This property is currently under
+                                        transaction.</span
+                                    >
+                                    <span v-else-if="property.status === 'sold'"
+                                        >This property has been sold.</span
+                                    >
+                                    <span v-else
+                                        >This property is not currently
+                                        available.</span
+                                    >
+                                </div>
+                                <div class="text-sm opacity-90">
+                                    <span v-if="property.status === 'sold'"
+                                        >You can still browse similar available
+                                        properties below.</span
+                                    >
+                                    <span v-else
+                                        >New inquiries are paused while this
+                                        status is active.</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Media Viewer Tabs (Gallery + Panorama) -->
                     <div
                         v-if="property.has_virtual_tour && hasVirtualTourData"
@@ -161,10 +215,25 @@
                                     :src="currentImage"
                                     :alt="property.title"
                                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    :class="{ 'blur-sm': imageLoading }"
+                                    :class="{
+                                        'blur-sm': imageLoading,
+                                        'grayscale opacity-80':
+                                            property.status === 'sold',
+                                    }"
                                     @load="imageLoading = false"
                                     @error="handleImageError"
                                 />
+
+                                <!-- Sold Badge Overlay -->
+                                <div
+                                    v-if="property.status === 'sold'"
+                                    class="absolute top-4 left-4 z-10"
+                                >
+                                    <span
+                                        class="px-3 py-1 rounded-full bg-red-600 text-white text-sm font-semibold shadow"
+                                        >Sold</span
+                                    >
+                                </div>
 
                                 <!-- Loading Overlay -->
                                 <div
@@ -375,10 +444,25 @@
                                 :src="currentImage"
                                 :alt="property.title"
                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                :class="{ 'blur-sm': imageLoading }"
+                                :class="{
+                                    'blur-sm': imageLoading,
+                                    'grayscale opacity-80':
+                                        property.status === 'sold',
+                                }"
                                 @load="imageLoading = false"
                                 @error="handleImageError"
                             />
+
+                            <!-- Sold Badge Overlay -->
+                            <div
+                                v-if="property.status === 'sold'"
+                                class="absolute top-4 left-4 z-10"
+                            >
+                                <span
+                                    class="px-3 py-1 rounded-full bg-red-600 text-white text-sm font-semibold shadow"
+                                    >Sold</span
+                                >
+                            </div>
 
                             <!-- Loading Overlay -->
                             <div
@@ -558,6 +642,13 @@
                                 {{ formatPropertyType(property.type) }}
                             </span>
                             <span
+                                v-if="property.status === 'sold'"
+                                class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium"
+                            >
+                                Sold
+                            </span>
+                            <span
+                                v-else
                                 class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
                             >
                                 Available
@@ -1033,11 +1124,38 @@
                             viewing schedules, and pricing options.
                         </p>
                         <a
+                            v-if="
+                                property.status === 'available' &&
+                                !isUnderTransaction
+                            "
                             href="#inquiry-form"
                             class="block w-full bg-white text-blue-600 text-center font-semibold py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors shadow-md"
                         >
                             Send Inquiry Now
                         </a>
+                        <div
+                            v-else
+                            class="block w-full bg-gray-100 text-gray-700 text-center font-semibold py-3 px-4 rounded-lg"
+                        >
+                            <span v-if="property.status === 'sold'"
+                                >This property has been sold</span
+                            >
+                            <span v-else-if="property.status === 'reserved'"
+                                >This property is currently reserved</span
+                            >
+                            <span
+                                v-else-if="
+                                    property.status === 'under_negotiation' ||
+                                    isUnderTransaction
+                                "
+                                >This property is currently under
+                                transaction</span
+                            >
+                            <span v-else
+                                >This property is not available for
+                                inquiries</span
+                            >
+                        </div>
                         <div
                             class="flex items-center gap-2 mt-4 text-blue-100 text-xs"
                         >
@@ -1111,6 +1229,10 @@
 
                     <!-- Inquiry Form -->
                     <div
+                        v-if="
+                            property.status === 'available' &&
+                            !isUnderTransaction
+                        "
                         id="inquiry-form"
                         class="bg-white rounded-xl border border-neutral-200 shadow-sm p-6 scroll-mt-6"
                     >
@@ -1265,6 +1387,51 @@
                             By submitting this form, you agree to be contacted
                             by the broker regarding this property.
                         </div>
+                    </div>
+                    <div
+                        v-else
+                        class="bg-white rounded-xl border border-neutral-200 shadow-sm p-6"
+                    >
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                            {{
+                                property.status === "sold"
+                                    ? "Property Sold"
+                                    : property.status === "reserved"
+                                    ? "Property Reserved"
+                                    : isUnderTransaction
+                                    ? "Under Transaction"
+                                    : "Not Available"
+                            }}
+                        </h3>
+                        <p class="text-gray-700 mb-4">
+                            <span v-if="property.status === 'sold'"
+                                >This property has been sold. Inquiries are
+                                disabled for sold properties.</span
+                            >
+                            <span v-else-if="property.status === 'reserved'"
+                                >This property is temporarily reserved and not
+                                accepting new inquiries.</span
+                            >
+                            <span
+                                v-else-if="
+                                    property.status === 'under_negotiation' ||
+                                    isUnderTransaction
+                                "
+                                >This property is currently in an active
+                                transaction and not accepting new
+                                inquiries.</span
+                            >
+                            <span v-else
+                                >This property is not currently accepting
+                                inquiries.</span
+                            >
+                        </p>
+                        <Link
+                            :href="route('public.properties')"
+                            class="inline-block bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                        >
+                            Browse Other Properties
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -1477,7 +1644,7 @@
             leave-to-class="translate-y-full opacity-0"
         >
             <div
-                v-if="showMobileCTA"
+                v-if="showMobileCTA && property.status !== 'sold'"
                 class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-2xl"
             >
                 <div class="px-4 py-3">
@@ -1534,6 +1701,15 @@ L.Icon.Default.mergeOptions({
 const props = defineProps({
     property: Object,
     errors: Object,
+});
+// Determine if property is under transaction (backend-provided flag preferred)
+const isUnderTransaction = computed(() => {
+    const p = props.property || {};
+    if (typeof p.is_under_transaction !== "undefined") {
+        return Boolean(p.is_under_transaction);
+    }
+    const count = Number(p.active_transactions_count || 0);
+    return p.status === "under_negotiation" || count > 0;
 });
 
 // Get page props for authentication state
@@ -1691,7 +1867,7 @@ const closeAuthPrompt = () => {
 const submitInquiry = () => {
     inquiryForm.post(route("public.inquiries.store", props.property.slug), {
         preserveScroll: true,
-        onSuccess: () => {
+        onSuccess: (response) => {
             // Cache the inquiry data before resetting
             lastInquiryData = {
                 name: inquiryForm.name,
@@ -1701,80 +1877,83 @@ const submitInquiry = () => {
                 property_id: props.property.id,
                 property_title: props.property.title,
             };
+
             inquiryForm.reset("name", "email", "phone");
             inquiryForm.message = `I'm interested in ${props.property.title}. Please provide more information about this property.`;
-            // Show the centered auth prompt modal
-            setTimeout(() => {
-                showAuthPrompt.value = true;
-            }, 0);
+
+            // Check if user is authenticated
+            if (isAuthenticated.value) {
+                // For authenticated users, show success toast
+                showSuccessToast(
+                    "Your inquiry has been sent successfully! The broker will contact you soon."
+                );
+            } else {
+                // For non-authenticated users, show the auth prompt modal
+                setTimeout(() => {
+                    showAuthPrompt.value = true;
+                }, 0);
+            }
+        },
+        onError: (errors) => {
+            // Show error toast
+            const firstError = Object.values(errors)[0];
+            showErrorToast(
+                firstError || "Failed to send inquiry. Please try again."
+            );
         },
     });
-    // Simple toast notification system
-    function showToast(message, type = "info") {
-        const toast = document.createElement("div");
-        toast.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
-            type === "success"
-                ? "bg-green-500 text-white"
-                : type === "error"
-                ? "bg-red-500 text-white"
-                : "bg-blue-500 text-white"
-        }`;
-        toast.innerHTML = `
-        <div class="flex flex-col gap-2">
-            <div class="flex items-center space-x-2 mb-2">
-                <div class="flex-1 text-sm">${message}</div>
-                <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="flex gap-2">
-                <button class="flex-1 py-1 px-2 rounded bg-white text-blue-700 font-semibold hover:bg-blue-50 border border-blue-200" id="toast-login-btn">Login</button>
-                <button class="flex-1 py-1 px-2 rounded bg-white text-gray-700 font-semibold hover:bg-gray-100 border border-gray-200" id="toast-register-btn">Register</button>
-            </div>
+};
+
+// Success toast notification
+const showSuccessToast = (message) => {
+    const toast = document.createElement("div");
+    toast.className =
+        "fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transform transition-all duration-300 bg-green-500 text-white";
+    toast.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <div class="flex-1 text-sm font-medium">${message}</div>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
         </div>
-        `;
-        document.body.appendChild(toast);
-        // Add event listeners for login/register
-        setTimeout(() => {
-            if (toast.parentElement) {
-                toast.remove();
-            }
-        }, 8000);
-        setTimeout(() => {
-            const loginBtn = toast.querySelector("#toast-login-btn");
-            const registerBtn = toast.querySelector("#toast-register-btn");
-            if (loginBtn)
-                loginBtn.onclick = () => {
-                    // Always use the latest Vue method to ensure session is set
-                    if (typeof redirectToLogin === "function") {
-                        redirectToLogin();
-                    } else if (window.__vue__redirectToLogin) {
-                        window.__vue__redirectToLogin();
-                    } else {
-                        window.location.href = route("login");
-                    }
-                    toast.remove();
-                };
-            if (registerBtn)
-                registerBtn.onclick = () => {
-                    if (typeof redirectToRegister === "function") {
-                        redirectToRegister();
-                    } else if (window.__vue__redirectToRegister) {
-                        window.__vue__redirectToRegister();
-                    } else {
-                        window.location.href = route("register");
-                    }
-                    toast.remove();
-                };
-        }, 0);
-    }
-    // Expose redirectToLogin/Register for toast button use
-    if (typeof window !== "undefined") {
-        window.__vue__redirectToLogin = redirectToLogin;
-        window.__vue__redirectToRegister = redirectToRegister;
-    }
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
+};
+
+// Error toast notification
+const showErrorToast = (message) => {
+    const toast = document.createElement("div");
+    toast.className =
+        "fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transform transition-all duration-300 bg-red-500 text-white";
+    toast.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <div class="flex-1 text-sm font-medium">${message}</div>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
 };
 
 // Store inquiry data and redirect to login
@@ -1837,14 +2016,12 @@ const getImageUrl = (image, isVirtualTour = false) => {
 
     // Handle arrays - flatten and find first valid string
     if (Array.isArray(image)) {
-        console.warn("Array passed to getImageUrl:", image);
         const flatArray = image.flat(2); // Flatten up to 2 levels deep
         const firstValidImage = flatArray.find(
             (img) => img && typeof img === "string" && img.trim() !== ""
         );
 
         if (!firstValidImage) {
-            console.error("No valid image found in array:", image);
             return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         }
 
@@ -1853,7 +2030,6 @@ const getImageUrl = (image, isVirtualTour = false) => {
 
     // Ensure we have a string
     if (typeof image !== "string") {
-        console.error("Invalid image type:", typeof image, image);
         return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
 
@@ -1864,7 +2040,7 @@ const getImageUrl = (image, isVirtualTour = false) => {
         return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
 
-    // If it's already a data URL or blob URL, return as-is (don't prefix storage paths)
+    // If it's already a data URL or blob URL, return as-is
     if (cleanImage.startsWith("data:") || cleanImage.startsWith("blob:")) {
         return cleanImage;
     }
@@ -1874,37 +2050,14 @@ const getImageUrl = (image, isVirtualTour = false) => {
         return cleanImage;
     }
 
-    // If already starts with /storage/, return as-is to prevent duplication
+    // If already starts with /storage/, return as-is
     if (cleanImage.startsWith("/storage/")) {
         return cleanImage;
     }
 
-    // Remove any leading slashes to prevent double slashes
+    // For any other case, prepend /storage/ (legacy support)
     cleanImage = cleanImage.replace(/^\/+/, "");
-
-    // Detect the correct path based on the image path or context
-    if (cleanImage.includes("properties/virtual-tours/")) {
-        // If it already contains the virtual tours path structure, just add /storage/ prefix
-        return `/storage/${cleanImage}`;
-    } else if (cleanImage.includes("properties/images/")) {
-        // If it already contains the images path structure, just add /storage/ prefix
-        return `/storage/${cleanImage}`;
-    } else if (cleanImage.includes("seller-requests/images/")) {
-        // Handle images from seller requests (legacy properties)
-        return `/storage/${cleanImage}`;
-    }
-
-    // Determine the correct path based on context or image path patterns
-    if (
-        isVirtualTour ||
-        cleanImage.includes("virtual") ||
-        cleanImage.includes("tour")
-    ) {
-        return `/storage/properties/virtual-tours/${cleanImage}`;
-    } else {
-        // Default to regular property images path
-        return `/storage/properties/images/${cleanImage}`;
-    }
+    return `/storage/${cleanImage}`;
 };
 
 const formatPropertyType = (type) => {

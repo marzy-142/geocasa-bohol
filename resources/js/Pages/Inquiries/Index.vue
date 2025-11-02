@@ -74,6 +74,67 @@
         </div>
 
         <div class="space-y-6">
+            <!-- Simple Status Tabs -->
+            <div class="bg-white rounded-lg shadow-sm p-3 md:p-4">
+                <div class="flex flex-wrap gap-2">
+                    <button
+                        @click="setStatusTab('')"
+                        :class="[
+                            'px-3 py-1.5 rounded-full text-sm font-medium border',
+                            selectedStatus === ''
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+                        ]"
+                    >
+                        All
+                    </button>
+                    <button
+                        @click="setStatusTab('new')"
+                        :class="[
+                            'px-3 py-1.5 rounded-full text-sm font-medium border',
+                            selectedStatus === 'new'
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+                        ]"
+                    >
+                        New
+                    </button>
+                    <button
+                        @click="setStatusTab('contacted')"
+                        :class="[
+                            'px-3 py-1.5 rounded-full text-sm font-medium border',
+                            selectedStatus === 'contacted'
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+                        ]"
+                    >
+                        In Discussion
+                    </button>
+                    <button
+                        @click="setStatusTab('scheduled')"
+                        :class="[
+                            'px-3 py-1.5 rounded-full text-sm font-medium border',
+                            selectedStatus === 'scheduled'
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+                        ]"
+                    >
+                        Scheduled
+                    </button>
+                    <button
+                        @click="setStatusTab('done')"
+                        :class="[
+                            'px-3 py-1.5 rounded-full text-sm font-medium border',
+                            selectedStatus === 'completed' ||
+                            selectedStatus === 'closed'
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+                        ]"
+                    >
+                        Done
+                    </button>
+                </div>
+            </div>
             <!-- Compact Search & Filter Section -->
             <div class="bg-white rounded-lg shadow-sm p-4 md:p-6">
                 <div
@@ -201,35 +262,10 @@
                     <h2 class="text-lg font-semibold text-gray-900">
                         Inquiries ({{ inquiries.total }})
                     </h2>
-                    <div class="flex items-center gap-2">
-                        <select
-                            v-model="sortBy"
-                            @change="applyFilters"
-                            class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="created_at">Latest First</option>
-                            <option value="priority">By Priority</option>
-                            <option value="status">By Status</option>
-                        </select>
-                        <button
-                            @click="toggleView"
-                            class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
-                        >
-                            {{
-                                viewMode === "grid" ? "List View" : "Grid View"
-                            }}
-                        </button>
-                    </div>
+                    <div class="flex items-center gap-2"></div>
                 </div>
 
-                <div
-                    v-if="inquiries.data.length > 0"
-                    :class="
-                        viewMode === 'grid'
-                            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'
-                            : 'space-y-4'
-                    "
-                >
+                <div v-if="inquiries.data.length > 0" class="space-y-4">
                     <div
                         v-for="inquiry in inquiries.data"
                         :key="inquiry.id"
@@ -243,8 +279,17 @@
                                 >
                                     {{ inquiry.name }}
                                 </h3>
-                                <p class="text-xs text-gray-500">
-                                    {{ formatDate(inquiry.created_at) }}
+                                <p
+                                    class="text-xs text-gray-500 flex items-center gap-2"
+                                >
+                                    <span>{{
+                                        formatDate(inquiry.created_at)
+                                    }}</span>
+                                    <span
+                                        v-if="isOverdue(inquiry)"
+                                        class="inline-flex items-center px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200"
+                                        >Overdue</span
+                                    >
                                 </p>
                             </div>
                             <span
@@ -281,45 +326,19 @@
 
                         <!-- Bottom: Action buttons with single accent color -->
                         <div class="flex gap-2 pt-4 border-t border-gray-100">
-                            <!-- Warning badge if property has assigned client -->
-                            <div
-                                v-if="hasAssignedClient(inquiry.property)"
-                                class="flex-1 py-2 px-3 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg text-center"
+                            <button
+                                v-if="primaryActionLabel(inquiry)"
+                                @click="handlePrimaryAction(inquiry)"
+                                class="flex-1 py-2 px-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                             >
-                                ⚠️ Property Unavailable
-                            </div>
-
+                                {{ primaryActionLabel(inquiry) }}
+                            </button>
                             <Link
                                 :href="route('inquiries.show', inquiry.id)"
                                 class="flex-1 text-center py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                             >
                                 View
                             </Link>
-                            <button
-                                @click="openQuickResponse(inquiry)"
-                                class="flex-1 py-2 px-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                            >
-                                Reply
-                            </button>
-                            <Link
-                                v-if="!hasAssignedClient(inquiry.property)"
-                                :href="
-                                    route('transactions.create', {
-                                        inquiry_id: inquiry.id,
-                                    })
-                                "
-                                class="flex-1 text-center py-2 px-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                Start Deal
-                            </Link>
-                            <button
-                                v-else
-                                disabled
-                                class="flex-1 py-2 px-3 text-sm font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed opacity-60"
-                                title="Property already has an assigned client"
-                            >
-                                Start Deal
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -386,7 +405,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { router } from "@inertiajs/vue3";
+import { router, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import { Link } from "@inertiajs/vue3";
 import Pagination from "@/Components/Pagination.vue";
@@ -408,7 +427,7 @@ const dateTo = ref(props.filters.date_to || "");
 
 // New reactive variables for enhanced features
 const selectedPriority = ref(props.filters.priority || "");
-const viewMode = ref("grid");
+const viewMode = ref("list");
 const sortBy = ref("created_at");
 const showQuickResponseModal = ref(false);
 const quickResponseText = ref("");
@@ -438,6 +457,46 @@ const completedTodayCount = computed(() => {
             new Date(inquiry.responded_at).toDateString() === today
     ).length;
 });
+
+// Map simple tab clicks to filters and apply
+const setStatusTab = (tab) => {
+    if (tab === "") {
+        selectedStatus.value = "";
+    } else if (tab === "done") {
+        // "Done" aggregates completed + closed; backend only accepts one status,
+        // so default to completed for server-side filtering
+        selectedStatus.value = "completed";
+    } else {
+        selectedStatus.value = tab;
+    }
+    applyFilters();
+};
+
+// Decide primary action per inquiry status
+const primaryActionLabel = (inquiry) => {
+    switch (inquiry.status) {
+        case "new":
+            return "Respond";
+        case "contacted":
+        case "scheduled":
+            return "Chat";
+        default:
+            return null;
+    }
+};
+
+const handlePrimaryAction = (inquiry) => {
+    switch (inquiry.status) {
+        case "new":
+            return openQuickResponse(inquiry);
+        case "contacted":
+        case "scheduled":
+            // Navigate to conversation for this inquiry
+            return router.visit(route("inquiries.show", inquiry.id));
+        default:
+            return;
+    }
+};
 
 const applyFilters = () => {
     router.get(
@@ -672,45 +731,67 @@ const exportInquiries = () => {
 onMounted(() => {
     // Initialize Echo for real-time updates
     if (window.Echo) {
-        // Listen for new inquiries
-        window.Echo.private("inquiries")
-            .listen(".inquiry.new", (e) => {
-                notifications.value.unshift({
-                    id: Date.now(),
-                    type: "new_inquiry",
-                    message: `New inquiry from ${e.inquiry.name}`,
-                    inquiry: e.inquiry,
-                    timestamp: new Date(),
-                });
+        const channelsJoined = [];
 
-                // Show browser notification if permission granted
-                if (Notification.permission === "granted") {
-                    new Notification("New Inquiry Received", {
-                        body: `${e.inquiry.name} inquired about ${e.inquiry.property.title}`,
-                        icon: "/favicon.ico",
+        const attachHandlers = (channel) => {
+            channel
+                .listen(".inquiry.new", (e) => {
+                    notifications.value.unshift({
+                        id: Date.now(),
+                        type: "new_inquiry",
+                        message: `New inquiry from ${e.inquiry.name}`,
+                        inquiry: e.inquiry,
+                        timestamp: new Date(),
                     });
-                }
 
-                // Auto-refresh the page data
-                router.reload({ only: ["inquiries"] });
-            })
-            .listen(".inquiry.status.updated", (e) => {
-                notifications.value.unshift({
-                    id: Date.now(),
-                    type: "status_update",
-                    message: `Inquiry #${e.inquiry_id} status changed to ${e.new_status}`,
-                    inquiry: e.inquiry,
-                    timestamp: new Date(),
+                    // Show browser notification if permission granted
+                    if (Notification.permission === "granted") {
+                        new Notification("New Inquiry Received", {
+                            body: `${e.inquiry.name} inquired about ${e.inquiry.property.title}`,
+                            icon: "/favicon.ico",
+                        });
+                    }
+
+                    // Auto-refresh the page data
+                    router.reload({ only: ["inquiries"] });
+                })
+                .listen(".inquiry.status.updated", (e) => {
+                    notifications.value.unshift({
+                        id: Date.now(),
+                        type: "status_update",
+                        message: `Inquiry #${e.inquiry_id} status changed to ${e.new_status}`,
+                        inquiry: e.inquiry,
+                        timestamp: new Date(),
+                    });
+
+                    // Update the inquiry in the current list if it exists
+                    const inquiryIndex = props.inquiries.data.findIndex(
+                        (inq) => inq.id === e.inquiry_id
+                    );
+                    if (inquiryIndex !== -1) {
+                        props.inquiries.data[inquiryIndex].status =
+                            e.new_status;
+                    }
                 });
+        };
 
-                // Update the inquiry in the current list if it exists
-                const inquiryIndex = props.inquiries.data.findIndex(
-                    (inq) => inq.id === e.inquiry_id
-                );
-                if (inquiryIndex !== -1) {
-                    props.inquiries.data[inquiryIndex].status = e.new_status;
-                }
-            });
+        // Global inquiries channel
+        const inquiriesChannel = window.Echo.private("inquiries");
+        attachHandlers(inquiriesChannel);
+        channelsJoined.push("inquiries");
+
+        // Also join broker-specific channel if available
+        try {
+            const userId = usePage()?.props?.auth?.user?.id;
+            if (userId) {
+                const brokerChannelName = `broker.${userId}`;
+                const brokerChannel = window.Echo.private(brokerChannelName);
+                attachHandlers(brokerChannel);
+                channelsJoined.push(brokerChannelName);
+            }
+        } catch (err) {
+            console.warn("Broker channel join skipped:", err);
+        }
 
         // Connection status listeners
         window.Echo.connector.pusher.connection.bind("connected", () => {
@@ -731,7 +812,16 @@ onMounted(() => {
 onUnmounted(() => {
     // Clean up Echo listeners
     if (window.Echo) {
-        window.Echo.leaveChannel("inquiries");
+        try {
+            // Leave all joined channels
+            const userId = usePage()?.props?.auth?.user?.id;
+            window.Echo.leaveChannel("inquiries");
+            if (userId) {
+                window.Echo.leaveChannel(`broker.${userId}`);
+            }
+        } catch (err) {
+            // no-op
+        }
     }
 });
 

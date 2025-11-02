@@ -198,7 +198,6 @@ class TransactionController extends Controller
             'client_id' => 'required|exists:clients,id',
             'inquiry_id' => 'nullable|exists:inquiries,id',
             'offered_price' => 'required|numeric|min:0',
-            'inquiry_date' => 'required|date',
             'broker_notes' => 'nullable|string',
         ]);
         
@@ -211,8 +210,10 @@ class TransactionController extends Controller
                 ->with('error', 'This property already has an assigned client and cannot accept new transactions. ' . $property->unavailable_reason);
         }
         
+        // Auto-fill broker_id and inquiry_date
         $validated['broker_id'] = $user->id;
-        $validated['status'] = 'inquiry';
+        $validated['inquiry_date'] = now();
+        $validated['status'] = 'offer_made';
         
         $transaction = Transaction::create($validated);
         
@@ -221,7 +222,7 @@ class TransactionController extends Controller
         
         // Update related inquiry status if provided
         if ($validated['inquiry_id']) {
-            Inquiry::find($validated['inquiry_id'])->update(['status' => 'in transaction']);
+            Inquiry::find($validated['inquiry_id'])->update(['status' => 'in_transaction']);
         }
         
         return redirect()->route('transactions.show', $transaction)

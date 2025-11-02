@@ -169,9 +169,10 @@
                                 ⭐ Featured
                             </div>
                             <div
-                                class="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-bold text-white shadow-sm"
+                                class="absolute top-2 right-2 px-2.5 py-1 rounded-lg text-xs font-semibold shadow-md border"
                                 :class="getStatusColor(property.status)"
                             >
+                                {{ getStatusIcon(property.status) }}
                                 {{ formatStatus(property.status) }}
                             </div>
                             <div
@@ -438,13 +439,24 @@ const canEditProperty = (property) => {
 
 const getStatusColor = (status) => {
     const colors = {
-        available: "bg-green-500",
-        reserved: "bg-yellow-500",
-        sold: "bg-red-500",
-        under_negotiation: "bg-blue-500",
-        off_market: "bg-gray-500",
+        available: "bg-green-100 text-green-800 border-green-200",
+        reserved: "bg-amber-100 text-amber-800 border-amber-200",
+        sold: "bg-gray-100 text-gray-800 border-gray-300",
+        under_negotiation: "bg-blue-100 text-blue-800 border-blue-200",
+        off_market: "bg-gray-100 text-gray-600 border-gray-200",
     };
-    return colors[status] || "bg-gray-500";
+    return colors[status] || "bg-gray-100 text-gray-600 border-gray-200";
+};
+
+const getStatusIcon = (status) => {
+    const icons = {
+        available: "✓",
+        reserved: "🔒",
+        sold: "✓",
+        under_negotiation: "💼",
+        off_market: "—",
+    };
+    return icons[status] || "•";
 };
 
 const formatType = (type) => {
@@ -452,7 +464,17 @@ const formatType = (type) => {
 };
 
 const formatStatus = (status) => {
-    return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    const labels = {
+        available: "Available",
+        reserved: "Reserved",
+        sold: "Sold",
+        under_negotiation: "Under Transaction",
+        off_market: "Off Market",
+    };
+    return (
+        labels[status] ||
+        status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+    );
 };
 
 const filterProperties = debounce(() => {

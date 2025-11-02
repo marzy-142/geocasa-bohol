@@ -32,8 +32,7 @@ class Property extends Model
         'archived',          // Removed from public view
         'reserved', 
         'under_negotiation', 
-        'off_market', 
-        'pending_renewal'
+        'off_market'
     ];
 
     // Bohol-specific locations/municipalities
@@ -122,7 +121,9 @@ class Property extends Model
         'formatted_price_per_sqm',
         'main_image',
         'google_maps_link',
-        'full_address'
+        'full_address',
+        // New computed flag to indicate if property is under an active transaction
+        'is_under_transaction',
     ];
 
     // Relationships
@@ -156,6 +157,38 @@ class Property extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    /**
+     * Computed attribute: whether the property is currently under transaction.
+     * True if status is explicitly under_negotiation or reserved, or if there is any
+     * active (non-finalized, non-cancelled) transaction. Uses loaded counts/relations when available
+     * to avoid extra queries; otherwise falls back to an existence check.
+     */
+    public function getIsUnderTransactionAttribute(): bool
+    {
+        // If status already indicates a transaction-like state
+        if (in_array($this->status, ['under_negotiation', 'reserved'], true)) {
+            return true;
+        }
+
+        // Prefer withCount alias if present to avoid N+1
+        $activeCount = $this->getAttribute('active_transactions_count');
+        if ($activeCount !== null) {
+            return (int) $activeCount > 0;
+        }
+
+        // If transactions relation is loaded, filter in-memory
+        if ($this->relationLoaded('transactions')) {
+            return $this->transactions
+                ->whereNotIn('status', ['finalized', 'cancelled'])
+                ->count() > 0;
+        }
+
+        // Fallback: lightweight existence query
+        return $this->transactions()
+            ->whereNotIn('status', ['finalized', 'cancelled'])
+            ->exists();
+    }
+
     // Scopes
     public function scopeAvailable($query)
     {
@@ -164,33 +197,12 @@ class Property extends Model
 
     public function scopePubliclyVisible($query)
     {
-        return $query->whereNotIn('status', ['pending_renewal']);
-    }
-
-    public function scopeExpired($query)
-    {
-        return $query->where('expiry_date', '<', now())
-                    ->where('status', '!=', 'pending_renewal');
-    }
-
-    public function scopeNeedsReminder($query)
-    {
-        return $query->where('expiry_date', '<=', now()->addDays(7))
-                    ->where('status', 'available')
-                    ->where(function($q) {
-                        $q->whereNull('reminder_sent_at')
-                          ->orWhere('reminder_sent_at', '<', now()->subDays(7));
-                    });
+        return $query->whereIn('status', ['available', 'pending', 'reserved', 'under_negotiation']);
     }
 
     public function scopeFeatured($query)
     {
         return $query->where('is_featured', true);
-    }
-
-    public function scopePendingRenewal($query)
-    {
-        return $query->where('status', 'pending_renewal');
     }
 
     public function scopeByType($query, $type)
@@ -274,75 +286,43 @@ class Property extends Model
     {
         $images = $this->images;
         if (is_string($images)) {
-            $decoded = json_decode($images, true);
-            $images = is_array($decoded) ? $decoded : [];
-        }
-        if (!is_array($images)) {
-            $images = [];
+            $images = json_decode($images, true) ?? [];
         }
 
-        // Extract first image candidate (supports string or object with common keys)
-        $first = null;
-        if (count($images) > 0) {
-            $candidate = $images[0];
-            if (is_array($candidate)) {
-                // Common keys that might hold the image path/url
-                foreach (['url', 'path', 'src', 'image', 'filename'] as $key) {
-                    if (!empty($candidate[$key]) && is_string($candidate[$key])) {
-                        $first = $candidate[$key];
-                        break;
-                    }
-                }
-            } elseif (is_string($candidate)) {
-                $first = $candidate;
+        if (is_array($images) && !empty($images)) {
+            $imagePath = $images[0];
+
+            // Handle cases where the image is an object with a path
+            if (is_array($imagePath) && isset($imagePath['path'])) {
+                $imagePath = $imagePath['path'];
             }
-        }
 
-        if (is_string($first)) {
-            $img = trim($first);
-
-            if ($img !== '') {
-                // Pass-through for absolute/data/blob URLs
-                if (Str::startsWith($img, ['http://', 'https://', 'data:', 'blob:'])) {
-                    return $img;
+            if (is_string($imagePath) && $imagePath !== '') {
+                // If it's already a full URL, return it.
+                if (Str::startsWith($imagePath, ['http://', 'https://', 'data:'])) {
+                    return $imagePath;
                 }
 
-                // If already a storage URL, normalize to have a single leading slash
-                if (Str::startsWith($img, ['/storage/', 'storage/'])) {
-                    return '/' . ltrim($img, '/');
+                // Clean up common prefixes that might be mistakenly stored.
+                $cleanPath = $imagePath;
+                if (Str::startsWith($cleanPath, '/storage/')) {
+                    $cleanPath = Str::after($cleanPath, '/storage/');
+                }
+                if (Str::startsWith($cleanPath, 'public/')) {
+                    $cleanPath = Str::after($cleanPath, 'public/');
+                }
+                $cleanPath = ltrim($cleanPath, '/');
+
+                // If the path doesn't already include a subdirectory, prepend the properties/images path
+                if (!Str::contains($cleanPath, '/')) {
+                    $cleanPath = 'properties/images/' . $cleanPath;
                 }
 
-                // Normalize leading slashes and remove accidental 'public/' prefix
-                $clean = ltrim($img, '/');
-                if (Str::startsWith($clean, 'public/')) {
-                    $clean = substr($clean, 7);
+                // Check if file exists and return relative URL (not absolute)
+                // This ensures images work regardless of the domain being used
+                if (Storage::disk('public')->exists($cleanPath)) {
+                    return '/storage/' . $cleanPath;
                 }
-
-                // If it already includes the expected directories, just prefix /storage
-                if (Str::contains($clean, 'properties/virtual-tours/')) {
-                    return '/storage/' . $clean;
-                }
-                if (Str::contains($clean, 'properties/images/')) {
-                    return '/storage/' . $clean;
-                }
-                if (Str::contains($clean, 'seller-requests/images/')) {
-                    return '/storage/' . $clean;
-                }
-
-                // Try a few common storage locations, prefer the first that exists
-                $candidates = [
-                    "public/properties/images/{$clean}" => "/storage/properties/images/{$clean}",
-                    "public/{$clean}" => "/storage/{$clean}",
-                ];
-
-                foreach ($candidates as $diskPath => $publicUrl) {
-                    if (Storage::exists($diskPath)) {
-                        return $publicUrl;
-                    }
-                }
-
-                // As a final fallback, assume standard images location
-                return "/storage/properties/images/{$clean}";
             }
         }
 
@@ -367,6 +347,55 @@ class Property extends Model
         return 'data:image/svg+xml;base64,' . base64_encode($svg);
     }
 
+    public function getImagesAttribute($value)
+    {
+        // Get the raw images value
+        $images = json_decode($value, true) ?? [];
+        
+        if (!is_array($images)) {
+            return [];
+        }
+
+        // Transform each image path to a full URL
+        return array_map(function($imagePath) {
+            // Handle cases where the image is an object with a path
+            if (is_array($imagePath) && isset($imagePath['path'])) {
+                $imagePath = $imagePath['path'];
+            }
+
+            if (!is_string($imagePath) || $imagePath === '') {
+                return null;
+            }
+
+            // If it's already a full URL, return it
+            if (Str::startsWith($imagePath, ['http://', 'https://', 'data:'])) {
+                return $imagePath;
+            }
+
+            // Clean up common prefixes
+            $cleanPath = $imagePath;
+            if (Str::startsWith($cleanPath, '/storage/')) {
+                $cleanPath = Str::after($cleanPath, '/storage/');
+            }
+            if (Str::startsWith($cleanPath, 'public/')) {
+                $cleanPath = Str::after($cleanPath, 'public/');
+            }
+            $cleanPath = ltrim($cleanPath, '/');
+
+            // If the path doesn't already include a subdirectory, prepend the properties/images path
+            if (!Str::contains($cleanPath, '/')) {
+                $cleanPath = 'properties/images/' . $cleanPath;
+            }
+
+            // Return relative URL (not absolute) to work with any domain
+            if (Storage::disk('public')->exists($cleanPath)) {
+                return '/storage/' . $cleanPath;
+            }
+
+            return null;
+        }, $images);
+    }
+
     public function getGoogleMapsLinkAttribute()
     {
         if ($this->coordinates_lat && $this->coordinates_lng) {
@@ -383,68 +412,6 @@ class Property extends Model
     public function getRouteKeyName()
     {
         return 'slug';
-    }
-
-    // Expiry Management Methods
-    public function setExpiryDate($days = 90)
-    {
-        $this->update([
-            'expiry_date' => now()->addDays($days),
-            'last_updated_at' => now(),
-            'renewal_required' => false,
-            'reminder_sent_at' => null
-        ]);
-    }
-
-    public function markAsExpired()
-    {
-        $this->update([
-            'status' => 'pending_renewal',
-            'renewal_required' => true
-        ]);
-    }
-
-    public function renewListing($days = 90)
-    {
-        $this->update([
-            'status' => 'available',
-            'expiry_date' => now()->addDays($days),
-            'last_updated_at' => now(),
-            'renewal_required' => false,
-            'reminder_sent_at' => null
-        ]);
-    }
-
-    public function markReminderSent()
-    {
-        $this->update(['reminder_sent_at' => now()]);
-    }
-
-    public function isExpired()
-    {
-        return $this->expiry_date && $this->expiry_date->isPast();
-    }
-
-    public function needsReminder()
-    {
-        if (!$this->expiry_date || $this->status !== 'available') {
-            return false;
-        }
-
-        $reminderThreshold = now()->addDays(7);
-        $lastReminderThreshold = now()->subDays(7);
-
-        return $this->expiry_date <= $reminderThreshold && 
-               (!$this->reminder_sent_at || $this->reminder_sent_at < $lastReminderThreshold);
-    }
-
-    public function getDaysUntilExpiryAttribute()
-    {
-        if (!$this->expiry_date) {
-            return null;
-        }
-        
-        return now()->diffInDays($this->expiry_date, false);
     }
 
     // ==========================================

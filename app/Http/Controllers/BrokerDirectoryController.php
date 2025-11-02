@@ -4,42 +4,41 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Property;
+use App\Services\BrokerRankingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 
 class BrokerDirectoryController extends Controller
 {
+    protected $brokerRankingService;
+
+    public function __construct(BrokerRankingService $brokerRankingService)
+    {
+        $this->brokerRankingService = $brokerRankingService;
+    }
+
     /**
      * Display broker directory with top performers (merged page)
      */
     public function index(Request $request)
     {
-        // Get top performing brokers (by finalized transactions)
-        $topPerformers = User::where('role', 'broker')
-            ->where('is_approved', true)
-            ->where('prc_verified', true)
-            ->whereNull('suspended_at')
-            ->withCount(['transactions as completed_sales' => function($query) {
-                $query->where('status', 'finalized');
-            }])
-            ->having('completed_sales', '>', 0)
-            ->orderBy('completed_sales', 'desc')
-            ->limit(10)
-            ->get()
+        // Get top performing brokers using centralized service for consistency
+        $topPerformers = $this->brokerRankingService->getTopPerformingBrokers(10)
             ->map(function($broker, $index) {
                 return [
                     'rank' => $index + 1,
                     'id' => $broker->id,
                     'name' => $broker->name,
                     'avatar' => $broker->avatar,
-                    'avatar_url' => $broker->avatar ? asset('storage/' . $broker->avatar) . '?v=' . time() : null,
+                    'avatar_url' => $broker->avatar_url,
                     'brokerage_firm_name' => $broker->brokerage_firm_name,
                     'city' => $broker->city,
-                    'finalized_transactions_count' => $broker->completed_sales,
-                    'last_sale_date' => $broker->last_sale_date,
+                    'finalized_transactions_count' => $broker->total_sales,
+                    'last_sale_date' => $broker->last_sale_date ?? null,
                 ];
-            });
+            })
+            ->values();
 
         // Get all verified brokers for directory, sorted alphabetically
         $brokers = User::where('role', 'broker')

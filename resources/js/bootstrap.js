@@ -67,14 +67,16 @@ if (!import.meta.env.VITE_REVERB_APP_KEY) {
             forceTLS:
                 (import.meta.env.VITE_REVERB_SCHEME || "http") === "https",
             enabledTransports: ["ws", "wss"],
+            // Ensure auth request goes to app origin, not the WS host/port
+            authHost: window.location.origin,
+            // Always use absolute path so it doesn't inherit the current page path (e.g., /broker/...)
+            authEndpoint: "/broadcasting/auth",
             auth: {
+                withCredentials: true,
                 headers: {
                     "X-CSRF-TOKEN": csrfToken,
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
                 },
             },
-            authEndpoint: "/broadcasting/auth",
             cluster: import.meta.env.VITE_REVERB_APP_CLUSTER || "mt1",
             disableStats: true,
             enableLogging: true,

@@ -328,20 +328,27 @@ const sendMessage = async () => {
     if (!newMessage.value.trim() || sending.value) return;
 
     sending.value = true;
+    const messageContent = newMessage.value;
+    newMessage.value = ""; // Clear immediately for better UX
 
     try {
         await router.post(
             route("conversations.send-message", props.conversation.id),
             {
-                content: newMessage.value,
+                content: messageContent,
             },
             {
-                preserveState: true,
-                preserveScroll: true,
+                preserveState: false, // Allow Inertia to reload messages
+                preserveScroll: true, // But keep scroll position
                 onSuccess: () => {
-                    newMessage.value = "";
+                    // Message will be in the updated props.messages
                     scrollToBottom();
                     messageInput.value?.focus();
+                },
+                onError: (errors) => {
+                    console.error("Failed to send message:", errors);
+                    // Restore message on error
+                    newMessage.value = messageContent;
                 },
             }
         );
@@ -416,28 +423,52 @@ const scrollToBottom = (smooth = true) => {
     });
 };
 
+// Only sync props to messages when props actually change (new message sent)
 watch(
-    () => props.messages,
-    (newMessages, oldMessages) => {
-        messages.value = newMessages || [];
+    () => props.messages?.length,
+    (newLength, oldLength) => {
+        // Only update if props has MORE messages (someone sent a new message)
+        if (newLength > oldLength) {
+            console.log("👁️ Props messages increased, syncing...");
 
-        // Check if new message was added
-        if (
-            newMessages &&
-            oldMessages &&
-            newMessages.length > oldMessages.length
-        ) {
-            const latestMessage = newMessages[newMessages.length - 1];
+            // Get new message IDs from props
+            const currentIds = new Set(messages.value.map((m) => m.id));
+            const propsIds = new Set(props.messages.map((m) => m.id));
+
+            // Find messages in props that aren't in our current array
+            const newFromProps = props.messages.filter(
+                (m) => !currentIds.has(m.id)
+            );
+
+            if (newFromProps.length > 0) {
+                console.log(
+                    `  Adding ${newFromProps.length} new message(s) from props`
+                );
+                messages.value.push(...newFromProps);
+            }
+        } else if (newLength < oldLength) {
+            // Props has fewer messages (page refresh or navigation)
+            console.log("👁️ Props reset detected, syncing all messages");
+            messages.value = [...props.messages];
+        }
+    }
+);
+
+// Auto-scroll when messages change
+watch(
+    () => messages.value.length,
+    (newCount, oldCount) => {
+        if (newCount > oldCount) {
+            const latestMessage = messages.value[messages.value.length - 1];
 
             // Show notification for new messages from others
-            if (latestMessage.sender_id !== currentUserId) {
+            if (latestMessage && latestMessage.sender_id !== currentUserId) {
                 showDesktopNotification(latestMessage);
             }
-        }
 
-        scrollToBottom();
-    },
-    { immediate: true }
+            scrollToBottom();
+        }
+    }
 );
 
 onMounted(() => {
@@ -458,28 +489,78 @@ onMounted(() => {
 
     // Listen for new messages via Echo
     if (window.Echo && props.conversation.id) {
-        window.Echo.private(`conversation.${props.conversation.id}`).listen(
-            "MessageSent",
-            (e) => {
-                messages.value.push(e.message);
-
-                // Show notification for messages from others
-                if (e.message.sender_id !== currentUserId) {
-                    showDesktopNotification(e.message);
-                }
-
-                scrollToBottom();
-            }
+        console.log(
+            `🔌 Listening for messages on conversation.${props.conversation.id}`
         );
+        console.log(`📊 Current messages count:`, messages.value.length);
+
+        const channel = window.Echo.private(
+            `conversation.${props.conversation.id}`
+        );
+
+        const handleIncoming = (e) => {
+            console.log("📨 New message received via Echo:", e);
+            console.log("📊 Messages before adding:", messages.value.length);
+
+            // Normalize payload to match existing message shape
+            const incoming = { ...e.message };
+            if (!incoming.sender_id && incoming.sender && incoming.sender.id) {
+                incoming.sender_id = incoming.sender.id;
+            }
+
+            console.log("📝 Normalized message:", incoming);
+
+            // Check if message already exists (prevent duplicates)
+            const exists = messages.value.find((m) => m.id === incoming.id);
+            if (exists) {
+                console.log(
+                    "⚠️ Message already exists, skipping:",
+                    incoming.id
+                );
+                return;
+            }
+
+            // Add the new message to the UI
+            console.log("➕ Adding message to array...");
+            messages.value.push(incoming);
+            console.log("📊 Messages after adding:", messages.value.length);
+            console.log("✅ Message added to UI:", incoming.id);
+
+            // Show notification for messages from others
+            if (incoming.sender_id !== currentUserId) {
+                showDesktopNotification(incoming);
+            }
+
+            scrollToBottom();
+        };
+
+        // Listen for multiple possible event name formats
+        channel.listen("MessageSent", handleIncoming);
+        channel.listen(".MessageSent", handleIncoming);
+        channel.listen("App\\Events\\MessageSent", handleIncoming);
+
+        channel.error((error) => {
+            console.error("❌ Echo channel error:", error);
+        });
+    } else {
+        if (!window.Echo) {
+            console.error("❌ Echo is not initialized!");
+        }
+        if (!props.conversation.id) {
+            console.error("❌ No conversation ID provided!");
+        }
     }
 });
 
 onUnmounted(() => {
     if (window.Echo && props.conversation.id) {
         try {
+            console.log(
+                `🔌 Leaving conversation.${props.conversation.id} channel`
+            );
             window.Echo.leave(`conversation.${props.conversation.id}`);
         } catch (e) {
-            // no-op
+            console.error("Error leaving Echo channel:", e);
         }
     }
 });

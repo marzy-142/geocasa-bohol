@@ -121,7 +121,7 @@
                                     class="text-sm text-gray-600 dark:text-gray-400 truncate mt-1"
                                 >
                                     {{
-                                        conversation.last_message?.content ||
+                                        conversation.latest_message?.content ||
                                         "No messages yet"
                                     }}
                                 </p>

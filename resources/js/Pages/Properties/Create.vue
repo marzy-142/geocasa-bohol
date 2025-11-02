@@ -40,7 +40,7 @@
         >
             <!-- Stepper / Progress Indicator -->
             <div
-                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 sticky top-0 z-10"
+                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 sticky top-20 z-20"
             >
                 <div class="flex items-center justify-between">
                     <div class="flex-1 mr-4">
@@ -472,6 +472,8 @@
                             v-model="form.lot_area_sqm"
                             type="number"
                             step="0.01"
+                            min="0"
+                            inputmode="decimal"
                             class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                             :class="{
                                 'border-red-500 ring-red-500':
@@ -501,6 +503,8 @@
                             v-model="form.price_per_sqm"
                             type="number"
                             step="0.01"
+                            min="0"
+                            inputmode="decimal"
                             class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                             :class="{
                                 'border-red-500 ring-red-500':
@@ -535,6 +539,8 @@
                             v-model="form.total_price"
                             type="number"
                             step="0.01"
+                            min="0"
+                            inputmode="decimal"
                             class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                             :class="{
                                 'border-red-500 ring-red-500':
@@ -610,7 +616,7 @@
                             for="title_type"
                             class="block text-sm font-medium text-gray-700 mb-2"
                         >
-                            Title Type
+                            Title Type *
                         </label>
                         <select
                             id="title_type"
@@ -1135,6 +1141,7 @@
                                 :src="image"
                                 :alt="`Preview ${index + 1}`"
                                 class="w-full h-24 object-cover rounded border"
+                                loading="lazy"
                             />
                             <button
                                 type="button"
@@ -1418,7 +1425,6 @@ const municipalities = [
     "Tubigon",
     "Ubay",
     "Valencia",
-    "Well",
 ];
 
 const canFeatureProperty = computed(() => {

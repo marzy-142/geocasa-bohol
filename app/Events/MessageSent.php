@@ -7,11 +7,11 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageSent implements ShouldBroadcast
+class MessageSent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -23,6 +23,12 @@ class MessageSent implements ShouldBroadcast
     public function __construct(Message $message)
     {
         $this->message = $message;
+        
+        \Log::info('MessageSent event created', [
+            'message_id' => $message->id,
+            'conversation_id' => $message->conversation_id,
+            'channel' => 'conversation.' . $message->conversation_id
+        ]);
     }
 
     /**
@@ -58,6 +64,7 @@ class MessageSent implements ShouldBroadcast
                 'type' => $this->message->type,
                 'attachments' => $this->message->getAttachmentUrls(),
                 'created_at' => $this->message->created_at,
+                'sender_id' => $this->message->sender->id,
                 'sender' => [
                     'id' => $this->message->sender->id,
                     'name' => $this->message->sender->name,

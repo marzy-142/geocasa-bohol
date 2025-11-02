@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
 use App\Models\Client;
+use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -205,8 +206,11 @@ class InquiryController extends Controller
             'status' => 'new',
         ]);
 
-        // If client has an assigned broker, assign the inquiry to them
-        if ($client->broker_id) {
+        // Assign broker: prioritize property broker, fallback to client's broker
+        $property = Property::find($request->property_id);
+        if ($property && $property->broker_id) {
+            $inquiry->update(['assigned_broker_id' => $property->broker_id]);
+        } elseif ($client->broker_id) {
             $inquiry->update(['assigned_broker_id' => $client->broker_id]);
         }
 

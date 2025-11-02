@@ -289,13 +289,14 @@ const showBrowserNotification = (notification) => {
 // Play notification sound
 const playNotificationSound = () => {
     try {
+        // TODO: Add notification.mp3 to public/sounds/ directory
         const audio = new Audio("/sounds/notification.mp3");
         audio.volume = 0.3;
         audio.play().catch(() => {
-            // Ignore audio play errors (user interaction required)
+            // Ignore audio play errors (user interaction required or file not found)
         });
     } catch (error) {
-        // Ignore audio errors
+        // Ignore audio errors silently
     }
 };
 

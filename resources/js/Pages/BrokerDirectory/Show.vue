@@ -5,36 +5,23 @@ const getImageUrl = (img, isVirtualTour = false) => {
 
     let cleanImage = String(img).trim();
 
-    // If already a full URL, return as-is
-    if (cleanImage.startsWith("http://") || cleanImage.startsWith("https://")) {
+    // If already a full URL or data URI, return as-is
+    if (
+        cleanImage.startsWith("http://") ||
+        cleanImage.startsWith("https://") ||
+        cleanImage.startsWith("data:")
+    ) {
         return cleanImage;
     }
 
-    // If already starts with /storage/, return as-is to prevent duplication
+    // If already starts with /storage/, return as-is
     if (cleanImage.startsWith("/storage/")) {
         return cleanImage;
     }
 
-    // Remove any leading slashes to prevent double slashes
+    // For any other case, prepend /storage/ (legacy support)
     cleanImage = cleanImage.replace(/^\/+/, "");
-
-    // Check for existing path segments to prevent duplication
-    if (cleanImage.includes("properties/virtual-tours/")) {
-        return `/storage/${cleanImage}`;
-    } else if (cleanImage.includes("properties/images/")) {
-        return `/storage/${cleanImage}`;
-    }
-
-    // Determine the correct path based on context
-    if (
-        isVirtualTour ||
-        cleanImage.includes("virtual") ||
-        cleanImage.includes("tour")
-    ) {
-        return `/storage/properties/virtual-tours/${cleanImage}`;
-    } else {
-        return `/storage/properties/images/${cleanImage}`;
-    }
+    return `/storage/${cleanImage}`;
 };
 
 const onImageError = (e) => {

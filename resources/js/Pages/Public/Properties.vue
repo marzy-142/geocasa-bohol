@@ -41,6 +41,7 @@ const form = reactive({
     utilities: props.filters.utilities || false,
     featured: props.filters.featured || false,
     virtual_tour: props.filters.virtual_tour || false,
+    include_sold: props.filters.include_sold || false,
 });
 
 const getImageUrl = (image, isVirtualTour = false) => {
@@ -51,14 +52,12 @@ const getImageUrl = (image, isVirtualTour = false) => {
 
     // Handle arrays - flatten and find first valid string
     if (Array.isArray(image)) {
-        console.warn("Array passed to getImageUrl:", image);
         const flatArray = image.flat(2);
         const firstValidImage = flatArray.find(
             (img) => img && typeof img === "string" && img.trim() !== ""
         );
 
         if (!firstValidImage) {
-            console.error("No valid image found in array:", image);
             return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         }
 
@@ -67,7 +66,6 @@ const getImageUrl = (image, isVirtualTour = false) => {
 
     // Ensure we have a string
     if (typeof image !== "string") {
-        console.error("Invalid image type:", typeof image, image);
         return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
 
@@ -78,39 +76,23 @@ const getImageUrl = (image, isVirtualTour = false) => {
         return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
     }
 
-    // If already a full URL, return as-is
-    if (cleanImage.startsWith("http://") || cleanImage.startsWith("https://")) {
+    // If already a full URL or data URI, return as-is
+    if (
+        cleanImage.startsWith("http://") ||
+        cleanImage.startsWith("https://") ||
+        cleanImage.startsWith("data:")
+    ) {
         return cleanImage;
     }
 
-    // If already starts with /storage/, return as-is to prevent duplication
+    // If already starts with /storage/, return as-is
     if (cleanImage.startsWith("/storage/")) {
         return cleanImage;
     }
 
-    // Remove any leading slashes to prevent double slashes
+    // For any other case, prepend /storage/ (legacy support)
     cleanImage = cleanImage.replace(/^\/+/, "");
-
-    // Check for existing path segments to prevent duplication
-    if (cleanImage.includes("properties/virtual-tours/")) {
-        return `/storage/${cleanImage}`;
-    } else if (cleanImage.includes("properties/images/")) {
-        return `/storage/${cleanImage}`;
-    } else if (cleanImage.includes("seller-requests/images/")) {
-        // Handle images from seller requests (legacy properties)
-        return `/storage/${cleanImage}`;
-    }
-
-    // Determine the correct path based on context
-    if (
-        isVirtualTour ||
-        cleanImage.includes("virtual") ||
-        cleanImage.includes("tour")
-    ) {
-        return `/storage/properties/virtual-tours/${cleanImage}`;
-    } else {
-        return `/storage/properties/images/${cleanImage}`;
-    }
+    return `/storage/${cleanImage}`;
 };
 
 function search() {
@@ -186,6 +168,22 @@ const formatAddress = (property) => {
     return result.join(", ");
 };
 
+// Determine if a property should be treated as under transaction.
+// This is true when status is explicitly 'under_negotiation' OR
+// when there is at least one active (non-finalized, non-cancelled) transaction counted by backend.
+const isUnderTransaction = (property) => {
+    // Prefer backend-computed flag if provided
+    if (typeof property.is_under_transaction !== "undefined") {
+        return Boolean(property.is_under_transaction);
+    }
+    // Fallback to active transactions count or explicit status
+    const activeCount = Number(property.active_transactions_count || 0);
+    return (
+        property.status === "under_negotiation" ||
+        (activeCount && activeCount > 0)
+    );
+};
+
 // Auto-search when filters change
 watch(
     form,
@@ -226,8 +224,8 @@ watch(
                     <p
                         class="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto"
                     >
-                        Browse through {{ properties.total }} available
-                        properties across Bohol's diverse locations
+                        Browse through {{ properties.total }} properties across
+                        Bohol's diverse locations
                     </p>
                 </div>
 
@@ -381,6 +379,22 @@ watch(
                                         Virtual Tour
                                     </span>
                                 </label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:text-rose-600 transition-colors"
+                                >
+                                    <input
+                                        id="sold-filter"
+                                        name="include_sold"
+                                        v-model="form.include_sold"
+                                        type="checkbox"
+                                        class="modern-checkbox"
+                                    />
+                                    <span
+                                        class="text-sm font-medium text-neutral-700 flex items-center gap-1"
+                                    >
+                                        Show Sold Properties
+                                    </span>
+                                </label>
                             </div>
                         </div>
                     </form>
@@ -393,7 +407,11 @@ watch(
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center mb-8">
                     <h2 class="text-2xl font-bold text-neutral-900">
-                        Available Properties
+                        {{
+                            form.include_sold
+                                ? "Sold Properties"
+                                : "All Properties"
+                        }}
                         <span class="text-neutral-500 text-lg font-normal">
                             ({{ properties.total }} found)
                         </span>
@@ -427,7 +445,12 @@ watch(
                             <img
                                 :src="getImageUrl(property.main_image)"
                                 :alt="property.title"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                :class="[
+                                    'w-full h-full object-cover transition-transform duration-300',
+                                    property.status === 'sold'
+                                        ? 'grayscale opacity-75'
+                                        : 'group-hover:scale-105',
+                                ]"
                                 loading="lazy"
                             />
                             <div
@@ -461,6 +484,48 @@ watch(
                                 >
                                     {{ formatPropertyType(property.type) }}
                                 </div>
+                            </div>
+                            <!-- Status Badge -->
+                            <div
+                                v-if="
+                                    property.status !== 'available' ||
+                                    isUnderTransaction(property)
+                                "
+                                class="absolute top-4 right-4"
+                            >
+                                <span
+                                    :class="{
+                                        'bg-rose-600 text-white':
+                                            property.status === 'sold',
+                                        'bg-amber-500 text-white':
+                                            property.status === 'reserved',
+                                        'bg-blue-500 text-white':
+                                            isUnderTransaction(property),
+                                        'bg-gray-500 text-white':
+                                            property.status === 'off_market',
+                                    }"
+                                    class="px-3 py-1.5 text-xs font-semibold rounded-lg shadow-md"
+                                >
+                                    <span v-if="property.status === 'sold'"
+                                        >✓ Sold</span
+                                    >
+                                    <span
+                                        v-else-if="
+                                            property.status === 'reserved'
+                                        "
+                                        >🔒 Reserved</span
+                                    >
+                                    <span
+                                        v-else-if="isUnderTransaction(property)"
+                                        >💼 Under Transaction</span
+                                    >
+                                    <span
+                                        v-else-if="
+                                            property.status === 'off_market'
+                                        "
+                                        >— Off Market</span
+                                    >
+                                </span>
                             </div>
                         </div>
 
