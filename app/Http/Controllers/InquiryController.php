@@ -18,7 +18,9 @@ use Inertia\Inertia;
 use App\Events\InquiryStatusUpdated;
 use App\Events\NewInquiryReceived;
 use App\Events\TransactionCreated;
+use App\Events\MessageSent;
 use App\Mail\InquiryResponseMail;
+use App\Notifications\MessageNotification;
 
 class InquiryController extends Controller
 {
@@ -473,7 +475,22 @@ class InquiryController extends Controller
         // Create or get conversation for ongoing communication
         $conversation = $inquiry->conversation;
         if (!$conversation) {
-            $conversation = Conversation::createForInquiry($inquiry->fresh(['property', 'client']));
+            // Reload inquiry with fresh relationships to ensure we have latest client data
+            $freshInquiry = $inquiry->fresh(['property', 'client.user']);
+            
+            // Log for debugging to check if client has user_id
+            \Log::info('Creating conversation for inquiry', [
+                'inquiry_id' => $freshInquiry->id,
+                'inquiry_user_id' => $freshInquiry->user_id,
+                'client_id' => $freshInquiry->client_id,
+                'client_user_id' => $freshInquiry->client?->user_id ?? 'NULL',
+                'property_broker_id' => $freshInquiry->property?->broker_id
+            ]);
+            
+            $conversation = Conversation::createForInquiry($freshInquiry);
+            
+            // Reload the inquiry to get the conversation relationship
+            $inquiry->load('conversation');
             
             // Create initial system message
             Message::create([
@@ -482,6 +499,32 @@ class InquiryController extends Controller
                 'content' => "Conversation started. {$user->name} responded to the inquiry about {$inquiry->property->title}.",
                 'is_system_message' => true,
             ]);
+        }
+        
+        // Send the broker's response as an actual message in the conversation
+        // This ensures the buyer can see the broker's message in their inbox
+        $responseMessage = Message::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $user->id,
+            'content' => $validated['broker_response'],
+            'type' => 'text',
+        ]);
+        
+        // Update conversation's last message timestamp
+        $conversation->update([
+            'last_message_at' => now()
+        ]);
+        
+        // Broadcast the message to other participants
+        broadcast(new \App\Events\MessageSent($responseMessage))->toOthers();
+        
+        // Notify other participants in the conversation
+        $otherParticipants = $conversation->participantUsers()
+            ->where('users.id', '!=', $user->id)
+            ->get();
+            
+        foreach ($otherParticipants as $participant) {
+            $participant->notify(new \App\Notifications\MessageNotification($responseMessage));
         }
 
         // Send email notification to the client

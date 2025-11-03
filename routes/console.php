@@ -71,19 +71,7 @@ Schedule::command('reminders:follow-up')
     ->withoutOverlapping()
     ->runInBackground();
 
-// Schedule property renewal reminders (daily at 8:00 AM)
-Schedule::command('property:send-renewal-reminders')
-    ->daily()
-    ->at('08:00')
-    ->withoutOverlapping()
-    ->runInBackground();
-
-// Schedule auto-expire listings (daily at 6:00 AM)
-Schedule::command('property:auto-expire')
-    ->daily()
-    ->at('06:00')
-    ->withoutOverlapping()
-    ->runInBackground();
+// Property renewal/auto-expire scheduling removed as the feature was deprecated
 
 // Schedule broker application daily summary (daily at 9:00 AM)
 Schedule::command('broker:daily-summary')

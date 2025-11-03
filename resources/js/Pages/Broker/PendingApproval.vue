@@ -16,8 +16,8 @@ const handleLogout = () => {
 
 const verificationSteps = [
     {
-        title: "Email Verified",
-        description: "Your email address has been confirmed",
+        title: "Account Created",
+        description: "You're logged in and your profile is set up",
         status: "completed",
         icon: CheckCircleIcon,
     },
@@ -59,8 +59,9 @@ const verificationSteps = [
                     <p
                         class="text-xl text-gray-500 font-light max-w-2xl mx-auto"
                     >
-                        Your email has been verified and your broker application
-                        is now being carefully reviewed by our admin team
+                        You're logged in and your broker application is now
+                        being carefully reviewed by our admin team. Broker
+                        features are locked until approval.
                     </p>
                 </div>
             </div>
@@ -213,6 +214,40 @@ const verificationSteps = [
 
                 <!-- Sidebar -->
                 <div class="space-y-8">
+                    <!-- Security Tip: Email Verification -->
+                    <div
+                        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                    >
+                        <div class="px-6 py-5 border-b border-gray-50">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                Secure Your Account
+                            </h3>
+                        </div>
+                        <div class="px-6 py-5">
+                            <p
+                                class="text-sm text-gray-600 mb-4 leading-relaxed"
+                            >
+                                For your security, we recommend verifying your
+                                email address if you haven't done so yet. This
+                                helps ensure you receive important notifications
+                                about your application.
+                            </p>
+                            <button
+                                @click="
+                                    () =>
+                                        router.post(
+                                            '/email/verification-notification'
+                                        )
+                                "
+                                type="button"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                            >
+                                <EnvelopeIcon class="w-4 h-4 mr-2" />
+                                Send verification link
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Review Checklist -->
                     <div
                         class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"

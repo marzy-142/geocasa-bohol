@@ -16,21 +16,6 @@
                                 assignments and performance metrics
                             </p>
                         </div>
-
-                        <div class="flex items-center space-x-4">
-                            <button
-                                @click="refreshData"
-                                :disabled="loading"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-                            >
-                                <ArrowPathIcon
-                                    v-if="loading"
-                                    class="w-4 h-4 animate-spin"
-                                />
-                                <ArrowPathIcon v-else class="w-4 h-4" />
-                                Refresh
-                            </button>
-                        </div>
                     </div>
                 </div>
 

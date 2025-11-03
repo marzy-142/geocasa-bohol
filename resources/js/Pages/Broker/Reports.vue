@@ -13,7 +13,7 @@
 
             <!-- Summary Cards -->
             <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
             >
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center">
@@ -63,27 +63,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div class="p-2 bg-yellow-100 rounded-lg">
-                            <CurrencyDollarIcon
-                                class="h-6 w-6 text-yellow-600"
-                            />
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">
-                                Total Sales Value
-                            </p>
-                            <p class="text-2xl font-bold text-gray-900">
-                                {{
-                                    formatPrice(
-                                        reportData.summary.total_commission
-                                    )
-                                }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <!-- Commission / sales value removed from public reports -->
             </div>
 
             <!-- Recent Transactions -->

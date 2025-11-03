@@ -12,25 +12,31 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
     public function rules(): array
     {
         return [
-            // Property basic info
+            // Property basic info - REQUIRED FIELDS
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'type' => 'required|in:' . implode(',', \App\Models\Property::TYPES),
+            // Allow predefined types or 'other' with a companion free-text field
+            'type' => 'required|in:' . implode(',', \App\Models\Property::TYPES) . ',other',
+            'type_other' => 'nullable|required_if:type,other|string|max:100',
             'municipality' => 'required|in:' . implode(',', \App\Models\Property::BOHOL_MUNICIPALITIES),
-            'barangay' => 'required|string|max:100',
-            'address' => 'required|string|max:500',
-            'coordinates_lat' => 'nullable|numeric|between:-90,90',
-            'coordinates_lng' => 'nullable|numeric|between:-180,180',
-            'status' => 'required|in:' . implode(',', \App\Models\Property::STATUSES),
+            'title_type' => 'required|in:titled,tax_declared,mother_title,cct',
             
-            // Property details
+            // Pricing and area - REQUIRED
             'lot_area_sqm' => 'required|numeric|min:0',
-            'lot_area_hectares' => 'nullable|numeric|min:0',
             'price_per_sqm' => 'required|numeric|min:0',
             'total_price' => 'required|numeric|min:0',
-            'title_type' => 'required|in:titled,tax_declared,mother_title,cct',
-            'title_number' => 'required|string|max:100',
-            'zoning_classification' => 'required|string|max:100',
+            
+            // Optional fields
+            'barangay' => 'nullable|string|max:100',
+            'address' => 'nullable|string|max:500',
+            'coordinates_lat' => 'nullable|numeric|between:-90,90',
+            'coordinates_lng' => 'nullable|numeric|between:-180,180',
+            'status' => 'nullable|in:' . implode(',', \App\Models\Property::STATUSES),
+            
+            // Property details - optional
+            'lot_area_hectares' => 'nullable|numeric|min:0',
+            'title_number' => 'nullable|string|max:100',
+            'zoning_classification' => 'nullable|string|max:100',
             
             // Amenities (boolean fields)
             'road_access' => 'boolean',
@@ -179,5 +185,15 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
         $this->merge([
             'has_virtual_tour' => $this->has('virtual_tour_images') && !empty($this->virtual_tour_images),
         ]);
+
+        // If 'other' type is selected, ensure additional notes capture the specified type without breaking schema
+        if ($this->input('type') === 'other' && $this->filled('type_other')) {
+            $notePrefix = 'Type (other): ' . trim($this->input('type_other'));
+            $existing = trim((string) $this->input('additional_notes'));
+            $mergedNotes = $existing ? ($notePrefix . "\n" . $existing) : $notePrefix;
+            $this->merge([
+                'additional_notes' => $mergedNotes,
+            ]);
+        }
     }
 }

@@ -55,10 +55,8 @@ class Property extends Model
         'coordinates_lng', 'road_access', 'water_source', 'electricity_available',
         'internet_available', 'nearby_landmarks', 'zoning_classification',
         'images', 'documents', 'is_featured', 'broker_id', 'client_id',
-        // Virtual tour fields
-        'virtual_tour_images', 'has_virtual_tour', 'gis_data', 'tour_hotspots',
-        // Expiry tracking fields
-        'last_updated_at', 'expiry_date', 'reminder_sent_at', 'renewal_required', 'renewed_at',
+    // Panoramic view fields
+    'virtual_tour_images', 'has_virtual_tour', 'gis_data', 'tour_hotspots',
         // Sale fields
         'pending_at', 'sold_at', 'archived_at', 'sold_price', 'sold_to_client_id', 'sold_via_transaction_id',
     ];
@@ -82,13 +80,7 @@ class Property extends Model
         'gis_data' => 'array',
         'virtual_tour_images' => 'array',
         'has_virtual_tour' => 'boolean',
-        'tour_hotspots' => 'array',
-        // Expiry tracking casts
-        'last_updated_at' => 'datetime',
-        'expiry_date' => 'datetime',
-        'reminder_sent_at' => 'datetime',
-        'renewal_required' => 'boolean',
-        'renewed_at' => 'datetime',
+    'tour_hotspots' => 'array',
         // Sale casts
         'pending_at' => 'datetime',
         'sold_at' => 'datetime',

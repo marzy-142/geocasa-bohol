@@ -115,7 +115,7 @@ class RegisteredUserController extends Controller
             // Explicitly set broker approval fields to override database defaults
             $userData['is_approved'] = false;
             $userData['application_status'] = $prcVerificationResult['verified'] ? 'pending' : 'prc_verification_failed';
-            $userData['email_verified_at'] = now(); // Bypass email verification for brokers
+            // Do NOT auto-verify email for brokers; admin approval is the activation gate
 
             // Store uploaded files securely using the enhanced security service
             $storedFiles = $request->storeFilesSecurely([
@@ -160,12 +160,18 @@ class RegisteredUserController extends Controller
             $this->handleBrokerRegistrationNotifications($user, $prcVerificationResult ?? null);
         }
 
-        // Only login if email is verified - require email verification for security
-        if ($user->hasVerifiedEmail()) {
+        // Login policy:
+        // - Brokers: login immediately and gate access by admin approval (pending page), email verification optional.
+        // - Clients: require email verification prior to login for security.
+        if ($user->role === 'broker') {
             Auth::login($user);
         } else {
-            // Store user ID in session for post-verification login
-            session(['pending_user_id' => $user->id]);
+            if ($user->hasVerifiedEmail()) {
+                Auth::login($user);
+            } else {
+                // Store user ID in session for post-verification login
+                session(['pending_user_id' => $user->id]);
+            }
         }
 
         // Add linking result to session for display
@@ -173,13 +179,10 @@ class RegisteredUserController extends Controller
             session()->flash('inquiry_linking_success', $linkingResult['message']);
         }
 
-        // Redirect based on email verification status and role
-        if (!$user->hasVerifiedEmail()) {
-            // Redirect to email verification notice
+        // Redirect based on role and approval; do not block brokers on email verification
+        if ($user->role !== 'broker' && !$user->hasVerifiedEmail()) {
             session()->forget('inquiry_data');
-            // Flash the success message explicitly
             session()->flash('success', 'Registration successful! Please check your email and click the verification link to complete your registration.');
-            // Pass the email as a query parameter for display
             return redirect()->route('verification.notice', ['registered' => '1', 'email' => $user->email]);
         }
 
@@ -212,18 +215,23 @@ class RegisteredUserController extends Controller
         try {
             $prcService = app(PRCVerificationService::class);
             
+            // Extract first and last name from full name if not provided separately
+            $nameParts = explode(' ', $request->name ?? '');
+            $firstName = $request->first_name ?? ($nameParts[0] ?? '');
+            $lastName = $request->last_name ?? (implode(' ', array_slice($nameParts, 1)) ?: ($nameParts[0] ?? ''));
+            
             // Use mock verification in development, real API in production
             if (config('services.prc.mock_mode', true)) {
                 return $prcService->mockVerification(
                     $request->prc_id,
-                    $request->last_name ?? '',
-                    $request->first_name ?? ''
+                    $lastName,
+                    $firstName
                 );
             } else {
                 return $prcService->verifyLicense(
                     $request->prc_id,
-                    $request->last_name ?? '',
-                    $request->first_name ?? ''
+                    $lastName,
+                    $firstName
                 );
             }
         } catch (\Exception $e) {

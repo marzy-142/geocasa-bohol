@@ -182,15 +182,52 @@ class Conversation extends Model
         // Add client user if available
         if ($inquiry->client && $inquiry->client->user_id) {
             $userParticipants[] = $inquiry->client->user_id;
+        } elseif ($inquiry->client && $inquiry->client->email) {
+            // ENHANCEMENT: If client exists but user_id is null, try to find and link the user by email
+            $user = \App\Models\User::where('email', $inquiry->client->email)->first();
+            if ($user) {
+                // Auto-link the client to the user
+                $inquiry->client->update(['user_id' => $user->id]);
+                $userParticipants[] = $user->id;
+                
+                \Log::info('Auto-linked client to user in conversation creation', [
+                    'client_id' => $inquiry->client->id,
+                    'user_id' => $user->id,
+                    'email' => $inquiry->client->email
+                ]);
+            }
         }
 
         // Add direct user_id if set (for logged-in inquiries)
         if ($inquiry->user_id) {
             $userParticipants[] = $inquiry->user_id;
+        } elseif ($inquiry->email) {
+            // ENHANCEMENT: If inquiry has email but no user_id, try to find the user
+            $user = \App\Models\User::where('email', $inquiry->email)->first();
+            if ($user && !in_array($user->id, $userParticipants)) {
+                $userParticipants[] = $user->id;
+                
+                // Also update the inquiry to link it
+                $inquiry->update(['user_id' => $user->id]);
+                
+                \Log::info('Auto-linked inquiry to user in conversation creation', [
+                    'inquiry_id' => $inquiry->id,
+                    'user_id' => $user->id,
+                    'email' => $inquiry->email
+                ]);
+            }
         }
 
         // Remove duplicates/nulls
         $userParticipants = array_values(array_unique(array_filter($userParticipants)));
+
+        // Log participants for debugging
+        \Log::info('Creating conversation for inquiry with participants', [
+            'inquiry_id' => $inquiry->id,
+            'participants' => $userParticipants,
+            'inquiry_email' => $inquiry->email,
+            'client_email' => $inquiry->client?->email
+        ]);
 
         $conversation = self::create([
             'title' => "Inquiry: {$inquiry->property->title}",

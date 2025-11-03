@@ -108,23 +108,18 @@ class DashboardController extends Controller
             $startOfMonth = $date->copy()->startOfMonth();
             $endOfMonth = $date->copy()->endOfMonth();
             
-            // Get finalized transactions for this month with commission calculation
+            // Get finalized transactions for this month using finalized_date (accuracy)
             $monthTransactions = $user->transactions()
                 ->where('status', 'finalized')
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->get();
-            
-            $monthCommission = $monthTransactions->sum(function($transaction) {
-                return $transaction->final_price ?? $transaction->offered_price ?? 0;
-            });
+                ->whereBetween('finalized_date', [$startOfMonth, $endOfMonth])
+                ->count();
             
             $monthlyData->push([
                 'month' => $date->format('M Y'),
                 'inquiries' => Inquiry::whereHas('property', function($query) use ($user) {
                     $query->where('broker_id', $user->id);
                 })->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count(),
-                'transactions' => $monthTransactions->count(),
-                'commission' => $monthCommission,
+                'transactions' => $monthTransactions,
                 'properties_added' => $user->properties()
                     ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                     ->count(),
@@ -160,7 +155,6 @@ class DashboardController extends Controller
                     $query->where('broker_id', $user->id);
                 })->count(),
                 'conversionRate' => $this->calculateConversionRate($user),
-                'averageCommission' => $this->calculateAverageCommission($user),
                 'topPerformingProperty' => $propertyStats->first(),
             ],
         ]);
@@ -268,22 +262,7 @@ class DashboardController extends Controller
         return $totalInquiries > 0 ? round(($finalizedTransactions / $totalInquiries) * 100, 1) : 0;
     }
 
-    private function calculateAverageCommission($user)
-    {
-        $finalizedTransactions = $user->transactions()
-            ->where('status', 'finalized')
-            ->get();
-
-        if ($finalizedTransactions->isEmpty()) {
-            return 0;
-        }
-
-        $totalCommission = $finalizedTransactions->sum(function($transaction) {
-            return $transaction->final_price ?? $transaction->offered_price ?? 0;
-        });
-
-        return round($totalCommission / $finalizedTransactions->count(), 2);
-    }
+    // Removed average commission calculation for privacy
 
     /**
      * Show pending approval page

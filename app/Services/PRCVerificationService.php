@@ -145,12 +145,10 @@ class PRCVerificationService
      */
     protected function isValidMockLicense(string $licenseNumber, string $lastName, string $firstName): bool
     {
-        // Simple mock validation rules
+        // Simple mock validation rules - allow international characters
         return strlen($licenseNumber) >= 6 && 
-               strlen($lastName) >= 2 && 
-               strlen($firstName) >= 2 &&
-               !preg_match('/[^a-zA-Z\s]/', $lastName) &&
-               !preg_match('/[^a-zA-Z\s]/', $firstName);
+               mb_strlen($lastName) >= 2 && 
+               mb_strlen($firstName) >= 2;
     }
 
     /**

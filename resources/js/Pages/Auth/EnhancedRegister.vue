@@ -888,10 +888,16 @@ const submit = () => {
 
                 // Small delay to show the success message before redirect
                 setTimeout(() => {
-                    // Force a full page reload to preserve session and query params
-                    window.location = route("verification.notice", {
-                        registered: 1,
-                    });
+                    // Route based on role: brokers go to Pending Approval; others see Verify Email notice
+                    if (form.role === "broker") {
+                        window.location = route("broker.pending-approval");
+                    } else {
+                        // Force a full page reload to preserve session and query params for clients
+                        window.location = route("verification.notice", {
+                            registered: 1,
+                            email: form.email,
+                        });
+                    }
                 }, 1500);
             },
         });
@@ -2106,11 +2112,18 @@ const getStepDescription = () => {
                                                 <div
                                                     class="w-2 h-2 bg-blue-400 rounded-full"
                                                 ></div>
-                                                <span
-                                                    >Email verification link
-                                                    will be sent to
-                                                    {{ form.email }}</span
-                                                >
+                                                <span>
+                                                    We’ll email a verification
+                                                    link to
+                                                    <strong>{{
+                                                        form.email
+                                                    }}</strong>
+                                                    to help secure your account.
+                                                    Verifying your email is
+                                                    recommended, but broker
+                                                    access still requires admin
+                                                    approval.
+                                                </span>
                                             </div>
                                             <div
                                                 class="flex items-center gap-2"
@@ -2118,11 +2131,11 @@ const getStepDescription = () => {
                                                 <div
                                                     class="w-2 h-2 bg-blue-400 rounded-full"
                                                 ></div>
-                                                <span
-                                                    >Admin team reviews your
-                                                    credentials (1-3 business
-                                                    days)</span
-                                                >
+                                                <span>
+                                                    Our admin team will review
+                                                    your credentials (1–3
+                                                    business days).
+                                                </span>
                                             </div>
                                             <div
                                                 class="flex items-center gap-2"
@@ -2130,10 +2143,14 @@ const getStepDescription = () => {
                                                 <div
                                                     class="w-2 h-2 bg-blue-400 rounded-full"
                                                 ></div>
-                                                <span
-                                                    >You'll receive notification
-                                                    about approval status</span
-                                                >
+                                                <span>
+                                                    You’ll be able to log in,
+                                                    but broker features stay
+                                                    locked until approval. We’ll
+                                                    notify you as soon as your
+                                                    application is approved or
+                                                    if we need more information.
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

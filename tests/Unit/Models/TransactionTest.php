@@ -26,8 +26,6 @@ class TransactionTest extends TestCase
             'broker_id',
             'transaction_type',
             'amount',
-            'commission_rate',
-            'commission_amount',
             'status',
             'completion_date',
             'notes'
@@ -42,16 +40,10 @@ class TransactionTest extends TestCase
         $transaction = new Transaction();
         $casts = $transaction->getCasts();
 
-        $this->assertArrayHasKey('amount', $casts);
-        $this->assertEquals('decimal:2', $casts['amount']);
-        
-        $this->assertArrayHasKey('commission_rate', $casts);
-        $this->assertEquals('decimal:2', $casts['commission_rate']);
-        
-        $this->assertArrayHasKey('commission_amount', $casts);
-        $this->assertEquals('decimal:2', $casts['commission_amount']);
-        
-        $this->assertArrayHasKey('completion_date', $casts);
+    $this->assertArrayHasKey('amount', $casts);
+    $this->assertEquals('decimal:2', $casts['amount']);
+    // Commission-related casts removed for privacy
+    $this->assertArrayHasKey('completion_date', $casts);
         $this->assertEquals('date', $casts['completion_date']);
     }
 
@@ -158,8 +150,6 @@ class TransactionTest extends TestCase
             'broker_id' => $broker->id,
             'transaction_type' => 'sale',
             'amount' => 5000000.00,
-            'commission_rate' => 5.00,
-            'commission_amount' => 250000.00,
             'status' => 'completed',
             'completion_date' => now()->format('Y-m-d'),
             'notes' => 'Transaction completed successfully.'
@@ -171,8 +161,7 @@ class TransactionTest extends TestCase
         $this->assertEquals($broker->id, $transaction->broker_id);
         $this->assertEquals('sale', $transaction->transaction_type);
         $this->assertEquals(5000000.00, $transaction->amount);
-        $this->assertEquals(5.00, $transaction->commission_rate);
-        $this->assertEquals(250000.00, $transaction->commission_amount);
+        // Commission fields are not exposed
         $this->assertEquals('completed', $transaction->status);
         $this->assertNotNull($transaction->completion_date);
         $this->assertEquals('Transaction completed successfully.', $transaction->notes);
@@ -194,33 +183,7 @@ class TransactionTest extends TestCase
         $this->assertInstanceOf(User::class, $transaction->broker);
     }
 
-    public function test_transaction_can_calculate_commission_amount(): void
-    {
-        $broker = User::factory()->create([
-            'role' => 'broker',
-            'is_approved' => true,
-            'application_status' => 'approved'
-        ]);
-        $client = User::factory()->create(['role' => 'client']);
-        $property = Property::factory()->create(['broker_id' => $broker->id]);
-
-        $transaction = Transaction::create([
-            'property_id' => $property->id,
-            'client_id' => $client->id,
-            'broker_id' => $broker->id,
-            'transaction_type' => 'sale',
-            'amount' => 5000000.00,
-            'commission_rate' => 5.00,
-            'status' => 'pending'
-        ]);
-
-        // Calculate commission: 5% of 5,000,000 = 250,000
-        $expectedCommission = $transaction->amount * ($transaction->commission_rate / 100);
-        $transaction->commission_amount = $expectedCommission;
-        $transaction->save();
-
-        $this->assertEquals(250000.00, $transaction->commission_amount);
-    }
+    // Commission calculation tests removed for privacy
 
     public function test_transaction_can_be_marked_as_completed(): void
     {
@@ -332,26 +295,14 @@ class TransactionTest extends TestCase
         $this->assertGreaterThan(0, $transaction->amount);
     }
 
-    public function test_transaction_commission_rate_is_percentage(): void
-    {
-        $transaction = Transaction::factory()->create([
-            'commission_rate' => 5.50
-        ]);
-
-        $this->assertGreaterThanOrEqual(0, $transaction->commission_rate);
-        $this->assertLessThanOrEqual(100, $transaction->commission_rate);
-    }
+    // Commission rate constraints removed
 
     public function test_transaction_decimal_precision(): void
     {
         $transaction = Transaction::factory()->create([
             'amount' => 5000000.99,
-            'commission_rate' => 5.75,
-            'commission_amount' => 287500.57
         ]);
 
         $this->assertEquals(5000000.99, $transaction->amount);
-        $this->assertEquals(5.75, $transaction->commission_rate);
-        $this->assertEquals(287500.57, $transaction->commission_amount);
     }
 }

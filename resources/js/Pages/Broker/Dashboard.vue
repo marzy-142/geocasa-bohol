@@ -118,20 +118,11 @@
             />
 
             <DashboardCard
-                title="Sales Value"
-                :value="formatCurrency(stats?.totalCommission || 0)"
-                subtitle="This month"
+                title="Completed Deals"
+                :value="stats?.completedTransactions || 0"
+                subtitle="Total completed"
                 :icon="CurrencyDollarIcon"
                 color="purple"
-                :trend="
-                    stats?.monthlyStats
-                        ? getTrend(
-                              stats.monthlyStats.current.commission,
-                              stats.monthlyStats.previous.commission,
-                              'this month'
-                          )
-                        : null
-                "
             />
         </div>
 

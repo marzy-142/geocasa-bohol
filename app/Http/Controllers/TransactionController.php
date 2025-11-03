@@ -236,9 +236,15 @@ class TransactionController extends Controller
     {
         $user = Auth::user();
         
-        // Authorization check for brokers
+        // Authorization check based on role
         if ($user->role === 'broker' && $transaction->broker_id !== $user->id) {
             abort(403, 'Unauthorized access to transaction.');
+        }
+        
+        // SECURITY: Client users should NOT access transactions via this route
+        // They should use the dedicated client.transactions.show route instead
+        if ($user->role === 'client') {
+            abort(403, 'Clients cannot access this transaction route. Please use the client portal.');
         }
         
         $transaction->load([
@@ -529,8 +535,6 @@ class TransactionController extends Controller
             switch ($validated['status']) {
                 case 'inquiry':
                 case 'initial_contact':
-                    $inquiryStatus = 'in transaction';
-                    break;
                 case 'property_viewing':
                 case 'offer_made':
                 case 'negotiation':
@@ -539,13 +543,15 @@ class TransactionController extends Controller
                 case 'due_diligence':
                 case 'financing':
                 case 'closing_preparation':
-                    $inquiryStatus = 'in transaction';
+                    // Transaction is in progress, mark inquiry as completed
+                    $inquiryStatus = 'completed';
                     break;
                 case 'finalized':
                     $inquiryStatus = 'closed';
                     break;
                 case 'cancelled':
-                    $inquiryStatus = 'not converted';
+                    // Transaction cancelled, revert to contacted status
+                    $inquiryStatus = 'contacted';
                     break;
             }
             if ($inquiryStatus) {

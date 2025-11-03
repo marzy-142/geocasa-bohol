@@ -436,7 +436,7 @@
                                                     formatNumber(
                                                         analytics
                                                             .transaction_metrics
-                                                            ?.total_commission ||
+                                                            ?.total_sales_value ||
                                                             0
                                                     )
                                                 }}

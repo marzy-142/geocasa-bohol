@@ -273,15 +273,6 @@
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-600"
-                                    >Properties Viewed</span
-                                >
-                                <span
-                                    class="text-lg font-semibold text-gray-900"
-                                    >{{ client.properties_viewed || 0 }}</span
-                                >
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600"
                                     >Transactions</span
                                 >
                                 <span
@@ -334,39 +325,6 @@
                                     </p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions Card -->
-                    <div
-                        class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                    >
-                        <div
-                            class="px-6 py-4 border-b border-gray-200 bg-gray-50"
-                        >
-                            <h3 class="text-lg font-semibold text-gray-900">
-                                Quick Actions
-                            </h3>
-                        </div>
-                        <div class="p-6 space-y-3">
-                            <button
-                                @click="sendEmail"
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                            >
-                                Send Email
-                            </button>
-                            <button
-                                @click="scheduleCall"
-                                class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                            >
-                                Schedule Call
-                            </button>
-                            <button
-                                @click="addNote"
-                                class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                            >
-                                Add Note
-                            </button>
                         </div>
                     </div>
 
@@ -495,18 +453,5 @@ const deleteClient = () => {
     }
 };
 
-const sendEmail = () => {
-    // Implement email functionality
-    console.log("Send email to client");
-};
-
-const scheduleCall = () => {
-    // Implement call scheduling functionality
-    console.log("Schedule call with client");
-};
-
-const addNote = () => {
-    // Implement note adding functionality
-    console.log("Add note for client");
-};
+// Quick actions removed per request
 </script>

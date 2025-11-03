@@ -178,6 +178,35 @@ const props = defineProps({
 });
 
 const stages = computed(() => {
+    // Determine if we have a transaction and its status
+    const hasTransaction = !!props.transaction;
+    const transactionStatus = props.transaction?.status;
+
+    // If transaction exists and is at negotiation or beyond, all earlier stages should be completed
+    const isNegotiationOrBeyond =
+        hasTransaction &&
+        [
+            "negotiation",
+            "offer_accepted",
+            "contract_signed",
+            "due_diligence",
+            "financing",
+            "closing_preparation",
+            "finalized",
+        ].includes(transactionStatus);
+
+    const isContractOrBeyond =
+        hasTransaction &&
+        [
+            "contract_signed",
+            "due_diligence",
+            "financing",
+            "closing_preparation",
+            "finalized",
+        ].includes(transactionStatus);
+
+    const isFinalized = transactionStatus === "finalized";
+
     const stageList = [
         {
             id: 1,
@@ -190,64 +219,56 @@ const stages = computed(() => {
             id: 2,
             number: 2,
             title: "Initial Contact",
-            status: props.inquiry.contacted_at ? "completed" : "pending",
-            date: props.inquiry.contacted_at,
+            // Completed if contacted_at exists OR if we have a transaction
+            status:
+                props.inquiry.contacted_at || hasTransaction
+                    ? "completed"
+                    : "pending",
+            date:
+                props.inquiry.contacted_at ||
+                props.transaction?.first_contact_date,
         },
         {
             id: 3,
             number: 3,
             title: "Viewing Scheduled",
-            status: props.inquiry.scheduled_at ? "completed" : "pending",
-            date: props.inquiry.scheduled_at,
+            // Completed if scheduled_at exists OR if we have a transaction
+            status:
+                props.inquiry.scheduled_at || hasTransaction
+                    ? "completed"
+                    : "pending",
+            date: props.inquiry.scheduled_at || props.transaction?.viewing_date,
         },
         {
             id: 4,
             number: 4,
             title: "Offer Made",
-            status: props.transaction ? "completed" : "pending",
-            date: props.transaction?.created_at,
+            status: hasTransaction ? "completed" : "pending",
+            date:
+                props.transaction?.offer_date || props.transaction?.created_at,
         },
         {
             id: 5,
             number: 5,
             title: "Negotiation",
-            status:
-                props.transaction &&
-                [
-                    "negotiation",
-                    "offer_accepted",
-                    "contract_signed",
-                    "finalized",
-                ].includes(props.transaction.status)
-                    ? "completed"
-                    : "pending",
-            date:
-                props.transaction?.status === "negotiation"
-                    ? props.transaction.updated_at
-                    : null,
+            status: isNegotiationOrBeyond ? "completed" : "pending",
+            date: isNegotiationOrBeyond ? props.transaction?.updated_at : null,
         },
         {
             id: 6,
             number: 6,
             title: "Contract Signed",
-            status:
-                props.transaction &&
-                ["contract_signed", "finalized"].includes(
-                    props.transaction.status
-                )
-                    ? "completed"
-                    : "pending",
+            status: isContractOrBeyond ? "completed" : "pending",
             date: props.transaction?.contract_date,
         },
         {
             id: 7,
             number: 7,
             title: "Finalized",
-            status:
-                props.transaction?.status === "finalized"
-                    ? "completed"
-                    : "pending",
-            date: props.transaction?.closing_date,
+            status: isFinalized ? "completed" : "pending",
+            date:
+                props.transaction?.closing_date ||
+                props.transaction?.finalized_date,
         },
     ];
 

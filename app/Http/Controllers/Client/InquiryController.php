@@ -33,6 +33,16 @@ class InquiryController extends Controller
         } elseif (!$client->user_id) {
             // Link existing client record to user
             $client->update(['user_id' => $user->id]);
+            
+            // Also update any inquiries that reference this client but don't have user_id
+            Inquiry::where('client_id', $client->id)
+                ->whereNull('user_id')
+                ->update(['user_id' => $user->id]);
+                
+            \Log::info('Auto-linked client and inquiries to user on login', [
+                'client_id' => $client->id,
+                'user_id' => $user->id
+            ]);
         }
         
         // Build query to get inquiries for this client
@@ -86,6 +96,16 @@ class InquiryController extends Controller
         // Check if user can access this inquiry
         if (!$client || ($inquiry->user_id !== $user->id && $inquiry->client_id !== $client->id)) {
             abort(403, 'You do not have permission to view this inquiry.');
+        }
+        
+        // Auto-link client to user if not already linked
+        if ($client && !$client->user_id) {
+            $client->update(['user_id' => $user->id]);
+        }
+        
+        // Auto-link inquiry to user if not already linked
+        if ($inquiry->client_id === $client->id && !$inquiry->user_id) {
+            $inquiry->update(['user_id' => $user->id]);
         }
         
         $inquiry->load(['property', 'property.user', 'client', 'conversation']);

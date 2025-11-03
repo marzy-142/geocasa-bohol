@@ -121,7 +121,7 @@ const formatPropertyType = (type) => {
     return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
-// Check if property has virtual tour data
+// Check if property has panoramic view data
 const hasVirtualTour = (property) => {
     return (
         property.has_virtual_tour &&
@@ -376,7 +376,7 @@ watch(
                                         class="text-sm font-medium text-neutral-700 flex items-center gap-1"
                                     >
                                         <VideoCameraIcon class="w-4 h-4" />
-                                        Virtual Tour
+                                        Panoramic View
                                     </span>
                                 </label>
                                 <label
@@ -477,7 +477,7 @@ watch(
                                     class="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
                                 >
                                     <VideoCameraIcon class="w-3 h-3" />
-                                    Virtual Tour
+                                    Panorama
                                 </div>
                                 <div
                                     class="bg-primary-600 text-white px-3 py-1 rounded-full text-xs font-medium"
@@ -618,7 +618,7 @@ watch(
                                     <span
                                         class="text-xs font-medium text-purple-700"
                                     >
-                                        360° Tour
+                                        Panorama
                                     </span>
                                 </div>
                             </div>

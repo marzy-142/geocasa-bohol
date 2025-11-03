@@ -48,4 +48,8 @@ return [
         'mock_mode' => env('PRC_MOCK_MODE', true),
     ],
 
+    'google_maps' => [
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+
 ];

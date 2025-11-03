@@ -165,11 +165,25 @@ class ClientController extends Controller
             abort(403);
         }
         
+        // Load relationships + counts needed by the UI
         $client->load([
             'broker',
             'inquiries.property',
             'transactions.property'
+        ])->loadCount([
+            'inquiries',
+            'transactions',
         ]);
+
+        // Build recent inquiries list (lightweight payload)
+        $recentInquiries = $client->inquiries()
+            ->with(['property:id,title'])
+            ->latest()
+            ->limit(5)
+            ->get(['id','property_id','created_at']);
+
+        // Attach dynamic attributes for serialization
+        $client->setAttribute('recent_inquiries', $recentInquiries);
         
         // Get matching properties based on client preferences
         $matchingProperties = $this->getMatchingProperties($client);
