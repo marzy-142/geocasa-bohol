@@ -76,15 +76,12 @@ class PropertyController extends Controller
         
         $brokers = $filterOptions['brokers'];
     
-        return Inertia::render('Properties/Index', [
-            'properties' => $properties,
-            'filters' => $request->only(['search', 'type', 'status', 'municipality', 'broker_id', 'min_price', 'max_price', 'min_area', 'max_area', 'utilities', 'featured']),
-            'types' => Property::TYPES,
+        return Inertia::render($component, [
+            'clients' => $clients,
+            'types' => $types,
             'statuses' => Property::STATUSES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
-            'brokers' => $brokers,
-            'stats' => $stats,
-            'isAdminView' => true
+            'google_maps_api_key' => config('services.google_maps.api_key'),
         ]);
     }
 
@@ -179,24 +176,25 @@ class PropertyController extends Controller
             ? auth()->user()->clients()->get(['id', 'name', 'email'])
             : collect();
     
-        return Inertia::render('Properties/Create', [
+        // Build label/value pairs for types and include an 'Other (specify)' option
+        $types = collect(Property::TYPES)
+            ->map(function ($slug) {
+                $label = ucwords(str_replace('_', ' ', $slug));
+                return ['value' => $slug, 'label' => $label];
+            })
+            ->values()
+            ->toArray();
+
+        $types[] = ['value' => 'other', 'label' => 'Other (specify)'];
+
+        // Use simplified form for brokers, full form for admins
+        $component = auth()->user()->role === 'broker' ? 'Properties/CreateSimple' : 'Properties/Create';
+
+        return Inertia::render($component, [
             'clients' => $clients,
-            'types' => Property::TYPES,
+            'types' => $types,
             'statuses' => Property::STATUSES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
-            'gisConfig' => [
-                'enabled' => true,
-                'defaultCenter' => [
-                    'lat' => 9.8349,
-                    'lng' => 124.1436
-                ],
-                'zoom' => 10
-            ],
-            'virtualTourConfig' => [
-                'enabled' => true,
-                'maxFiles' => 20,
-                'allowedTypes' => ['jpg', 'jpeg', 'png']
-            ]
         ]);
     }
 
@@ -205,22 +203,28 @@ class PropertyController extends Controller
         $this->authorize('create', Property::class);
     
         $validated = $request->validated();
+        
+        // Preserve human-entered other type detail in notes; keep canonical type schema intact
+        if (($validated['type'] ?? null) === 'other' && !empty($validated['type_other'] ?? null)) {
+            $notePrefix = 'Type (other): ' . trim($validated['type_other']);
+            $validated['additional_notes'] = isset($validated['additional_notes']) && $validated['additional_notes']
+                ? ($notePrefix . "\n" . $validated['additional_notes'])
+                : $notePrefix;
+            unset($validated['type_other']);
+        }
     
         // Enforce 'available' for broker-created listings
         if (auth()->user()->role === 'broker') {
-            $validated['status'] = 'available';
+            $validated['status'] = $validated['status'] ?? 'available';
         }
     
         $validated['broker_id'] = auth()->id();
         $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(6);
     
-        // Calculate hectares if not provided
-        if (empty($validated['lot_area_hectares'])) {
+        // Calculate hectares if lot_area_sqm is provided
+        if (!empty($validated['lot_area_sqm']) && empty($validated['lot_area_hectares'])) {
             $validated['lot_area_hectares'] = $validated['lot_area_sqm'] / 10000;
         }
-    
-        // Remove invalid field mappings that don't exist in the database
-        // The validated data already contains the correct field names
     
         // Handle secure file uploads consistently with update method
         if ($request->hasFile('images')) {
@@ -241,13 +245,10 @@ class PropertyController extends Controller
             $validated['virtual_tour_images'] = $tourImagePaths;
             $validated['has_virtual_tour'] = true;
         } else {
-            $validated['has_virtual_tour'] = false;
+            $validated['has_virtual_tour'] = $validated['has_virtual_tour'] ?? false;
         }
     
         $property = Property::create($validated);
-        
-        // Set expiry date for new properties (90 days from creation)
-        $property->setExpiryDate(90);
 
         return redirect()->route('broker.properties.index')
             ->with('success', 'Land property created successfully with enhanced features.');
@@ -261,12 +262,24 @@ class PropertyController extends Controller
             ? auth()->user()->clients()->get(['id', 'name', 'email'])
             : collect();
 
+        // Build label/value pairs for types and include an 'Other (specify)' option
+        $types = collect(Property::TYPES)
+            ->map(function ($slug) {
+                $label = ucwords(str_replace('_', ' ', $slug));
+                return ['value' => $slug, 'label' => $label];
+            })
+            ->values()
+            ->toArray();
+
+        $types[] = ['value' => 'other', 'label' => 'Other (specify)'];
+
         return Inertia::render('Properties/Edit', [
             'property' => $property,
             'clients' => $clients,
-            'types' => Property::TYPES,
+            'types' => $types,
             'statuses' => Property::STATUSES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
+            'googleMapsApiKey' => config('services.google_maps.api_key'),
             'gisConfig' => [
                 'enabled' => true,
                 'defaultCenter' => [
@@ -327,12 +340,19 @@ class PropertyController extends Controller
         if ($validated['title'] !== $property->title) {
             $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(6);
         }
+
+        // Preserve human-entered other type detail in notes on update as well
+        if (($validated['type'] ?? null) === 'other' && !empty($validated['type_other'] ?? null)) {
+            $notePrefix = 'Type (other): ' . trim($validated['type_other']);
+            $validated['additional_notes'] = isset($validated['additional_notes']) && $validated['additional_notes']
+                ? ($notePrefix . "\n" . $validated['additional_notes'])
+                : $notePrefix;
+            unset($validated['type_other']);
+        }
     
-        // Calculate hectares if not provided (safe on missing key)
-        if (empty($validated['lot_area_hectares'])) {
-            $validated['lot_area_hectares'] = !empty($validated['lot_area_sqm'])
-                ? $validated['lot_area_sqm'] / 10000
-                : null;
+        // Calculate hectares if lot_area_sqm is provided and hectares is not
+        if (!empty($validated['lot_area_sqm']) && empty($validated['lot_area_hectares'])) {
+            $validated['lot_area_hectares'] = $validated['lot_area_sqm'] / 10000;
         }
     
         // Handle file removals and additions
@@ -363,9 +383,6 @@ class PropertyController extends Controller
         }
 
         $property->update($validated);
-        
-        // Reset expiry date when property is updated (90 days from update)
-        $property->setExpiryDate(90);
 
         return redirect()->route('broker.properties.index')
             ->with('success', 'Property updated successfully.');
@@ -401,8 +418,13 @@ class PropertyController extends Controller
         }
     
         $property->delete();
-    
-        return redirect()->route('properties.index')
+        
+        // Redirect to the correct listing page based on role
+        $redirectRoute = auth()->user()->role === 'admin'
+            ? 'admin.properties.index'
+            : 'broker.properties.index';
+
+        return redirect()->route($redirectRoute)
             ->with('success', 'Land property deleted successfully.');
     }
 
@@ -465,7 +487,7 @@ class PropertyController extends Controller
             $validated['documents'] = $currentDocuments;
         }
     
-        // Handle virtual tour image removal
+        // Handle panoramic view image removal
         if ($request->has('remove_virtual_tour_images')) {
             $currentTourImages = $property->virtual_tour_images ?? [];
             foreach ($request->remove_virtual_tour_images as $imageToRemove) {
@@ -477,9 +499,9 @@ class PropertyController extends Controller
             $validated['virtual_tour_images'] = array_values($currentTourImages);
         }
     
-        // Handle new virtual tour image uploads
+        // Handle new panoramic view image uploads
         if ($request->hasFile('new_virtual_tour_images')) {
-            \Log::info('Processing new virtual tour images');
+            \Log::info('Processing new panoramic view images');
             $currentTourImages = $validated['virtual_tour_images'] ?? $property->virtual_tour_images ?? [];
             foreach ($request->file('new_virtual_tour_images') as $image) {
                 $path = $image->store('properties/virtual-tours', 'public');
@@ -488,18 +510,18 @@ class PropertyController extends Controller
             $validated['virtual_tour_images'] = $currentTourImages;
             
             // Add debugging
-            \Log::info('Virtual tour images after upload:', [
+            \Log::info('Panoramic view images after upload:', [
                 'images' => $currentTourImages,
                 'count' => count($currentTourImages)
             ]);
         }
         
-        // Automatically set has_virtual_tour based on resulting virtual tour images
+        // Automatically set has_virtual_tour based on resulting panoramic images
         $finalTourImages = $validated['virtual_tour_images'] ?? $property->virtual_tour_images ?? [];
         $validated['has_virtual_tour'] = !empty($finalTourImages);
         
         // Add debugging
-        \Log::info('Setting has_virtual_tour:', [
+        \Log::info('Setting has_virtual_tour (panoramic):', [
             'final_images' => $finalTourImages,
             'has_virtual_tour' => $validated['has_virtual_tour'],
             'validated_array' => $validated

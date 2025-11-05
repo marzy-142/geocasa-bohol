@@ -160,13 +160,28 @@
                                 "
                                 class="block w-full py-2 bg-yellow-500 text-white text-center rounded hover:bg-yellow-600"
                             >
-                                Edit
+                                ✏️ Edit Property
                             </Link>
+                            <button
+                                @click="toggleFeatured"
+                                :class="
+                                    property.is_featured
+                                        ? 'bg-gray-500 hover:bg-gray-600'
+                                        : 'bg-yellow-500 hover:bg-yellow-600'
+                                "
+                                class="w-full py-2 text-white rounded transition-colors"
+                            >
+                                {{
+                                    property.is_featured
+                                        ? "⭐ Remove Featured"
+                                        : "⭐ Make Featured"
+                                }}
+                            </button>
                             <button
                                 @click="deleteProperty"
                                 class="w-full py-2 bg-red-500 text-white rounded hover:bg-red-600"
                             >
-                                Delete
+                                🗑️ Delete Property
                             </button>
                         </div>
                     </div>
@@ -271,6 +286,12 @@ const deleteProperty = () => {
     if (confirm("Are you sure you want to delete this property?")) {
         router.delete(route("broker.properties.destroy", props.property.slug));
     }
+};
+
+const toggleFeatured = () => {
+    router.post(
+        route("broker.properties.toggle-featured", props.property.slug)
+    );
 };
 
 const initMap = () => {

@@ -1,12 +1,13 @@
-import '../css/app.css';
-import './bootstrap';
+import "../css/app.css";
+import "../css/leaflet-custom.css";
+import "./bootstrap";
 
-import { createInertiaApp } from '@inertiajs/vue3';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createApp, h } from 'vue';
-import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { createInertiaApp } from "@inertiajs/vue3";
+import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
+import { createApp, h } from "vue";
+import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || "Laravel";
 // Force rebuild - routes updated
 
 createInertiaApp({
@@ -14,7 +15,7 @@ createInertiaApp({
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,
-            import.meta.glob('./Pages/**/*.vue'),
+            import.meta.glob("./Pages/**/*.vue")
         ),
     setup({ el, App, props, plugin }) {
         return createApp({ render: () => h(App, props) })
@@ -24,7 +25,7 @@ createInertiaApp({
     },
     progress: {
         delay: 250,
-        color: '#2563EB',
+        color: "#2563EB",
         includeCSS: true,
         showSpinner: false,
     },

@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { useForm, router } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UnifiedSearchFilter from "@/Components/UnifiedSearchFilter.vue";
 import { Link } from "@inertiajs/vue3";
 import Pagination from "@/Components/Pagination.vue";
 import { debounce } from "lodash";
@@ -127,6 +128,98 @@ const getInitials = (name) => {
         .toUpperCase();
 };
 
+// Filter configurations for UnifiedSearchFilter
+const primaryFilters = computed(() => [
+    {
+        key: "status",
+        label: "Status",
+        type: "select",
+        span: 2,
+        options: [
+            { value: "pending", label: "Pending" },
+            { value: "under_review", label: "Under Review" },
+            { value: "approved", label: "Approved" },
+            { value: "rejected", label: "Rejected" },
+            { value: "listed", label: "Listed" },
+        ],
+    },
+    {
+        key: "property_type",
+        label: "Property Type",
+        type: "select",
+        span: 2,
+        options: [
+            { value: "land", label: "Land Property" },
+            { value: "residential", label: "Residential Property" },
+            { value: "commercial", label: "Commercial Property" },
+            { value: "industrial", label: "Industrial Property" },
+            { value: "agricultural", label: "Agricultural Property" },
+        ],
+    },
+]);
+
+const secondaryFilters = computed(() => [
+    {
+        key: "price_min",
+        label: "Min Price",
+        type: "number",
+        placeholder: "Minimum price (₱)",
+    },
+    {
+        key: "price_max",
+        label: "Max Price",
+        type: "number",
+        placeholder: "Maximum price (₱)",
+    },
+    {
+        key: "municipality",
+        label: "Municipality",
+        type: "select",
+        options: [
+            "Tagbilaran City",
+            "Baclayon",
+            "Alburquerque",
+            "Loboc",
+            "Sevilla",
+            "Calape",
+            "Tubigon",
+            "Clarin",
+            "Inabanga",
+            "Sagbayan",
+            "Catigbian",
+            "Batuan",
+            "Balilihan",
+            "Carmen",
+            "Sierra Bullones",
+            "Pilar",
+        ].map((city) => ({ value: city, label: city })),
+    },
+    {
+        key: "area_min",
+        label: "Min Area (sqm)",
+        type: "number",
+        placeholder: "Minimum area",
+    },
+]);
+
+// Event handlers for UnifiedSearchFilter
+const handleSearchChange = (value) => {
+    filters.value.search = value;
+    filterSellerRequests();
+};
+
+const handleFilterChange = (key, value) => {
+    filters.value[key] = value;
+    filterSellerRequests();
+};
+
+const clearAllFilters = () => {
+    Object.keys(filters.value).forEach((key) => {
+        filters.value[key] = "";
+    });
+    filterSellerRequests();
+};
+
 const clearFilters = () => {
     filters.value = {};
     router.get(route("seller-requests.index"));
@@ -162,6 +255,43 @@ const deleteRequest = (request) => {
     if (confirm("Are you sure you want to delete this seller request?")) {
         useForm({}).delete(route("seller-requests.destroy", request.id));
     }
+};
+
+const formatPropertyType = (type) => {
+    if (!type) return "Property Type Not Specified";
+
+    const typeMap = {
+        land: "Land Property",
+        residential: "Residential Property",
+        commercial: "Commercial Property",
+        industrial: "Industrial Property",
+        agricultural: "Agricultural Property",
+    };
+
+    return (
+        typeMap[type] ||
+        type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+    );
+};
+
+const formatArea = (area) => {
+    if (!area || area === 0) return "Area not specified";
+    return `${area} sqm`; // Default unit is square meters based on the form
+};
+
+const formatLocation = (request) => {
+    const parts = [];
+
+    if (request.barangay) parts.push(request.barangay);
+    if (request.municipality) parts.push(request.municipality);
+    if (request.city) parts.push(request.city);
+    if (request.province) parts.push(request.province);
+
+    if (parts.length === 0) {
+        return request.address || "Location not specified";
+    }
+
+    return parts.join(", ");
 };
 </script>
 
@@ -209,28 +339,6 @@ const deleteRequest = (request) => {
                                 }})
                             </span>
                         </button>
-                        <Link
-                            v-if="canCreate"
-                            :href="route('seller-requests.create')"
-                            class="bg-white text-orange-600 hover:bg-orange-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
-                        >
-                            <span class="flex items-center">
-                                <svg
-                                    class="w-5 h-5 mr-2"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 4v16m8-8H4"
-                                    ></path>
-                                </svg>
-                                New Seller Request
-                            </span>
-                        </Link>
                     </div>
                 </div>
             </div>
@@ -358,78 +466,19 @@ const deleteRequest = (request) => {
                 </div>
             </div>
 
-            <!-- Filters Section -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                    Search & Filter Seller Requests
-                </h3>
-
-                <!-- Primary Filters -->
-                <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4"
-                >
-                    <input
-                        v-model="filters.search"
-                        type="text"
-                        placeholder="Search seller requests..."
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @input="filterSellerRequests"
-                    />
-                    <select
-                        v-model="filters.status"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @change="filterSellerRequests"
-                    >
-                        <option value="">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="under_review">Under Review</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                    <select
-                        v-if="$page.props.auth.user.role === 'admin'"
-                        v-model="filters.assignment_status"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @change="filterSellerRequests"
-                    >
-                        <option value="">All Assignments</option>
-                        <option value="assigned">Assigned</option>
-                        <option value="unassigned">Unassigned</option>
-                    </select>
-                    <select
-                        v-if="$page.props.auth.user.role === 'admin'"
-                        v-model="filters.broker_id"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @change="filterSellerRequests"
-                    >
-                        <option value="">All Brokers</option>
-                        <option
-                            v-for="broker in brokers"
-                            :key="broker.id"
-                            :value="broker.id"
-                        >
-                            {{ broker.name }}
-                        </option>
-                    </select>
-                    <input
-                        v-model="filters.date_from"
-                        type="date"
-                        placeholder="Date From"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        @change="filterSellerRequests"
-                    />
-                </div>
-
-                <!-- Clear Filters -->
-                <div class="mt-4">
-                    <button
-                        @click="clearFilters"
-                        class="text-sm text-gray-600 hover:text-gray-800 font-medium"
-                    >
-                        Clear all filters
-                    </button>
-                </div>
-            </div>
+            <!-- Unified Search & Filter -->
+            <UnifiedSearchFilter
+                title="Search Seller Requests"
+                :search="filters.search"
+                search-placeholder="Search by name, email, or property details..."
+                :filters="filters"
+                :result-count="sellerRequests.total"
+                :primary-filters="primaryFilters"
+                :secondary-filters="secondaryFilters"
+                @search-change="handleSearchChange"
+                @filter-change="handleFilterChange"
+                @clear-filters="clearAllFilters"
+            />
 
             <!-- Seller Requests Grid -->
             <div class="bg-white rounded-lg shadow-sm p-6">
@@ -526,8 +575,7 @@ const deleteRequest = (request) => {
                                         {{ formatPrice(request.asking_price) }}
                                     </p>
                                     <p class="text-sm text-gray-500">
-                                        {{ request.property_area }}
-                                        {{ request.area_unit }}
+                                        {{ formatArea(request.lot_area) }}
                                     </p>
                                 </div>
                             </div>
@@ -551,7 +599,8 @@ const deleteRequest = (request) => {
                                         ></path>
                                     </svg>
                                     <span class="font-medium">{{
-                                        request.property_title
+                                        request.property_title ||
+                                        "Property Title Not Provided"
                                     }}</span>
                                 </div>
                                 <div
@@ -576,7 +625,7 @@ const deleteRequest = (request) => {
                                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                                         ></path>
                                     </svg>
-                                    <span>{{ request.property_location }}</span>
+                                    <span>{{ formatLocation(request) }}</span>
                                 </div>
                                 <div
                                     class="flex items-center text-sm text-gray-600"
@@ -594,9 +643,11 @@ const deleteRequest = (request) => {
                                             d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                                         ></path>
                                     </svg>
-                                    <span class="capitalize"
-                                        >Land Property</span
-                                    >
+                                    <span class="capitalize">{{
+                                        formatPropertyType(
+                                            request.property_type
+                                        )
+                                    }}</span>
                                 </div>
                             </div>
 

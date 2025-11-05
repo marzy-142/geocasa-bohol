@@ -12,122 +12,22 @@
                             Manage your clients in GeoCasa Bohol
                         </p>
                     </div>
-                    <Link
-                        v-if="canCreateClient"
-                        :href="route('clients.create')"
-                        class="bg-white text-purple-600 hover:bg-purple-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg"
-                    >
-                        <span class="flex items-center">
-                            <svg
-                                class="w-5 h-5 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M12 4v16m8-8H4"
-                                ></path>
-                            </svg>
-                            Add New Client
-                        </span>
-                    </Link>
                 </div>
             </div>
 
-            <!-- Filters Section -->
-            <div class="bg-white rounded-lg shadow-sm p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                    Search & Filter Clients
-                </h3>
-
-                <!-- Primary Filters -->
-                <div
-                    class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4"
-                >
-                    <input
-                        v-model="filters.search"
-                        type="text"
-                        placeholder="Search clients..."
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        @input="filterClients"
-                    />
-                    <select
-                        v-model="filters.status"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        @change="filterClients"
-                    >
-                        <option value="">All Statuses</option>
-                        <option
-                            v-for="status in statuses"
-                            :key="status"
-                            :value="status"
-                        >
-                            {{ formatStatus(status) }}
-                        </option>
-                    </select>
-                    <select
-                        v-model="filters.source"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        @change="filterClients"
-                    >
-                        <option value="">All Sources</option>
-                        <option
-                            v-for="source in sources"
-                            :key="source"
-                            :value="source"
-                        >
-                            {{ formatSource(source) }}
-                        </option>
-                    </select>
-                    <select
-                        v-model="filters.preferred_location"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        @change="filterClients"
-                    >
-                        <option value="">All Locations</option>
-                        <option
-                            v-for="municipality in municipalities"
-                            :key="municipality"
-                            :value="municipality"
-                        >
-                            {{ municipality }}
-                        </option>
-                    </select>
-                    <select
-                        v-if="isAdmin"
-                        v-model="filters.broker_id"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        @change="filterClients"
-                    >
-                        <option value="">All Brokers</option>
-                        <option value="unassigned">Unassigned</option>
-                        <option
-                            v-for="broker in brokers"
-                            :key="broker.id"
-                            :value="broker.id"
-                        >
-                            {{ broker.name }}
-                        </option>
-                    </select>
-                    <input
-                        v-model="filters.min_budget"
-                        type="number"
-                        placeholder="Min Budget (₱)"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        @input="filterClients"
-                    />
-                    <input
-                        v-model="filters.max_budget"
-                        type="number"
-                        placeholder="Max Budget (₱)"
-                        class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                        @input="filterClients"
-                    />
-                </div>
-            </div>
+            <!-- Unified Search & Filter -->
+            <UnifiedSearchFilter
+                title="Search Clients"
+                :search="filters.search"
+                search-placeholder="Search by name, email, or phone..."
+                :filters="filters"
+                :result-count="clients.total"
+                :primary-filters="primaryFilters"
+                :secondary-filters="secondaryFilters"
+                @search-change="handleSearchChange"
+                @filter-change="handleFilterChange"
+                @clear-filters="clearAllFilters"
+            />
 
             <!-- Clients Grid -->
             <div class="bg-white rounded-lg shadow-sm p-6">
@@ -221,7 +121,7 @@
                                     </svg>
                                     {{
                                         client.preferred_location ||
-                                        "Any location"
+                                        "No location preference"
                                     }}
                                 </div>
                                 <div
@@ -240,7 +140,7 @@
                                             d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
                                         ></path>
                                     </svg>
-                                    {{ client.formatted_budget_range }}
+                                    {{ client.formatted_budget }}
                                 </div>
                                 <div
                                     class="flex items-center text-sm text-gray-600"
@@ -305,24 +205,8 @@
 
                             <!-- Client Meta -->
                             <div
-                                class="flex justify-between text-xs text-gray-500 mb-4"
+                                class="flex justify-end text-xs text-gray-500 mb-4"
                             >
-                                <span class="flex items-center">
-                                    <svg
-                                        class="w-3 h-3 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                        ></path>
-                                    </svg>
-                                    {{ formatSource(client.source) }}
-                                </span>
                                 <span class="flex items-center">
                                     <svg
                                         class="w-3 h-3 mr-1"
@@ -337,8 +221,16 @@
                                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                                         ></path>
                                     </svg>
-                                    <span :class="client.broker ? 'text-green-600' : 'text-orange-600'">
-                                        {{ client.broker?.name || "Unassigned" }}
+                                    <span
+                                        :class="
+                                            client.broker
+                                                ? 'text-green-600'
+                                                : 'text-orange-600'
+                                        "
+                                    >
+                                        {{
+                                            client.broker?.name || "Unassigned"
+                                        }}
                                     </span>
                                     <button
                                         v-if="isAdmin"
@@ -346,7 +238,11 @@
                                         class="ml-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
                                         title="Assign/Reassign Broker"
                                     >
-                                        {{ client.broker ? 'Reassign' : 'Assign' }}
+                                        {{
+                                            client.broker
+                                                ? "Reassign"
+                                                : "Assign"
+                                        }}
                                     </button>
                                 </span>
                             </div>
@@ -361,23 +257,6 @@
                                 >
                                     View Details →
                                 </Link>
-                                <div
-                                    v-if="canEditClient(client)"
-                                    class="flex space-x-3"
-                                >
-                                    <Link
-                                        :href="route('clients.edit', client.id)"
-                                        class="text-green-600 hover:text-green-800 text-sm font-medium transition-colors duration-200"
-                                    >
-                                        Edit
-                                    </Link>
-                                    <button
-                                        @click="deleteClient(client)"
-                                        class="text-red-600 hover:text-red-800 text-sm font-medium transition-colors duration-200"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -406,29 +285,8 @@
                         No clients found
                     </h3>
                     <p class="text-gray-500 mb-6 max-w-md mx-auto">
-                        Try adjusting your search filters or add a new client to
-                        get started.
+                        Try adjusting your search filters to find clients.
                     </p>
-                    <Link
-                        v-if="canCreateClient"
-                        :href="route('clients.create')"
-                        class="inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200"
-                    >
-                        <svg
-                            class="w-5 h-5 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 4v16m8-8H4"
-                            ></path>
-                        </svg>
-                        Add Your First Client
-                    </Link>
                 </div>
 
                 <!-- Pagination -->
@@ -447,31 +305,63 @@
         </div>
 
         <!-- Assign Broker Modal -->
-        <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeModal">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
+        <div
+            v-if="showModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+            @click="closeModal"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+                @click.stop
+            >
                 <div class="mt-3">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-medium text-gray-900">
-                            {{ selectedClient?.broker ? 'Reassign' : 'Assign' }} Broker
+                            {{ selectedClient?.broker ? "Reassign" : "Assign" }}
+                            Broker
                         </h3>
-                        <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <button
+                            @click="closeModal"
+                            class="text-gray-400 hover:text-gray-600"
+                        >
+                            <svg
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                ></path>
                             </svg>
                         </button>
                     </div>
-                    
+
                     <div class="mb-4">
                         <p class="text-sm text-gray-600 mb-2">
-                            Client: <span class="font-medium">{{ selectedClient?.name }}</span>
+                            Client:
+                            <span class="font-medium">{{
+                                selectedClient?.name
+                            }}</span>
                         </p>
-                        <p v-if="selectedClient?.broker" class="text-sm text-gray-600 mb-4">
-                            Current Broker: <span class="font-medium text-green-600">{{ selectedClient.broker.name }}</span>
+                        <p
+                            v-if="selectedClient?.broker"
+                            class="text-sm text-gray-600 mb-4"
+                        >
+                            Current Broker:
+                            <span class="font-medium text-green-600">{{
+                                selectedClient.broker.name
+                            }}</span>
                         </p>
                     </div>
-                    
+
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <label
+                            class="block text-sm font-medium text-gray-700 mb-2"
+                        >
                             Select Broker
                         </label>
                         <select
@@ -488,7 +378,7 @@
                             </option>
                         </select>
                     </div>
-                    
+
                     <div class="flex justify-end space-x-3">
                         <button
                             @click="closeModal"
@@ -501,7 +391,13 @@
                             :disabled="isAssigning"
                             class="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
                         >
-                            {{ isAssigning ? 'Assigning...' : (selectedClient?.broker ? 'Reassign' : 'Assign') }}
+                            {{
+                                isAssigning
+                                    ? "Assigning..."
+                                    : selectedClient?.broker
+                                    ? "Reassign"
+                                    : "Assign"
+                            }}
                         </button>
                     </div>
                 </div>
@@ -514,6 +410,7 @@
 import { ref, computed } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UnifiedSearchFilter from "@/Components/UnifiedSearchFilter.vue";
 import Pagination from "@/Components/Pagination.vue";
 import { debounce } from "lodash";
 
@@ -521,7 +418,6 @@ const props = defineProps({
     clients: Object,
     filters: Object,
     statuses: Array,
-    sources: Array,
     municipalities: Array,
     brokers: Array,
     can: Object,
@@ -531,44 +427,103 @@ const page = usePage();
 const filters = ref({ ...props.filters });
 const showModal = ref(false);
 const selectedClient = ref(null);
-const selectedBroker = ref('');
+const selectedBroker = ref("");
 const isAssigning = ref(false);
-
-const canCreateClient = computed(() => {
-    const user = page.props.auth.user;
-    return ["admin", "broker"].includes(user.role) && user.is_approved;
-});
 
 const isAdmin = computed(() => {
     const user = page.props.auth.user;
-    return user.role === 'admin';
+    return user.role === "admin";
 });
-
-const canEditClient = (client) => {
-    const user = page.props.auth.user;
-    return (
-        user.role === "admin" ||
-        (user.role === "broker" &&
-            user.is_approved &&
-            client.broker_id === user.id)
-    );
-};
 
 const getStatusColor = (status) => {
     const colors = {
         active: "bg-green-500",
         inactive: "bg-gray-500",
-        converted: "bg-blue-500",
+        converted: "bg-blue-500", // Keep same color but now shows as "Purchased"
     };
     return colors[status] || "bg-gray-500";
 };
 
 const formatStatus = (status) => {
-    return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+    const statusLabels = {
+        active: "Active",
+        inactive: "Inactive",
+        converted: "Purchased", // Much clearer than "Converted"
+    };
+
+    return (
+        statusLabels[status] ||
+        status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+    );
 };
 
-const formatSource = (source) => {
-    return source.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+// Filter configurations for UnifiedSearchFilter
+const primaryFilters = computed(() => [
+    {
+        key: "status",
+        label: "Status",
+        type: "select",
+        span: 6,
+        options: props.statuses.map((status) => ({
+            value: status,
+            label: formatStatus(status),
+        })),
+    },
+]);
+
+const secondaryFilters = computed(() => [
+    {
+        key: "budget_min",
+        label: "Min Budget",
+        type: "number",
+        placeholder: "Minimum budget (₱)",
+    },
+    {
+        key: "budget_max",
+        label: "Max Budget",
+        type: "number",
+        placeholder: "Maximum budget (₱)",
+    },
+    ...(isAdmin.value
+        ? [
+              {
+                  key: "broker_id",
+                  label: "Assigned Broker",
+                  type: "select",
+                  options: props.brokers.map((broker) => ({
+                      value: broker.id,
+                      label: broker.name,
+                  })),
+              },
+          ]
+        : []),
+    {
+        key: "preferred_location",
+        label: "Preferred Location",
+        type: "select",
+        options: props.municipalities.map((city) => ({
+            value: city,
+            label: city,
+        })),
+    },
+]);
+
+// Event handlers for UnifiedSearchFilter
+const handleSearchChange = (value) => {
+    filters.value.search = value;
+    filterClients();
+};
+
+const handleFilterChange = (key, value) => {
+    filters.value[key] = value;
+    filterClients();
+};
+
+const clearAllFilters = () => {
+    Object.keys(filters.value).forEach((key) => {
+        filters.value[key] = "";
+    });
+    filterClients();
 };
 
 const filterClients = debounce(() => {
@@ -578,42 +533,40 @@ const filterClients = debounce(() => {
     });
 }, 300);
 
-const deleteClient = (client) => {
-    if (confirm("Are you sure you want to delete this client?")) {
-        router.delete(route("clients.destroy", client.id));
-    }
-};
-
 const showAssignBrokerModal = (client) => {
     selectedClient.value = client;
-    selectedBroker.value = client.broker_id || '';
+    selectedBroker.value = client.broker_id || "";
     showModal.value = true;
 };
 
 const assignBroker = () => {
     if (!selectedClient.value) return;
-    
+
     isAssigning.value = true;
-    
+
     const data = {
-        broker_id: selectedBroker.value || null
+        broker_id: selectedBroker.value || null,
     };
-    
-    router.patch(route('admin.clients.assign-broker', selectedClient.value.id), data, {
-        onSuccess: () => {
-            showModal.value = false;
-            selectedClient.value = null;
-            selectedBroker.value = '';
-        },
-        onFinish: () => {
-            isAssigning.value = false;
+
+    router.patch(
+        route("admin.clients.assign-broker", selectedClient.value.id),
+        data,
+        {
+            onSuccess: () => {
+                showModal.value = false;
+                selectedClient.value = null;
+                selectedBroker.value = "";
+            },
+            onFinish: () => {
+                isAssigning.value = false;
+            },
         }
-    });
+    );
 };
 
 const closeModal = () => {
     showModal.value = false;
     selectedClient.value = null;
-    selectedBroker.value = '';
+    selectedBroker.value = "";
 };
 </script>

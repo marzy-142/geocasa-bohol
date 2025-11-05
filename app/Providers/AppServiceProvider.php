@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use App\Services\DatabaseMonitoringService;
 use App\Models\Transaction;
 use App\Models\Inquiry;
@@ -44,5 +45,11 @@ class AppServiceProvider extends ServiceProvider
         //         );
         //     });
         // }
+
+        // Define privacy gate for finance/commission-related data
+        Gate::define('finance.view', function ($user) {
+            // Only admins can view finance/commission data by default.
+            return isset($user->role) && $user->role === 'admin';
+        });
     }
 }

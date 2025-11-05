@@ -12,25 +12,31 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
     public function rules(): array
     {
         return [
-            // Property basic info
+            // Property basic info - REQUIRED FIELDS
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'type' => 'required|in:' . implode(',', \App\Models\Property::TYPES),
+            // Allow predefined types or 'other' with a companion free-text field
+            'type' => 'required|in:' . implode(',', \App\Models\Property::TYPES) . ',other',
+            'type_other' => 'nullable|required_if:type,other|string|max:100',
             'municipality' => 'required|in:' . implode(',', \App\Models\Property::BOHOL_MUNICIPALITIES),
-            'barangay' => 'required|string|max:100',
-            'address' => 'required|string|max:500',
-            'coordinates_lat' => 'nullable|numeric|between:-90,90',
-            'coordinates_lng' => 'nullable|numeric|between:-180,180',
-            'status' => 'required|in:' . implode(',', \App\Models\Property::STATUSES),
+            'title_type' => 'required|in:titled,tax_declared,mother_title,cct',
             
-            // Property details
+            // Pricing and area - REQUIRED
             'lot_area_sqm' => 'required|numeric|min:0',
-            'lot_area_hectares' => 'nullable|numeric|min:0',
             'price_per_sqm' => 'required|numeric|min:0',
             'total_price' => 'required|numeric|min:0',
-            'title_type' => 'required|in:titled,tax_declared,mother_title,cct',
-            'title_number' => 'required|string|max:100',
-            'zoning_classification' => 'required|string|max:100',
+            
+            // Optional fields
+            'barangay' => 'nullable|string|max:100',
+            'address' => 'nullable|string|max:500',
+            'coordinates_lat' => 'nullable|numeric|between:-90,90',
+            'coordinates_lng' => 'nullable|numeric|between:-180,180',
+            'status' => 'nullable|in:' . implode(',', \App\Models\Property::STATUSES),
+            
+            // Property details - optional
+            'lot_area_hectares' => 'nullable|numeric|min:0',
+            'title_number' => 'nullable|string|max:100',
+            'zoning_classification' => 'nullable|string|max:100',
             
             // Amenities (boolean fields)
             'road_access' => 'boolean',
@@ -55,7 +61,7 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             
             'virtual_tour_images' => 'nullable|array|max:20',
-            'virtual_tour_images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+            'virtual_tour_images.*' => 'file|max:5120',
             
             // Client assignment
             'client_id' => 'nullable|exists:clients,id',
@@ -66,7 +72,7 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
             'new_documents' => 'nullable|array|max:5',
             'new_documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
             'new_virtual_tour_images' => 'nullable|array|max:20',
-            'new_virtual_tour_images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+            'new_virtual_tour_images.*' => 'file|max:5120',
             'remove_images' => 'nullable|array',
             'remove_images.*' => 'string',
             'remove_documents' => 'nullable|array',
@@ -136,8 +142,7 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
             'documents.*.max' => 'Each document must not exceed 5MB.',
             
             'virtual_tour_images.max' => 'You can upload a maximum of 20 virtual tour images.',
-            'virtual_tour_images.*.image' => 'Virtual tour files must be valid images.',
-            'virtual_tour_images.*.mimes' => 'Virtual tour images must be in JPEG, PNG, or JPG format.',
+            'virtual_tour_images.*.file' => 'Virtual tour files must be valid image files.',
             'virtual_tour_images.*.max' => 'Each virtual tour image must not exceed 5MB.',
             
             'features.max' => 'You can select a maximum of 30 features.',
@@ -179,5 +184,15 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
         $this->merge([
             'has_virtual_tour' => $this->has('virtual_tour_images') && !empty($this->virtual_tour_images),
         ]);
+
+        // If 'other' type is selected, ensure additional notes capture the specified type without breaking schema
+        if ($this->input('type') === 'other' && $this->filled('type_other')) {
+            $notePrefix = 'Type (other): ' . trim($this->input('type_other'));
+            $existing = trim((string) $this->input('additional_notes'));
+            $mergedNotes = $existing ? ($notePrefix . "\n" . $existing) : $notePrefix;
+            $this->merge([
+                'additional_notes' => $mergedNotes,
+            ]);
+        }
     }
 }

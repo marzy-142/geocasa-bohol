@@ -218,7 +218,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $query->where('role', 'broker')
                     ->where('is_approved', false)
-                    ->whereIn('application_status', ['pending', 'under_review']);
+                    ->whereIn('application_status', ['pending', 'under_review', 'prc_verification_failed']);
     }
 
     public function scopeRejectedApplications($query)

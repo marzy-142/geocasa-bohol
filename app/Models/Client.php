@@ -37,6 +37,11 @@ class Client extends Model
         'converted_via_transaction_id',
     ];
 
+    protected $appends = [
+        'formatted_budget',
+        'formatted_preferred_area',
+    ];
+
     /**
      * Scope for full-text search
      */

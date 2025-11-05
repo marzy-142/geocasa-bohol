@@ -195,7 +195,7 @@
                                                 d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                                             />
                                         </svg>
-                                        <span>360° Panorama</span>
+                                        <span>Panoramic View</span>
                                         <span
                                             class="ml-1 px-2 py-0.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs rounded-full"
                                             >NEW</span
@@ -375,7 +375,7 @@
                         </div>
 
                         <!-- Panorama Tab Content -->
-                        <div v-show="activeTab === 'panorama'">
+                        <div v-if="activeTab === 'panorama'">
                             <div
                                 class="bg-gradient-to-br from-purple-50 to-blue-50 p-4 lg:p-6 border-b border-gray-200"
                             >
@@ -402,7 +402,7 @@
                                             <h3
                                                 class="text-lg font-bold text-gray-900"
                                             >
-                                                360° Virtual Tour
+                                                Panoramic View
                                             </h3>
                                             <p class="text-sm text-gray-600">
                                                 Drag to explore • Scroll to zoom
@@ -420,6 +420,7 @@
                                 <VirtualTourViewer360
                                     v-if="virtualTourImages.length > 0"
                                     :imageUrl="virtualTourImages[0].url"
+                                    :key="activeTab"
                                 />
                                 <div
                                     v-else
@@ -431,7 +432,7 @@
                         </div>
                     </div>
 
-                    <!-- Fallback: Gallery Only (No Virtual Tour) -->
+                    <!-- Fallback: Gallery Only (No Panoramic View) -->
                     <div
                         v-else
                         class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden"
@@ -653,7 +654,7 @@
                             >
                                 Available
                             </span>
-                            <!-- Virtual Tour Badge -->
+                            <!-- Panoramic View Badge -->
                             <span
                                 v-if="property.has_virtual_tour"
                                 class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1"
@@ -671,7 +672,7 @@
                                         d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                                     />
                                 </svg>
-                                <span>Virtual Tour</span>
+                                <span>Panoramic View</span>
                             </span>
                         </div>
 
@@ -1776,7 +1777,7 @@ const currentImage = computed(() => {
     return getImageUrl(props.property.main_image);
 });
 
-// Virtual Tour computed properties (robust against strings/objects)
+// Panoramic View computed properties (robust against strings/objects)
 const parsedVirtualTourArray = computed(() => {
     const value = props.property?.virtual_tour_images;
     if (!value) return [];
@@ -1835,10 +1836,10 @@ const virtualTourImages = computed(() => {
     if (!Array.isArray(images) || images.length === 0) return [];
 
     return images.map((image, index) => ({
-        url: getImageUrl(image, true), // Pass true for virtual tour images
+        url: getImageUrl(image, true), // Pass true for panoramic images
         thumbnail: getImageUrl(image, true),
         title: `View ${index + 1}`,
-        description: `360° view of ${props.property.title}`,
+        description: `Panoramic view of ${props.property.title}`,
     }));
 });
 

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Panorama Feature Demo - GeoCasa Bohol</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Arial", sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .demo-container {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                width: 90%;
+                max-width: 1200px;
+                margin: 20px;
+            }
+
+            .header {
+                background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+
+            .header p {
+                font-size: 1.2rem;
+                opacity: 0.9;
+            }
+
+            .panorama-section {
+                padding: 40px;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+                color: #1f2937;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .panorama-viewer {
+                width: 100%;
+                height: 600px;
+                border-radius: 15px;
+                overflow: hidden;
+                position: relative;
+                background: #f3f4f6;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                margin-bottom: 30px;
+            }
+
+            .panorama-container {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                overflow: hidden;
+                cursor: grab;
+                background: linear-gradient(45deg, #f0f9ff, #e0f2fe);
+            }
+
+            .panorama-container:active {
+                cursor: grabbing;
+            }
+
+            .panorama-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s ease;
+                transform-origin: center;
+            }
+
+            .controls {
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 15px;
+                background: rgba(0, 0, 0, 0.8);
+                padding: 15px 25px;
+                border-radius: 50px;
+                backdrop-filter: blur(10px);
+            }
+
+            .control-btn {
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                padding: 12px 16px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .control-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
+            }
+
+            .status {
+                text-align: center;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 20px 0;
+                font-weight: 600;
+            }
+
+            .status.success {
+                background: #d1fae5;
+                color: #065f46;
+                border: 2px solid #10b981;
+            }
+
+            .status.error {
+                background: #fee2e2;
+                color: #991b1b;
+                border: 2px solid #ef4444;
+            }
+
+            .status.loading {
+                background: #fef3c7;
+                color: #92400e;
+                border: 2px solid #f59e0b;
+            }
+
+            .features {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-top: 30px;
+            }
+
+            .feature {
+                background: #f8fafc;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                border: 2px solid #e2e8f0;
+            }
+
+            .feature-icon {
+                font-size: 3rem;
+                margin-bottom: 15px;
+            }
+
+            .feature h3 {
+                color: #1f2937;
+                margin-bottom: 10px;
+            }
+
+            .feature p {
+                color: #6b7280;
+                font-size: 0.9rem;
+            }
+
+            .image-switcher {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin: 20px 0;
+            }
+
+            .image-btn {
+                background: #e5e7eb;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+
+            .image-btn.active {
+                background: #2563eb;
+                color: white;
+            }
+
+            .image-btn:hover {
+                background: #1d4ed8;
+                color: white;
+            }
+
+            .loading-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(255, 255, 255, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                z-index: 10;
+            }
+
+            .spinner {
+                width: 50px;
+                height: 50px;
+                border: 5px solid #e5e7eb;
+                border-top: 5px solid #2563eb;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-bottom: 20px;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .help-text {
+                background: #eff6ff;
+                border: 2px solid #3b82f6;
+                color: #1e40af;
+                padding: 15px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .error-display {
+                text-align: center;
+                padding: 60px 20px;
+                color: #ef4444;
+            }
+
+            .error-icon {
+                font-size: 4rem;
+                margin-bottom: 20px;
+            }
+
+            .retry-btn {
+                background: #2563eb;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                margin-top: 15px;
+            }
+
+            .retry-btn:hover {
+                background: #1d4ed8;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="demo-container">
+            <div class="header">
+                <h1>🌐 Panoramic Virtual Tours</h1>
+                <p>
+                    Experience immersive 360° property viewing in GeoCasa Bohol
+                </p>
+            </div>
+
+            <div class="panorama-section">
+                <div class="section-title">
+                    <span>📸</span>
+                    <span>Interactive Panorama Viewer</span>
+                </div>
+
+                <div class="help-text">
+                    <strong>How to use:</strong> Drag to pan around • Scroll to
+                    zoom in/out • Use control buttons below
+                </div>
+
+                <div class="image-switcher">
+                    <button
+                        class="image-btn active"
+                        onclick="switchImage(0, this)"
+                    >
+                        🏖️ Beachfront View
+                    </button>
+                    <button class="image-btn" onclick="switchImage(1, this)">
+                        🏔️ Mountain View
+                    </button>
+                    <button class="image-btn" onclick="switchImage(2, this)">
+                        🏢 Commercial Area
+                    </button>
+                </div>
+
+                <div class="panorama-viewer">
+                    <div id="loading-overlay" class="loading-overlay">
+                        <div class="spinner"></div>
+                        <p>Loading panoramic image...</p>
+                    </div>
+
+                    <div
+                        id="error-display"
+                        class="error-display"
+                        style="display: none"
+                    >
+                        <div class="error-icon">⚠️</div>
+                        <h3>Unable to load panoramic tour</h3>
+                        <p>
+                            The image could not be loaded. Please check your
+                            connection and try again.
+                        </p>
+                        <button class="retry-btn" onclick="retryLoad()">
+                            Try Again
+                        </button>
+                    </div>
+
+                    <div class="panorama-container" id="panorama-container">
+                        <img
+                            id="panorama-image"
+                            class="panorama-image"
+                            src="/storage/properties/virtual-tours/360_tour_1.jpg"
+                            alt="360° Panoramic View"
+                            onload="onImageLoad()"
+                            onerror="onImageError()"
+                            draggable="false"
+                        />
+
+                        <div class="controls">
+                            <button class="control-btn" onclick="zoomIn()">
+                                🔍 Zoom In
+                            </button>
+                            <button class="control-btn" onclick="zoomOut()">
+                                🔍 Zoom Out
+                            </button>
+                            <button class="control-btn" onclick="resetView()">
+                                🏠 Reset
+                            </button>
+                            <button
+                                class="control-btn"
+                                onclick="toggleFullscreen()"
+                            >
+                                ⛶ Fullscreen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="status" class="status loading">
+                    🔄 Loading panoramic image...
+                </div>
+
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon">🖱️</div>
+                        <h3>Drag to Explore</h3>
+                        <p>
+                            Click and drag to look around the 360° environment
+                        </p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🔍</div>
+                        <h3>Zoom Controls</h3>
+                        <p>
+                            Scroll or use buttons to zoom in for detailed
+                            viewing
+                        </p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">📱</div>
+                        <h3>Touch Support</h3>
+                        <p>Pinch to zoom and swipe to pan on mobile devices</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">⛶</div>
+                        <h3>Fullscreen Mode</h3>
+                        <p>
+                            Immersive fullscreen experience for better viewing
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let currentScale = 1;
+            let currentTranslate = { x: 0, y: 0 };
+            let isDragging = false;
+            let dragStart = { x: 0, y: 0 };
+            let lastPan = { x: 0, y: 0 };
+
+            const images = [
+                "/storage/properties/virtual-tours/360_tour_1.jpg",
+                "/storage/properties/virtual-tours/360_tour_2.jpg",
+                "/storage/properties/virtual-tours/360_tour_3.jpg",
+            ];
+
+            let currentImageIndex = 0;
+
+            function onImageLoad() {
+                document.getElementById("loading-overlay").style.display =
+                    "none";
+                document.getElementById("error-display").style.display = "none";
+                document.getElementById("status").className = "status success";
+                document.getElementById("status").innerHTML =
+                    "✅ Panoramic image loaded successfully! Try dragging and zooming.";
+
+                setupInteractions();
+                console.log("✅ Panoramic image loaded successfully");
+            }
+
+            function onImageError() {
+                document.getElementById("loading-overlay").style.display =
+                    "none";
+                document.getElementById("error-display").style.display =
+                    "block";
+                document.getElementById("status").className = "status error";
+                document.getElementById("status").innerHTML =
+                    "❌ Failed to load panoramic image. Please check if the server is running.";
+
+                console.error(
+                    "❌ Failed to load panoramic image:",
+                    images[currentImageIndex]
+                );
+            }
+
+            function retryLoad() {
+                document.getElementById("loading-overlay").style.display =
+                    "flex";
+                document.getElementById("error-display").style.display = "none";
+                document.getElementById("status").className = "status loading";
+                document.getElementById("status").innerHTML =
+                    "🔄 Retrying to load panoramic image...";
+
+                const img = document.getElementById("panorama-image");
+                img.src = images[currentImageIndex] + "?t=" + Date.now();
+            }
+
+            function switchImage(index, button) {
+                currentImageIndex = index;
+
+                // Update button states
+                document
+                    .querySelectorAll(".image-btn")
+                    .forEach((btn) => btn.classList.remove("active"));
+                button.classList.add("active");
+
+                // Show loading
+                document.getElementById("loading-overlay").style.display =
+                    "flex";
+                document.getElementById("status").className = "status loading";
+                document.getElementById("status").innerHTML =
+                    "🔄 Loading new panoramic view...";
+
+                // Reset view
+                resetView();
+
+                // Load new image
+                const img = document.getElementById("panorama-image");
+                img.src = images[index];
+            }
+
+            function setupInteractions() {
+                const container = document.getElementById("panorama-container");
+                const image = document.getElementById("panorama-image");
+
+                // Mouse events
+                container.addEventListener("mousedown", startDrag);
+                document.addEventListener("mousemove", onDrag);
+                document.addEventListener("mouseup", endDrag);
+
+                // Touch events
+                container.addEventListener("touchstart", handleTouchStart, {
+                    passive: false,
+                });
+                container.addEventListener("touchmove", handleTouchMove, {
+                    passive: false,
+                });
+                container.addEventListener("touchend", handleTouchEnd);
+
+                // Wheel zoom
+                container.addEventListener("wheel", onWheel, {
+                    passive: false,
+                });
+            }
+
+            function startDrag(e) {
+                if (currentScale <= 1) return;
+
+                isDragging = true;
+                const clientX =
+                    e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY =
+                    e.clientY || (e.touches && e.touches[0].clientY);
+
+                dragStart.x = clientX - currentTranslate.x;
+                dragStart.y = clientY - currentTranslate.y;
+
+                document.getElementById("panorama-container").style.cursor =
+                    "grabbing";
+            }
+
+            function onDrag(e) {
+                if (!isDragging) return;
+
+                e.preventDefault();
+                const clientX =
+                    e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY =
+                    e.clientY || (e.touches && e.touches[0].clientY);
+
+                currentTranslate.x = clientX - dragStart.x;
+                currentTranslate.y = clientY - dragStart.y;
+
+                updateTransform();
+            }
+
+            function endDrag() {
+                isDragging = false;
+                document.getElementById("panorama-container").style.cursor =
+                    "grab";
+            }
+
+            function onWheel(e) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                const newScale = Math.max(1, Math.min(4, currentScale + delta));
+
+                if (newScale === 1) {
+                    currentScale = 1;
+                    currentTranslate = { x: 0, y: 0 };
+                } else {
+                    currentScale = newScale;
+                }
+
+                updateTransform();
+            }
+
+            function zoomIn() {
+                currentScale = Math.min(4, currentScale + 0.3);
+                updateTransform();
+            }
+
+            function zoomOut() {
+                currentScale = Math.max(1, currentScale - 0.3);
+                if (currentScale === 1) {
+                    currentTranslate = { x: 0, y: 0 };
+                }
+                updateTransform();
+            }
+
+            function resetView() {
+                currentScale = 1;
+                currentTranslate = { x: 0, y: 0 };
+                updateTransform();
+            }
+
+            function updateTransform() {
+                const image = document.getElementById("panorama-image");
+                image.style.transform = `scale(${currentScale}) translate(${currentTranslate.x}px, ${currentTranslate.y}px)`;
+            }
+
+            function toggleFullscreen() {
+                const container = document.querySelector(".demo-container");
+
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    container.requestFullscreen().catch((err) => {
+                        console.log("Fullscreen not supported:", err);
+                    });
+                }
+            }
+
+            function handleTouchStart(e) {
+                if (e.touches.length === 1) {
+                    startDrag(e);
+                }
+            }
+
+            function handleTouchMove(e) {
+                if (e.touches.length === 1) {
+                    onDrag(e);
+                }
+            }
+
+            function handleTouchEnd(e) {
+                endDrag();
+            }
+
+            // Initialize
+            console.log("🌐 Panorama Demo Initialized");
+            console.log("Available images:", images);
+        </script>
+    </body>
+</html>

@@ -477,199 +477,527 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Main Content Grid -->
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    <!-- Main Transaction Details -->
-                    <div class="xl:col-span-2 space-y-6">
-                        <!-- Financial Overview Card -->
+                <div class="space-y-8">
+                    <!-- Key Information Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Financial Summary -->
                         <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                            class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-6"
                         >
-                            <div
-                                class="px-6 py-4 bg-gray-50 border-b border-gray-200"
-                            >
+                            <div class="flex items-center justify-between mb-4">
                                 <h3
-                                    class="text-lg font-semibold text-gray-900 flex items-center"
+                                    class="text-lg font-semibold text-green-900"
                                 >
-                                    <CurrencyDollarIcon
-                                        class="w-5 h-5 mr-2 text-green-600"
-                                    />
-                                    Financial Overview
+                                    Financial Summary
                                 </h3>
+                                <CurrencyDollarIcon
+                                    class="w-6 h-6 text-green-600"
+                                />
                             </div>
-                            <div class="p-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-sm text-green-700">
+                                        Offered Price
+                                    </p>
+                                    <p class="text-xl font-bold text-green-900">
+                                        {{
+                                            formatPrice(
+                                                currentTransaction.offered_price
+                                            )
+                                        }}
+                                    </p>
+                                </div>
                                 <div
-                                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                                    v-if="currentTransaction.final_price"
+                                    class="pt-4 border-t border-green-200"
                                 >
-                                    <!-- Offered Price -->
-                                    <div class="bg-blue-50 rounded-lg p-4">
-                                        <div
-                                            class="flex items-center justify-between"
-                                        >
-                                            <div>
-                                                <p
-                                                    class="text-sm font-medium text-blue-600"
-                                                >
-                                                    Offered Price
-                                                </p>
-                                                <p
-                                                    class="text-2xl font-bold text-blue-900"
-                                                >
-                                                    {{
-                                                        formatPrice(
-                                                            currentTransaction.offered_price
-                                                        )
-                                                    }}
-                                                </p>
-                                            </div>
-                                            <CurrencyDollarIcon
-                                                class="w-8 h-8 text-blue-400"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <!-- Final Price -->
-                                    <div
-                                        v-if="currentTransaction.final_price"
-                                        class="bg-green-50 rounded-lg p-4"
-                                    >
-                                        <div
-                                            class="flex items-center justify-between"
-                                        >
-                                            <div>
-                                                <p
-                                                    class="text-sm font-medium text-green-600"
-                                                >
-                                                    Final Price
-                                                </p>
-                                                <p
-                                                    class="text-2xl font-bold text-green-900"
-                                                >
-                                                    {{
-                                                        formatPrice(
-                                                            currentTransaction.final_price
-                                                        )
-                                                    }}
-                                                </p>
-                                            </div>
-                                            <CheckCircleIcon
-                                                class="w-8 h-8 text-green-400"
-                                            />
-                                        </div>
-                                    </div>
+                                    <p class="text-sm text-green-700">
+                                        Final Price
+                                    </p>
+                                    <p class="text-xl font-bold text-green-900">
+                                        {{
+                                            formatPrice(
+                                                currentTransaction.final_price
+                                            )
+                                        }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Transaction Timeline -->
+                        <!-- Transaction Status -->
                         <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                            class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6"
                         >
-                            <div
-                                class="px-6 py-4 bg-gray-50 border-b border-gray-200"
-                            >
-                                <h3
-                                    class="text-lg font-semibold text-gray-900 flex items-center"
-                                >
-                                    <ClockIcon
-                                        class="w-5 h-5 mr-2 text-indigo-600"
-                                    />
-                                    Transaction Timeline
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-blue-900">
+                                    Current Status
                                 </h3>
+                                <component
+                                    :is="statusIcon"
+                                    class="w-6 h-6 text-blue-600"
+                                />
                             </div>
-                            <div class="p-6">
-                                <div class="space-y-4">
-                                    <!-- Created -->
-                                    <div class="flex items-start space-x-3">
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center"
+                            <div class="space-y-4">
+                                <div>
+                                    <span
+                                        :class="
+                                            getStatusColor(
+                                                currentTransaction.status
+                                            )
+                                        "
+                                        class="inline-flex px-3 py-1 text-sm font-semibold rounded-full"
+                                    >
+                                        {{
+                                            currentTransaction.status.replace(
+                                                "_",
+                                                " "
+                                            )
+                                        }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-blue-700">
+                                    {{ statusDescription }}
+                                </p>
+                                <div class="pt-2">
+                                    <div
+                                        class="flex items-center justify-between text-xs text-blue-600 mb-1"
+                                    >
+                                        <span>Progress</span>
+                                        <span
+                                            >{{
+                                                Math.round(progressPercentage)
+                                            }}%</span
+                                        >
+                                    </div>
+                                    <div
+                                        class="w-full bg-blue-200 rounded-full h-2"
+                                    >
+                                        <div
+                                            class="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                                            :style="{
+                                                width: progressPercentage + '%',
+                                            }"
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Summary -->
+                        <div
+                            class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-6"
+                        >
+                            <div class="flex items-center justify-between mb-4">
+                                <h3
+                                    class="text-lg font-semibold text-purple-900"
+                                >
+                                    Timeline
+                                </h3>
+                                <ClockIcon class="w-6 h-6 text-purple-600" />
+                            </div>
+                            <div class="space-y-3">
+                                <div>
+                                    <p
+                                        class="text-xs text-purple-700 uppercase tracking-wide"
+                                    >
+                                        Started
+                                    </p>
+                                    <p
+                                        class="text-sm font-semibold text-purple-900"
+                                    >
+                                        {{
+                                            formatDate(
+                                                currentTransaction.created_at
+                                            )
+                                        }}
+                                    </p>
+                                </div>
+                                <div v-if="currentTransaction.contract_date">
+                                    <p
+                                        class="text-xs text-purple-700 uppercase tracking-wide"
+                                    >
+                                        Contract Signed
+                                    </p>
+                                    <p
+                                        class="text-sm font-semibold text-purple-900"
+                                    >
+                                        {{
+                                            formatDate(
+                                                currentTransaction.contract_date
+                                            )
+                                        }}
+                                    </p>
+                                </div>
+                                <div v-if="currentTransaction.closing_date">
+                                    <p
+                                        class="text-xs text-purple-700 uppercase tracking-wide"
+                                    >
+                                        Closed
+                                    </p>
+                                    <p
+                                        class="text-sm font-semibold text-purple-900"
+                                    >
+                                        {{
+                                            formatDate(
+                                                currentTransaction.closing_date
+                                            )
+                                        }}
+                                    </p>
+                                </div>
+                                <div class="pt-2 border-t border-purple-200">
+                                    <p class="text-xs text-purple-700">
+                                        {{ daysInProgress }} days in progress
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Left Column - Property & People -->
+                        <div class="space-y-6">
+                            <!-- Property Information -->
+                            <div
+                                class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                            >
+                                <div
+                                    class="px-6 py-4 bg-gray-50 border-b border-gray-200"
+                                >
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 flex items-center"
+                                    >
+                                        <BuildingOfficeIcon
+                                            class="w-5 h-5 mr-2 text-blue-600"
+                                        />
+                                        Property Details
+                                    </h3>
+                                </div>
+                                <div class="p-6">
+                                    <div class="space-y-4">
+                                        <div>
+                                            <h4
+                                                class="font-semibold text-gray-900 text-lg mb-2"
                                             >
-                                                <CalendarIcon
-                                                    class="w-4 h-4 text-blue-600"
+                                                {{
+                                                    currentTransaction.property
+                                                        .title
+                                                }}
+                                            </h4>
+                                            <div
+                                                class="flex items-center text-sm text-gray-500 mb-3"
+                                            >
+                                                <MapPinIcon
+                                                    class="w-4 h-4 mr-1"
                                                 />
+                                                {{
+                                                    currentTransaction.property
+                                                        .location
+                                                }}
                                             </div>
                                         </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p
-                                                class="text-sm font-medium text-gray-900"
+
+                                        <div class="grid grid-cols-1 gap-3">
+                                            <div
+                                                class="bg-gray-50 rounded-lg p-3"
                                             >
-                                                Transaction Created
-                                            </p>
-                                            <p class="text-sm text-gray-500">
-                                                {{
-                                                    formatDate(
-                                                        currentTransaction.created_at
-                                                    )
-                                                }}
-                                            </p>
+                                                <p
+                                                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                                                >
+                                                    Type
+                                                </p>
+                                                <p
+                                                    class="text-sm font-semibold text-gray-900"
+                                                >
+                                                    {{
+                                                        currentTransaction
+                                                            .property.type
+                                                    }}
+                                                </p>
+                                            </div>
+                                            <div
+                                                class="bg-gray-50 rounded-lg p-3"
+                                            >
+                                                <p
+                                                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                                                >
+                                                    Listed Price
+                                                </p>
+                                                <p
+                                                    class="text-sm font-semibold text-gray-900"
+                                                >
+                                                    {{
+                                                        formatPrice(
+                                                            currentTransaction
+                                                                .property.price
+                                                        )
+                                                    }}
+                                                </p>
+                                            </div>
                                         </div>
+
+                                        <Link
+                                            v-if="
+                                                currentTransaction.property &&
+                                                currentTransaction.property.slug
+                                            "
+                                            :href="
+                                                route(
+                                                    'broker.properties.show',
+                                                    currentTransaction.property
+                                                        .slug
+                                                )
+                                            "
+                                            class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                        >
+                                            <EyeIcon class="w-4 h-4 mr-2" />
+                                            View Property
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- People Involved -->
+                            <div
+                                class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                            >
+                                <div
+                                    class="px-6 py-4 bg-gray-50 border-b border-gray-200"
+                                >
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 flex items-center"
+                                    >
+                                        <UserGroupIcon
+                                            class="w-5 h-5 mr-2 text-blue-600"
+                                        />
+                                        People Involved
+                                    </h3>
+                                </div>
+                                <div class="p-6 space-y-6">
+                                    <!-- Client -->
+                                    <div>
+                                        <p
+                                            class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3"
+                                        >
+                                            Client
+                                        </p>
+                                        <div
+                                            class="flex items-center space-x-3 mb-3"
+                                        >
+                                            <div
+                                                class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"
+                                            >
+                                                <span
+                                                    class="text-sm font-semibold text-green-600"
+                                                >
+                                                    {{
+                                                        currentTransaction.client.name.charAt(
+                                                            0
+                                                        )
+                                                    }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <h4
+                                                    class="font-semibold text-gray-900"
+                                                >
+                                                    {{
+                                                        currentTransaction
+                                                            .client.name
+                                                    }}
+                                                </h4>
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    {{
+                                                        currentTransaction
+                                                            .client.email
+                                                    }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Link
+                                            :href="
+                                                route(
+                                                    'clients.show',
+                                                    currentTransaction.client.id
+                                                )
+                                            "
+                                            class="inline-flex items-center px-3 py-1 bg-green-100 hover:bg-green-200 text-green-700 text-sm font-medium rounded-lg transition-colors"
+                                        >
+                                            <EyeIcon class="w-4 h-4 mr-1" />
+                                            View Client
+                                        </Link>
                                     </div>
 
-                                    <!-- Contract Date -->
-                                    <div
-                                        v-if="currentTransaction.contract_date"
-                                        class="flex items-start space-x-3"
-                                    >
-                                        <div class="flex-shrink-0">
+                                    <!-- Broker -->
+                                    <div class="border-t border-gray-100 pt-6">
+                                        <p
+                                            class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3"
+                                        >
+                                            Assigned Broker
+                                        </p>
+                                        <div
+                                            class="flex items-center space-x-3"
+                                        >
                                             <div
-                                                class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center"
+                                                class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center"
                                             >
-                                                <DocumentTextIcon
-                                                    class="w-4 h-4 text-green-600"
-                                                />
+                                                <span
+                                                    class="text-sm font-semibold text-purple-600"
+                                                >
+                                                    {{
+                                                        currentTransaction.broker.name.charAt(
+                                                            0
+                                                        )
+                                                    }}
+                                                </span>
                                             </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p
-                                                class="text-sm font-medium text-gray-900"
-                                            >
-                                                Contract Signed
-                                            </p>
-                                            <p class="text-sm text-gray-500">
-                                                {{
-                                                    formatDate(
-                                                        currentTransaction.contract_date
-                                                    )
-                                                }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Closing Date -->
-                                    <div
-                                        v-if="currentTransaction.closing_date"
-                                        class="flex items-start space-x-3"
-                                    >
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center"
-                                            >
-                                                <CheckCircleIcon
-                                                    class="w-4 h-4 text-emerald-600"
-                                                />
+                                            <div>
+                                                <h4
+                                                    class="font-semibold text-gray-900"
+                                                >
+                                                    {{
+                                                        currentTransaction
+                                                            .broker.name
+                                                    }}
+                                                </h4>
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    {{
+                                                        currentTransaction
+                                                            .broker.email
+                                                    }}
+                                                </p>
                                             </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p
-                                                class="text-sm font-medium text-gray-900"
-                                            >
-                                                Transaction Closed
-                                            </p>
-                                            <p class="text-sm text-gray-500">
-                                                {{
-                                                    formatDate(
-                                                        currentTransaction.closing_date
-                                                    )
-                                                }}
-                                            </p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Notes & Documents -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Middle Column - Timeline & Notes -->
+                        <div class="space-y-6">
+                            <!-- Detailed Timeline -->
+                            <div
+                                class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                            >
+                                <div
+                                    class="px-6 py-4 bg-gray-50 border-b border-gray-200"
+                                >
+                                    <h3
+                                        class="text-lg font-semibold text-gray-900 flex items-center"
+                                    >
+                                        <ClockIcon
+                                            class="w-5 h-5 mr-2 text-indigo-600"
+                                        />
+                                        Detailed Timeline
+                                    </h3>
+                                </div>
+                                <div class="p-6">
+                                    <div class="space-y-4">
+                                        <!-- Created -->
+                                        <div class="flex items-start space-x-3">
+                                            <div class="flex-shrink-0">
+                                                <div
+                                                    class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center"
+                                                >
+                                                    <CalendarIcon
+                                                        class="w-4 h-4 text-blue-600"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p
+                                                    class="text-sm font-medium text-gray-900"
+                                                >
+                                                    Transaction Created
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    {{
+                                                        formatDate(
+                                                            currentTransaction.created_at
+                                                        )
+                                                    }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Contract Date -->
+                                        <div
+                                            v-if="
+                                                currentTransaction.contract_date
+                                            "
+                                            class="flex items-start space-x-3"
+                                        >
+                                            <div class="flex-shrink-0">
+                                                <div
+                                                    class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center"
+                                                >
+                                                    <DocumentTextIcon
+                                                        class="w-4 h-4 text-green-600"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p
+                                                    class="text-sm font-medium text-gray-900"
+                                                >
+                                                    Contract Signed
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    {{
+                                                        formatDate(
+                                                            currentTransaction.contract_date
+                                                        )
+                                                    }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Closing Date -->
+                                        <div
+                                            v-if="
+                                                currentTransaction.closing_date
+                                            "
+                                            class="flex items-start space-x-3"
+                                        >
+                                            <div class="flex-shrink-0">
+                                                <div
+                                                    class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center"
+                                                >
+                                                    <CheckCircleIcon
+                                                        class="w-4 h-4 text-emerald-600"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p
+                                                    class="text-sm font-medium text-gray-900"
+                                                >
+                                                    Transaction Closed
+                                                </p>
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    {{
+                                                        formatDate(
+                                                            currentTransaction.closing_date
+                                                        )
+                                                    }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Notes -->
                             <div
                                 v-if="currentTransaction.notes"
@@ -684,7 +1012,7 @@ onUnmounted(() => {
                                         <DocumentTextIcon
                                             class="w-5 h-5 mr-2 text-gray-600"
                                         />
-                                        Notes
+                                        Transaction Notes
                                     </h3>
                                 </div>
                                 <div class="p-6">
@@ -695,7 +1023,10 @@ onUnmounted(() => {
                                     </p>
                                 </div>
                             </div>
+                        </div>
 
+                        <!-- Right Column - Documents & Additional Info -->
+                        <div class="space-y-6">
                             <!-- Documents -->
                             <div
                                 v-if="
@@ -745,393 +1076,6 @@ onUnmounted(() => {
                                             </a>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sidebar Information -->
-                    <div class="space-y-6">
-                        <!-- Property Information Card -->
-                        <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                        >
-                            <div
-                                class="px-6 py-4 bg-gray-50 border-b border-gray-200"
-                            >
-                                <h3
-                                    class="text-lg font-semibold text-gray-900 flex items-center"
-                                >
-                                    <BuildingOfficeIcon
-                                        class="w-5 h-5 mr-2 text-blue-600"
-                                    />
-                                    Property Details
-                                </h3>
-                            </div>
-                            <div class="p-6">
-                                <div class="space-y-4">
-                                    <div>
-                                        <h4
-                                            class="font-semibold text-gray-900 text-lg mb-2"
-                                        >
-                                            {{
-                                                currentTransaction.property
-                                                    .title
-                                            }}
-                                        </h4>
-                                        <div
-                                            class="flex items-center text-sm text-gray-500 mb-3"
-                                        >
-                                            <MapPinIcon class="w-4 h-4 mr-1" />
-                                            {{
-                                                currentTransaction.property
-                                                    .location
-                                            }}
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="bg-gray-50 rounded-lg p-3">
-                                            <p
-                                                class="text-xs font-medium text-gray-500 uppercase tracking-wide"
-                                            >
-                                                Type
-                                            </p>
-                                            <p
-                                                class="text-sm font-semibold text-gray-900"
-                                            >
-                                                {{
-                                                    currentTransaction.property
-                                                        .type
-                                                }}
-                                            </p>
-                                        </div>
-                                        <div class="bg-gray-50 rounded-lg p-3">
-                                            <p
-                                                class="text-xs font-medium text-gray-500 uppercase tracking-wide"
-                                            >
-                                                Listed Price
-                                            </p>
-                                            <p
-                                                class="text-sm font-semibold text-gray-900"
-                                            >
-                                                {{
-                                                    formatPrice(
-                                                        currentTransaction
-                                                            .property.price
-                                                    )
-                                                }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <Link
-                                        v-if="
-                                            currentTransaction.property &&
-                                            currentTransaction.property.slug
-                                        "
-                                        :href="
-                                            route(
-                                                'broker.properties.show',
-                                                currentTransaction.property.slug
-                                            )
-                                        "
-                                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-                                    >
-                                        <EyeIcon class="w-4 h-4 mr-2" />
-                                        View Property
-                                    </Link>
-                                    <span
-                                        v-else
-                                        class="text-sm text-gray-500 text-center block"
-                                    >
-                                        Property details not available
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Client Information Card -->
-                        <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                        >
-                            <div
-                                class="px-6 py-4 bg-gray-50 border-b border-gray-200"
-                            >
-                                <h3
-                                    class="text-lg font-semibold text-gray-900 flex items-center"
-                                >
-                                    <UserGroupIcon
-                                        class="w-5 h-5 mr-2 text-green-600"
-                                    />
-                                    Client Information
-                                </h3>
-                            </div>
-                            <div class="p-6">
-                                <div class="space-y-4">
-                                    <div class="flex items-center space-x-3">
-                                        <div
-                                            class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"
-                                        >
-                                            <span
-                                                class="text-sm font-semibold text-green-600"
-                                            >
-                                                {{
-                                                    currentTransaction.client.name.charAt(
-                                                        0
-                                                    )
-                                                }}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="font-semibold text-gray-900"
-                                            >
-                                                {{
-                                                    currentTransaction.client
-                                                        .name
-                                                }}
-                                            </h4>
-                                            <p class="text-sm text-gray-500">
-                                                Client
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <div
-                                            class="flex items-center text-sm text-gray-600"
-                                        >
-                                            <EnvelopeIcon
-                                                class="w-4 h-4 mr-2 text-gray-400"
-                                            />
-                                            <a
-                                                :href="`mailto:${currentTransaction.client.email}`"
-                                                class="hover:text-blue-600"
-                                            >
-                                                {{
-                                                    currentTransaction.client
-                                                        .email
-                                                }}
-                                            </a>
-                                        </div>
-                                        <div
-                                            v-if="
-                                                currentTransaction.client.phone
-                                            "
-                                            class="flex items-center text-sm text-gray-600"
-                                        >
-                                            <PhoneIcon
-                                                class="w-4 h-4 mr-2 text-gray-400"
-                                            />
-                                            <a
-                                                :href="`tel:${currentTransaction.client.phone}`"
-                                                class="hover:text-blue-600"
-                                            >
-                                                {{
-                                                    currentTransaction.client
-                                                        .phone
-                                                }}
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <Link
-                                        :href="
-                                            route(
-                                                'clients.show',
-                                                currentTransaction.client.id
-                                            )
-                                        "
-                                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
-                                    >
-                                        <EyeIcon class="w-4 h-4 mr-2" />
-                                        View Client
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Broker Information Card -->
-                        <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                        >
-                            <div
-                                class="px-6 py-4 bg-gray-50 border-b border-gray-200"
-                            >
-                                <h3
-                                    class="text-lg font-semibold text-gray-900 flex items-center"
-                                >
-                                    <UserGroupIcon
-                                        class="w-5 h-5 mr-2 text-purple-600"
-                                    />
-                                    Assigned Broker
-                                </h3>
-                            </div>
-                            <div class="p-6">
-                                <div class="space-y-4">
-                                    <div class="flex items-center space-x-3">
-                                        <div
-                                            class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center"
-                                        >
-                                            <span
-                                                class="text-sm font-semibold text-purple-600"
-                                            >
-                                                {{
-                                                    currentTransaction.broker.name.charAt(
-                                                        0
-                                                    )
-                                                }}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <h4
-                                                class="font-semibold text-gray-900"
-                                            >
-                                                {{
-                                                    currentTransaction.broker
-                                                        .name
-                                                }}
-                                            </h4>
-                                            <p class="text-sm text-gray-500">
-                                                Broker
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        class="flex items-center text-sm text-gray-600"
-                                    >
-                                        <EnvelopeIcon
-                                            class="w-4 h-4 mr-2 text-gray-400"
-                                        />
-                                        <a
-                                            :href="`mailto:${currentTransaction.broker.email}`"
-                                            class="hover:text-blue-600"
-                                        >
-                                            {{
-                                                currentTransaction.broker.email
-                                            }}
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Related Inquiry Card -->
-                        <div
-                            v-if="currentTransaction.inquiry"
-                            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                        >
-                            <div
-                                class="px-6 py-4 bg-gray-50 border-b border-gray-200"
-                            >
-                                <h3
-                                    class="text-lg font-semibold text-gray-900 flex items-center"
-                                >
-                                    <DocumentTextIcon
-                                        class="w-5 h-5 mr-2 text-orange-600"
-                                    />
-                                    Related Inquiry
-                                </h3>
-                            </div>
-                            <div class="p-6">
-                                <div class="space-y-4">
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div class="bg-gray-50 rounded-lg p-3">
-                                            <p
-                                                class="text-xs font-medium text-gray-500 uppercase tracking-wide"
-                                            >
-                                                Type
-                                            </p>
-                                            <p
-                                                class="text-sm font-semibold text-gray-900"
-                                            >
-                                                {{
-                                                    currentTransaction.inquiry
-                                                        .inquiry_type
-                                                }}
-                                            </p>
-                                        </div>
-                                        <div class="bg-gray-50 rounded-lg p-3">
-                                            <p
-                                                class="text-xs font-medium text-gray-500 uppercase tracking-wide"
-                                            >
-                                                Status
-                                            </p>
-                                            <span
-                                                :class="
-                                                    getStatusColor(
-                                                        currentTransaction
-                                                            .inquiry.status
-                                                    )
-                                                "
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                                            >
-                                                {{
-                                                    currentTransaction.inquiry.status.replace(
-                                                        "_",
-                                                        " "
-                                                    )
-                                                }}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <Link
-                                        :href="
-                                            route(
-                                                'inquiries.show',
-                                                currentTransaction.inquiry.id
-                                            )
-                                        "
-                                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors"
-                                    >
-                                        <EyeIcon class="w-4 h-4 mr-2" />
-                                        View Inquiry
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Quick Actions Card -->
-                        <div
-                            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                        >
-                            <div
-                                class="px-6 py-4 bg-gray-50 border-b border-gray-200"
-                            >
-                                <h3
-                                    class="text-lg font-semibold text-gray-900 flex items-center"
-                                >
-                                    <TagIcon
-                                        class="w-5 h-5 mr-2 text-gray-600"
-                                    />
-                                    Quick Actions
-                                </h3>
-                            </div>
-                            <div class="p-6">
-                                <div class="space-y-3">
-                                    <button
-                                        class="w-full flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
-                                    >
-                                        <PlusIcon class="w-4 h-4 mr-2" />
-                                        Add Note
-                                    </button>
-                                    <button
-                                        class="w-full flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
-                                    >
-                                        <ArrowDownTrayIcon
-                                            class="w-4 h-4 mr-2"
-                                        />
-                                        Export PDF
-                                    </button>
-                                    <button
-                                        class="w-full flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
-                                    >
-                                        <ShareIcon class="w-4 h-4 mr-2" />
-                                        Share Link
-                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -639,10 +639,16 @@ const formatDateTime = (date) => {
     });
 };
 
-// Initialize date range on mount
+// Initialize date range on mount only if no filters are present in URL
 onMounted(() => {
-    if (!filters.date_from && !filters.date_to) {
-        setDateRange("today");
+    // Only set default date range if no query parameters exist
+    const hasQueryParams = window.location.search.length > 0;
+    if (!hasQueryParams && !filters.date_from && !filters.date_to) {
+        dateRange.value = "today";
+        // Set dates without applying filters to avoid auto-redirect
+        const today = new Date();
+        filters.date_from = today.toISOString().split("T")[0];
+        filters.date_to = today.toISOString().split("T")[0];
     }
 });
 </script>

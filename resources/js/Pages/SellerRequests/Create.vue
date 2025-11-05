@@ -14,7 +14,6 @@ import {
     PhotoIcon,
     MapPinIcon,
     HomeIcon,
-    UserIcon,
     DocumentTextIcon,
     DocumentIcon,
     CurrencyDollarIcon,
@@ -29,7 +28,6 @@ import {
 
 const props = defineProps({
     availableFeatures: Array,
-    availableBrokers: Array,
     municipalities: Array,
     auth: Object,
 });
@@ -289,8 +287,6 @@ const {
         marketing_consent: false,
         newsletter_consent: false,
         terms_accepted: false,
-        broker_selection_method: "auto",
-        preferred_broker_id: null,
     },
     validationRules
 );
@@ -302,26 +298,11 @@ const { getSmartSuggestions, getQuickActions } = useSmartValidation();
 
 // Form initialization complete
 
-// Broker selection
-const brokerSearch = ref("");
-const filteredBrokers = computed(() => {
-    if (!props.availableBrokers) return [];
-    if (!brokerSearch.value) return props.availableBrokers;
-
-    const search = brokerSearch.value.toLowerCase();
-    return props.availableBrokers.filter(
-        (broker) =>
-            broker.name.toLowerCase().includes(search) ||
-            broker.location.toLowerCase().includes(search) ||
-            (broker.firm && broker.firm.toLowerCase().includes(search))
-    );
-});
-
 const imageFiles = ref([]);
 const propertyDocuments = ref([]);
 const ownershipDocuments = ref([]);
 const currentStep = ref(1);
-const totalSteps = 5; // Updated to 5 steps (added broker selection)
+const totalSteps = 4; // Updated to 4 steps (removed broker selection)
 const isSubmitting = ref(false);
 const submissionStatus = ref(null); // 'success', 'error', or null
 const submissionMessage = ref("");
@@ -390,16 +371,6 @@ const getStepValidationErrors = (step) => {
             break;
 
         case 4:
-            // Broker selection validation
-            if (
-                validationForm.broker_selection_method === "manual" &&
-                !validationForm.preferred_broker_id
-            ) {
-                errors.push("Please select a broker to continue");
-            }
-            break;
-
-        case 5:
             // Images validation
             if (!imageFiles.value || imageFiles.value.length === 0) {
                 errors.push("At least one property image is required");
@@ -519,13 +490,6 @@ const canProceed = computed(() => {
         case 3:
             return isStep3Valid.value;
         case 4:
-            // Broker selection step - always allow proceeding
-            // Auto-assignment doesn't require selection, manual does
-            if (validationForm.broker_selection_method === "manual") {
-                return validationForm.preferred_broker_id !== null;
-            }
-            return true; // Auto-assignment always valid
-        case 5:
             // Final step - check all previous steps and images
             const canSubmit =
                 isStep1Valid.value &&
@@ -680,7 +644,7 @@ const getStepValidationClass = (step) => {
 
 const getStepIcon = (step) => {
     const icons = {
-        1: UserIcon,
+        1: HomeIcon,
         2: DocumentTextIcon,
         3: MapPinIcon,
         4: PhotoIcon,
@@ -2736,264 +2700,8 @@ const handleFieldQuickAction = (fieldName, action) => {
                         </div>
                     </div>
 
-                    <!-- Step 4: Broker Selection -->
+                    <!-- Step 4: Images and Features -->
                     <div v-if="currentStep === 4" class="space-y-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <UserIcon class="w-6 h-6 text-primary-600" />
-                            <h2 class="text-2xl font-bold text-neutral-900">
-                                Choose Your Broker
-                            </h2>
-                        </div>
-
-                        <!-- Broker Selection Method -->
-                        <div
-                            class="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
-                        >
-                            <h3
-                                class="text-lg font-semibold mb-4 text-neutral-900"
-                            >
-                                How would you like to proceed?
-                            </h3>
-
-                            <div class="space-y-4">
-                                <!-- Auto-assign (Recommended) -->
-                                <label
-                                    class="flex items-start p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-neutral-50"
-                                    :class="{
-                                        'border-primary-500 bg-primary-50 shadow-md':
-                                            validationForm.broker_selection_method ===
-                                            'auto',
-                                        'border-neutral-200':
-                                            validationForm.broker_selection_method !==
-                                            'auto',
-                                    }"
-                                >
-                                    <input
-                                        type="radio"
-                                        v-model="
-                                            validationForm.broker_selection_method
-                                        "
-                                        value="auto"
-                                        class="mt-1 text-primary-600 focus:ring-primary-500"
-                                    />
-                                    <div class="ml-4 flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span
-                                                class="font-semibold text-neutral-900"
-                                                >Auto-assign (Recommended)</span
-                                            >
-                                            <span
-                                                class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full"
-                                            >
-                                                Fastest
-                                            </span>
-                                        </div>
-                                        <p
-                                            class="text-sm text-neutral-600 mt-1"
-                                        >
-                                            We'll match you with the best
-                                            available broker based on location,
-                                            expertise, and current workload.
-                                        </p>
-                                        <div
-                                            class="mt-3 flex items-center gap-4 text-sm"
-                                        >
-                                            <div
-                                                class="flex items-center text-green-600"
-                                            >
-                                                <CheckCircleIcon
-                                                    class="w-4 h-4 mr-1"
-                                                />
-                                                Immediate assignment
-                                            </div>
-                                            <div
-                                                class="flex items-center text-green-600"
-                                            >
-                                                <CheckCircleIcon
-                                                    class="w-4 h-4 mr-1"
-                                                />
-                                                Fair distribution
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <!-- Manual selection -->
-                                <label
-                                    class="flex items-start p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:bg-neutral-50"
-                                    :class="{
-                                        'border-primary-500 bg-primary-50 shadow-md':
-                                            validationForm.broker_selection_method ===
-                                            'manual',
-                                        'border-neutral-200':
-                                            validationForm.broker_selection_method !==
-                                            'manual',
-                                    }"
-                                >
-                                    <input
-                                        type="radio"
-                                        v-model="
-                                            validationForm.broker_selection_method
-                                        "
-                                        value="manual"
-                                        class="mt-1 text-primary-600 focus:ring-primary-500"
-                                    />
-                                    <div class="ml-4 flex-1">
-                                        <div
-                                            class="font-semibold text-neutral-900"
-                                        >
-                                            Choose Your Broker
-                                        </div>
-                                        <p
-                                            class="text-sm text-neutral-600 mt-1"
-                                        >
-                                            Select from our verified brokers if
-                                            you have a preference.
-                                        </p>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Broker Selection (shown only if manual) -->
-                        <div
-                            v-if="
-                                validationForm.broker_selection_method ===
-                                'manual'
-                            "
-                            class="bg-white p-6 rounded-xl shadow-sm border border-neutral-200 animate-fadeIn"
-                        >
-                            <h3
-                                class="text-lg font-semibold mb-4 text-neutral-900"
-                            >
-                                Select Your Preferred Broker
-                            </h3>
-
-                            <!-- Search/Filter -->
-                            <div class="mb-6">
-                                <input
-                                    type="text"
-                                    v-model="brokerSearch"
-                                    placeholder="Search by name, location, or firm..."
-                                    class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                />
-                            </div>
-
-                            <!-- Broker List -->
-                            <div
-                                class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto"
-                            >
-                                <div
-                                    v-for="broker in filteredBrokers"
-                                    :key="broker.id"
-                                    @click="
-                                        validationForm.preferred_broker_id =
-                                            broker.id
-                                    "
-                                    class="p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md"
-                                    :class="{
-                                        'border-primary-500 bg-primary-50':
-                                            validationForm.preferred_broker_id ===
-                                            broker.id,
-                                        'border-neutral-200 hover:border-primary-300':
-                                            validationForm.preferred_broker_id !==
-                                            broker.id,
-                                    }"
-                                >
-                                    <div
-                                        class="flex items-start justify-between"
-                                    >
-                                        <div class="flex-1">
-                                            <div
-                                                class="font-semibold text-neutral-900"
-                                            >
-                                                {{ broker.name }}
-                                            </div>
-                                            <div
-                                                class="text-sm text-neutral-600 mt-0.5"
-                                            >
-                                                {{ broker.firm }}
-                                            </div>
-                                            <div
-                                                class="flex items-center gap-2 mt-2 text-sm text-neutral-500"
-                                            >
-                                                <MapPinIcon class="w-4 h-4" />
-                                                <span>{{
-                                                    broker.location
-                                                }}</span>
-                                                <span>•</span>
-                                                <span
-                                                    >{{
-                                                        broker.experience
-                                                    }}
-                                                    years</span
-                                                >
-                                            </div>
-                                            <div
-                                                class="flex items-center gap-3 mt-3 text-xs"
-                                            >
-                                                <span
-                                                    class="px-2 py-1 bg-neutral-100 text-neutral-700 rounded"
-                                                >
-                                                    {{ broker.active_listings }}
-                                                    listings
-                                                </span>
-                                                <span
-                                                    class="px-2 py-1 rounded font-medium"
-                                                    :class="
-                                                        broker.workload < 5
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-orange-100 text-orange-700'
-                                                    "
-                                                >
-                                                    {{ broker.availability }}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div
-                                            v-if="
-                                                validationForm.preferred_broker_id ===
-                                                broker.id
-                                            "
-                                            class="ml-3 text-primary-500"
-                                        >
-                                            <CheckCircleIcon class="w-6 h-6" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="filteredBrokers.length === 0"
-                                class="text-center py-12 text-neutral-500"
-                            >
-                                <UserIcon
-                                    class="w-12 h-12 mx-auto mb-3 text-neutral-400"
-                                />
-                                <p>No brokers found matching your search.</p>
-                            </div>
-
-                            <div
-                                v-if="
-                                    validationForm.broker_selection_method ===
-                                        'manual' &&
-                                    !validationForm.preferred_broker_id
-                                "
-                                class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2"
-                            >
-                                <ExclamationTriangleIcon
-                                    class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
-                                />
-                                <p class="text-sm text-amber-800">
-                                    Please select a broker to continue.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 5: Images and Features -->
-                    <div v-if="currentStep === 5" class="space-y-8">
                         <div class="flex items-center gap-3 mb-6">
                             <PhotoIcon class="w-6 h-6 text-primary-600" />
                             <h2 class="text-2xl font-bold text-neutral-900">

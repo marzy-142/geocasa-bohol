@@ -10,21 +10,26 @@
                             Client Details & Activity
                         </p>
                     </div>
-                    <div class="flex space-x-3">
-                        <button
-                            v-if="canEdit"
-                            @click="editClient"
-                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 backdrop-blur-sm"
+                    <div>
+                        <Link
+                            :href="route('clients.index')"
+                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 backdrop-blur-sm inline-flex items-center"
                         >
-                            Edit Client
-                        </button>
-                        <button
-                            v-if="canDelete"
-                            @click="deleteClient"
-                            class="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                        >
-                            Delete
-                        </button>
+                            <svg
+                                class="w-4 h-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M15 19l-7-7 7-7"
+                                ></path>
+                            </svg>
+                            Back to Clients
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -273,15 +278,6 @@
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-600"
-                                    >Properties Viewed</span
-                                >
-                                <span
-                                    class="text-lg font-semibold text-gray-900"
-                                    >{{ client.properties_viewed || 0 }}</span
-                                >
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-600"
                                     >Transactions</span
                                 >
                                 <span
@@ -334,39 +330,6 @@
                                     </p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions Card -->
-                    <div
-                        class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-                    >
-                        <div
-                            class="px-6 py-4 border-b border-gray-200 bg-gray-50"
-                        >
-                            <h3 class="text-lg font-semibold text-gray-900">
-                                Quick Actions
-                            </h3>
-                        </div>
-                        <div class="p-6 space-y-3">
-                            <button
-                                @click="sendEmail"
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                            >
-                                Send Email
-                            </button>
-                            <button
-                                @click="scheduleCall"
-                                class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                            >
-                                Schedule Call
-                            </button>
-                            <button
-                                @click="addNote"
-                                class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                            >
-                                Add Note
-                            </button>
                         </div>
                     </div>
 
@@ -439,7 +402,7 @@
 
 <script setup>
 import { computed } from "vue";
-import { usePage, router } from "@inertiajs/vue3";
+import { usePage, router, Link } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 
@@ -455,19 +418,6 @@ const props = defineProps({
 });
 
 const { props: pageProps } = usePage();
-
-const canEdit = computed(() => {
-    const user = pageProps.auth.user;
-    return (
-        user.role === "admin" ||
-        (user.role === "broker" && user.id === props.client.broker_id)
-    );
-});
-
-const canDelete = computed(() => {
-    const user = pageProps.auth.user;
-    return user.role === "admin";
-});
 
 const formatCurrency = (amount) => {
     if (!amount) return "Not specified";
@@ -485,28 +435,5 @@ const formatDate = (date) => {
     });
 };
 
-const editClient = () => {
-    router.visit(route("clients.edit", props.client.id));
-};
-
-const deleteClient = () => {
-    if (confirm("Are you sure you want to delete this client?")) {
-        router.delete(route("clients.destroy", props.client.id));
-    }
-};
-
-const sendEmail = () => {
-    // Implement email functionality
-    console.log("Send email to client");
-};
-
-const scheduleCall = () => {
-    // Implement call scheduling functionality
-    console.log("Schedule call with client");
-};
-
-const addNote = () => {
-    // Implement note adding functionality
-    console.log("Add note for client");
-};
+// Quick actions removed per request
 </script>

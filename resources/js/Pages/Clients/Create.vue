@@ -317,7 +317,7 @@
                                             }"
                                         >
                                             <option value="">
-                                                Any Location
+                                                No location preference
                                             </option>
                                             <option
                                                 v-for="municipality in municipalities"

@@ -2,19 +2,17 @@
 import { ref, computed, onMounted } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
-import { Link } from "@inertiajs/vue3";
+import UnifiedSearchFilter from "@/Components/UnifiedSearchFilter.vue";
 import Pagination from "@/Components/Pagination.vue";
 import Button from "@/Components/Button.vue";
 import Card from "@/Components/Card.vue";
 import Badge from "@/Components/Badge.vue";
 import {
-    MagnifyingGlassIcon,
-    FunnelIcon,
-    PlusIcon,
     ChartBarIcon,
     CurrencyDollarIcon,
     ClockIcon,
     UserGroupIcon,
+    UserIcon,
     BuildingOfficeIcon,
     EyeIcon,
     PencilIcon,
@@ -32,18 +30,126 @@ const props = defineProps({
     filters: Object,
     properties: Array,
     statuses: Object,
-    canCreate: Boolean,
     stats: Object,
 });
 
-const search = ref(props.filters.search || "");
-const selectedStatus = ref(props.filters.status || "");
-const selectedProperty = ref(props.filters.property_id || "");
-const dateFrom = ref(props.filters.date_from || "");
-const dateTo = ref(props.filters.date_to || "");
-const showFilters = ref(false);
-const sortBy = ref(props.filters.sort_by || "created_at");
-const sortOrder = ref(props.filters.sort_order || "desc");
+const search = ref("");
+const selectedStatus = ref("");
+const selectedProperty = ref("");
+const dateFrom = ref("");
+const dateTo = ref("");
+const sortBy = ref("");
+const sortOrder = ref("");
+
+// Filter object for UnifiedSearchFilter
+const filterObject = computed(() => ({
+    status: selectedStatus.value,
+    property_id: selectedProperty.value,
+    date_from: dateFrom.value,
+    date_to: dateTo.value,
+    sort_by: sortBy.value,
+    sort_order: sortOrder.value,
+}));
+
+// Filter configurations for UnifiedSearchFilter
+const primaryFilters = computed(() => [
+    {
+        key: "status",
+        label: "Status",
+        type: "select",
+        span: 3,
+        options: Object.entries(props.statuses).map(([value, label]) => ({
+            value,
+            label,
+        })),
+    },
+    {
+        key: "sort_by",
+        label: "Sort By",
+        type: "select",
+        span: 3,
+        options: [
+            { value: "created_at", label: "Date Created" },
+            { value: "offered_price", label: "Price" },
+            { value: "status", label: "Status" },
+            { value: "updated_at", label: "Last Updated" },
+        ],
+    },
+]);
+
+const secondaryFilters = computed(() => [
+    {
+        key: "property_id",
+        label: "Property",
+        type: "select",
+        options: props.properties.map((property) => ({
+            value: property.id,
+            label: property.title,
+        })),
+    },
+    {
+        key: "date_from",
+        label: "Date From",
+        type: "date",
+        placeholder: "Start date",
+    },
+    {
+        key: "date_to",
+        label: "Date To",
+        type: "date",
+        placeholder: "End date",
+    },
+    {
+        key: "sort_order",
+        label: "Sort Order",
+        type: "select",
+        options: [
+            { value: "desc", label: "Newest First" },
+            { value: "asc", label: "Oldest First" },
+        ],
+    },
+]);
+
+// Event handlers for UnifiedSearchFilter
+const handleSearchChange = (value) => {
+    search.value = value;
+    applyFilters();
+};
+
+const handleFilterChange = (key, value) => {
+    switch (key) {
+        case "status":
+            selectedStatus.value = value;
+            break;
+        case "property_id":
+            selectedProperty.value = value;
+            break;
+        case "date_from":
+            dateFrom.value = value;
+            break;
+        case "date_to":
+            dateTo.value = value;
+            break;
+        case "sort_by":
+            sortBy.value = value || "";
+            break;
+        case "sort_order":
+            sortOrder.value = value || "";
+            break;
+    }
+    applyFilters();
+};
+
+const clearAllFilters = () => {
+    search.value = "";
+    selectedStatus.value = "";
+    selectedProperty.value = "";
+    dateFrom.value = "";
+    dateTo.value = "";
+    sortBy.value = "";
+    sortOrder.value = "";
+    applyFilters();
+};
 
 // Determine if current user is admin to conditionally hide edit/delete actions
 const page = usePage();
@@ -83,21 +189,6 @@ const applyFilters = () => {
             replace: true,
         }
     );
-};
-
-const clearFilters = () => {
-    search.value = "";
-    selectedStatus.value = "";
-    selectedProperty.value = "";
-    dateFrom.value = "";
-    dateTo.value = "";
-    sortBy.value = "created_at";
-    sortOrder.value = "desc";
-    applyFilters();
-};
-
-const toggleFilters = () => {
-    showFilters.value = !showFilters.value;
 };
 
 const getStatusColor = (status) => {
@@ -242,15 +333,6 @@ const updateStatus = (transactionId, newStatus) => {
     });
 };
 
-// Auto-apply search with debounce
-let searchTimeout;
-const handleSearch = () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        applyFilters();
-    }, 300);
-};
-
 onMounted(() => {
     // Initialize any additional setup if needed
 });
@@ -284,25 +366,22 @@ onMounted(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <Link
-                            v-if="canCreate"
-                            :href="route('transactions.create')"
-                            class="bg-white text-blue-600 hover:bg-blue-50 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                        >
-                            <PlusIcon class="w-5 h-5" />
-                            New Transaction
-                        </Link>
-                        <button
-                            @click="toggleFilters"
-                            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 backdrop-blur-sm flex items-center justify-center gap-2"
-                        >
-                            <FunnelIcon class="w-5 h-5" />
-                            {{ showFilters ? "Hide" : "Show" }} Filters
-                        </button>
-                    </div>
                 </div>
             </div>
+
+            <!-- Unified Search & Filter -->
+            <UnifiedSearchFilter
+                title="Search & Filter Transactions"
+                :search="search"
+                search-placeholder="Search by transaction number, property, client, or broker..."
+                :filters="filterObject"
+                :result-count="transactions.total"
+                :primary-filters="primaryFilters"
+                :secondary-filters="secondaryFilters"
+                @search-change="handleSearchChange"
+                @filter-change="handleFilterChange"
+                @clear-filters="clearAllFilters"
+            />
 
             <!-- Quick Stats Overview -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -387,152 +466,6 @@ onMounted(() => {
                                 class="w-6 h-6 text-purple-600"
                             />
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Enhanced Filters Section -->
-            <div
-                v-show="showFilters"
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all duration-300"
-            >
-                <div class="flex items-center justify-between mb-6">
-                    <h3
-                        class="text-lg font-semibold text-gray-900 flex items-center gap-2"
-                    >
-                        <FunnelIcon class="w-5 h-5 text-gray-500" />
-                        Search & Filter Transactions
-                    </h3>
-                    <button
-                        @click="clearFilters"
-                        class="text-sm text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1"
-                    >
-                        <ArrowPathIcon class="w-4 h-4" />
-                        Clear all
-                    </button>
-                </div>
-
-                <!-- Search Bar -->
-                <div class="mb-6">
-                    <div class="relative">
-                        <MagnifyingGlassIcon
-                            class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                        />
-                        <input
-                            v-model="search"
-                            type="text"
-                            placeholder="Search by transaction number, property, client, or broker..."
-                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            @input="handleSearch"
-                        />
-                    </div>
-                </div>
-
-                <!-- Filter Grid -->
-                <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-                >
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                            >Status</label
-                        >
-                        <select
-                            v-model="selectedStatus"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            @change="applyFilters"
-                        >
-                            <option value="">All Statuses</option>
-                            <option
-                                v-for="(label, value) in statuses"
-                                :key="value"
-                                :value="value"
-                            >
-                                {{ label }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                            >Property</label
-                        >
-                        <select
-                            v-model="selectedProperty"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            @change="applyFilters"
-                        >
-                            <option value="">All Properties</option>
-                            <option
-                                v-for="property in properties"
-                                :key="property.id"
-                                :value="property.id"
-                            >
-                                {{ property.title }} -
-                                {{ property.municipality }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                            >Date From</label
-                        >
-                        <input
-                            v-model="dateFrom"
-                            type="date"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            @change="applyFilters"
-                        />
-                    </div>
-
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                            >Date To</label
-                        >
-                        <input
-                            v-model="dateTo"
-                            type="date"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            @change="applyFilters"
-                        />
-                    </div>
-                </div>
-
-                <!-- Sort Options -->
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <div class="flex-1">
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                            >Sort By</label
-                        >
-                        <select
-                            v-model="sortBy"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            @change="applyFilters"
-                        >
-                            <option value="created_at">Date Created</option>
-                            <option value="inquiry_date">Inquiry Date</option>
-                            <option value="offered_price">Offered Price</option>
-                            <option value="status">Status</option>
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                            >Order</label
-                        >
-                        <select
-                            v-model="sortOrder"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            @change="applyFilters"
-                        >
-                            <option value="desc">Newest First</option>
-                            <option value="asc">Oldest First</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -793,36 +726,9 @@ onMounted(() => {
                             dateFrom ||
                             dateTo
                                 ? "Try adjusting your search filters to find transactions."
-                                : "Get started by creating your first transaction or wait for client inquiries to convert."
+                                : "No transactions found. Transactions will appear here when client inquiries are converted."
                         }}
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Button
-                            v-if="canCreate"
-                            variant="primary"
-                            size="lg"
-                            :icon="PlusIcon"
-                            as="a"
-                            :href="route('transactions.create')"
-                        >
-                            Create Transaction
-                        </Button>
-                        <Button
-                            v-if="
-                                search ||
-                                selectedStatus ||
-                                selectedProperty ||
-                                dateFrom ||
-                                dateTo
-                            "
-                            variant="secondary"
-                            size="lg"
-                            :icon="ArrowPathIcon"
-                            @click="clearFilters"
-                        >
-                            Clear Filters
-                        </Button>
-                    </div>
                 </div>
 
                 <!-- Enhanced Pagination -->

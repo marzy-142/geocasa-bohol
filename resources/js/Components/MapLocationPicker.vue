@@ -11,26 +11,96 @@
         </div>
 
         <!-- Address Input with Geocoding -->
-        <div class="mb-4">
+        <div class="mb-4 relative" style="z-index: 1000">
             <div class="flex gap-2">
-                <input
-                    v-model="addressInput"
-                    type="text"
-                    placeholder="Enter address in Bohol (e.g., Panglao, Bohol)"
-                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    @keyup.enter="geocodeAddress"
-                />
+                <div class="flex-1 relative">
+                    <input
+                        v-model="addressInput"
+                        type="text"
+                        placeholder="Enter location (e.g., Cabantian Hills, Guindulman, Bohol)"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        @keyup.enter="geocodeAddress"
+                        @input="onAddressInput"
+                        @focus="showResults = searchResults.length > 0"
+                    />
+
+                    <!-- Search Results Dropdown -->
+                    <div
+                        v-if="showResults && searchResults.length > 0"
+                        class="absolute w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+                        style="z-index: 10000"
+                    >
+                        <div
+                            v-for="(result, index) in searchResults"
+                            :key="index"
+                            @click="selectSearchResult(result)"
+                            class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                        >
+                            <div class="flex items-start gap-2">
+                                <svg
+                                    class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                    />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                </svg>
+                                <div class="flex-1 min-w-0">
+                                    <div
+                                        class="font-medium text-gray-900 truncate"
+                                    >
+                                        {{ result.name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500 truncate">
+                                        {{ result.display_name }}
+                                    </div>
+                                    <div class="text-xs text-gray-400 mt-1">
+                                        {{
+                                            result.source === "google"
+                                                ? "📍 Google Maps"
+                                                : "🗺️ OpenStreetMap"
+                                        }}
+                                        · {{ result.type }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <button
                     @click="geocodeAddress"
                     :disabled="!addressInput || isGeocoding"
-                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                 >
-                    {{ isGeocoding ? "Searching..." : "Find" }}
+                    {{ isGeocoding ? "Searching..." : "Search" }}
                 </button>
             </div>
-            <div v-if="geocodeError" class="text-red-500 text-sm mt-1">
+            <div
+                v-if="geocodeError"
+                class="text-sm mt-1"
+                :class="
+                    geocodeError.includes('Found')
+                        ? 'text-amber-600'
+                        : 'text-red-500'
+                "
+            >
                 {{ geocodeError }}
             </div>
+            <p class="text-xs text-gray-500 mt-1">
+                💡 Try: "Cabantian Hills", "Barangay Cabantian, Guindulman", or
+                click the map
+            </p>
         </div>
 
         <!-- Map Container -->
@@ -163,6 +233,10 @@ const props = defineProps({
         type: String,
         default: "",
     },
+    googleApiKey: {
+        type: String,
+        default: "",
+    },
 });
 
 const emit = defineEmits(["update:modelValue", "locationSelected"]);
@@ -177,6 +251,59 @@ const BOHOL_BOUNDS = {
 
 // Bohol center coordinates
 const BOHOL_CENTER = { lat: 9.8349, lng: 124.1436 };
+
+// Complete list of Bohol municipalities and city (including common spelling variants)
+const BOHOL_MUNICIPALITY_NAMES = [
+    "Tagbilaran City",
+    "Alburquerque",
+    "Alicia",
+    "Anda",
+    "Antequera",
+    "Baclayon",
+    "Balilihan",
+    "Batuan",
+    "Bien Unido",
+    "Bilar",
+    "Buenavista",
+    "Calape",
+    "Candijay",
+    "Carmen",
+    "Catigbian",
+    "Clarin",
+    "Corella",
+    "Cortes",
+    "Dagohoy",
+    "Danao",
+    "Dauis",
+    "Dimiao",
+    "Duero",
+    "Garcia Hernandez",
+    "Guindulman",
+    "Inabanga",
+    "Jagna",
+    "Getafe",
+    "Jetafe",
+    "Lila",
+    "Loay",
+    "Loboc",
+    "Loon",
+    "Mabini",
+    "Maribojoc",
+    "Panglao",
+    "Pilar",
+    "President Carlos P. Garcia",
+    "Sagbayan",
+    "San Isidro",
+    "San Miguel",
+    "Sevilla",
+    "Sierra Bullones",
+    "Sikatuna",
+    "Talibon",
+    "Trinidad",
+    "Tubigon",
+    "Ubay",
+    "Valencia",
+];
 
 // Reactive data
 const mapContainer = ref(null);
@@ -193,6 +320,8 @@ const isGeocoding = ref(false);
 const geocodeError = ref("");
 const reverseGeocodedAddress = ref("");
 const boundaryWarning = ref("");
+const searchResults = ref([]);
+const showResults = ref(false);
 
 // Initialize map
 const initMap = async () => {
@@ -326,45 +455,267 @@ const updateCoordinatesFromInput = () => {
     }
 };
 
-// Geocode address
-const geocodeAddress = async () => {
+// Auto-search as user types (debounced)
+let searchTimeout;
+const onAddressInput = () => {
+    clearTimeout(searchTimeout);
+    geocodeError.value = "";
+
+    if (addressInput.value.trim().length < 3) {
+        searchResults.value = [];
+        showResults.value = false;
+        return;
+    }
+
+    searchTimeout = setTimeout(() => {
+        geocodeAddressWithResults();
+    }, 500);
+};
+
+// Select a result from dropdown
+const selectSearchResult = (result) => {
+    setLocation(result.lat, result.lng);
+    reverseGeocodedAddress.value = result.display_name;
+    addressInput.value = result.name;
+    showResults.value = false;
+
+    if (map.value) {
+        map.value.setView([result.lat, result.lng], 16);
+    }
+};
+
+// Enhanced geocoding with Google Places API fallback
+const geocodeAddressWithResults = async () => {
     if (!addressInput.value.trim()) return;
 
     isGeocoding.value = true;
     geocodeError.value = "";
+    searchResults.value = [];
 
     try {
-        // Using Nominatim API for geocoding
-        const query = encodeURIComponent(
-            `${addressInput.value}, Bohol, Philippines`
-        );
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`
-        );
-        const data = await response.json();
+        const raw = addressInput.value.trim();
+        // Handle partial inputs like "Buenavista, C" by dropping very short trailing fragments
+        const partsByComma = raw
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean);
+        const hasShortTrailing =
+            partsByComma.length > 1 &&
+            partsByComma[partsByComma.length - 1].length < 3;
+        const searchTerm = hasShortTrailing
+            ? partsByComma.slice(0, -1).join(", ")
+            : raw;
+        let allResults = [];
 
-        if (data && data.length > 0) {
-            const result = data[0];
-            const lat = parseFloat(result.lat);
-            const lng = parseFloat(result.lon);
+        // PRIORITY 1: Try Google Places API if key is available
+        if (props.googleApiKey) {
+            const googleResults = await searchGooglePlaces(searchTerm);
+            allResults.push(...googleResults);
+        }
 
-            setLocation(lat, lng);
+        // PRIORITY 2: Enhanced Nominatim search with multiple strategies
+        const nominatimResults = await searchNominatim(searchTerm);
+        allResults.push(...nominatimResults);
 
-            // Center map on found location
-            if (map.value) {
-                map.value.setView([lat, lng], 15);
-            }
+        // Filter and sort results by relevance to Bohol
+        const boholResults = allResults
+            .filter((result) => {
+                const lat = parseFloat(result.lat);
+                const lng = parseFloat(result.lng);
+                return (
+                    lat >= BOHOL_BOUNDS.south &&
+                    lat <= BOHOL_BOUNDS.north &&
+                    lng >= BOHOL_BOUNDS.west &&
+                    lng <= BOHOL_BOUNDS.east
+                );
+            })
+            .sort((a, b) => {
+                // Prioritize Google results
+                if (a.source === "google" && b.source !== "google") return -1;
+                if (a.source !== "google" && b.source === "google") return 1;
 
-            reverseGeocodedAddress.value = result.display_name;
-        } else {
-            geocodeError.value =
-                "Address not found. Please try a different search term.";
+                // Then by distance from Bohol center
+                const distA = getDistance(
+                    a.lat,
+                    a.lng,
+                    BOHOL_CENTER.lat,
+                    BOHOL_CENTER.lng
+                );
+                const distB = getDistance(
+                    b.lat,
+                    b.lng,
+                    BOHOL_CENTER.lat,
+                    BOHOL_CENTER.lng
+                );
+                return distA - distB;
+            });
+
+        searchResults.value = boholResults.slice(0, 5); // Top 5 results
+        showResults.value = boholResults.length > 0;
+
+        if (boholResults.length === 0) {
+            geocodeError.value = hasShortTrailing
+                ? `Keep typing… (try completing the municipality, e.g., "${partsByComma[0]}, Carmen")`
+                : `"${raw}" not found in Bohol. Try different keywords or click the map.`;
         }
     } catch (error) {
         console.error("Geocoding error:", error);
-        geocodeError.value = "Error searching for address. Please try again.";
+        geocodeError.value = "Search error. Please try again.";
     } finally {
         isGeocoding.value = false;
+    }
+};
+
+// Search using Google Places API
+const searchGooglePlaces = async (searchTerm) => {
+    if (!props.googleApiKey) return [];
+
+    try {
+        // Use Google Geocoding API (simpler than Places)
+        const query = encodeURIComponent(`${searchTerm}, Bohol, Philippines`);
+        const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${query}&key=${props.googleApiKey}&region=ph&bounds=9.3,123.5|10.2,124.5`
+        );
+        const data = await response.json();
+
+        if (data.status === "OK" && data.results) {
+            return data.results.map((result) => ({
+                lat: result.geometry.location.lat,
+                lng: result.geometry.location.lng,
+                name: result.address_components[0]?.long_name || searchTerm,
+                display_name: result.formatted_address,
+                type: result.types[0]?.replace(/_/g, " ") || "location",
+                source: "google",
+                importance: 1.0,
+            }));
+        }
+    } catch (error) {
+        console.error("Google Places error:", error);
+    }
+
+    return [];
+};
+
+// Enhanced Nominatim search with multiple strategies
+const searchNominatim = async (searchTerm) => {
+    const results = [];
+    const queries = [];
+
+    // Build structured understanding of the term
+    const byComma = searchTerm
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
+    const firstToken = byComma[0] || searchTerm;
+    const secondToken = byComma.length > 1 ? byComma[1] : "";
+    const secondIsShort = secondToken && secondToken.length < 3;
+
+    // Strategy 1: Full search with Bohol context
+    queries.push(`${searchTerm}, Bohol, Philippines`);
+
+    // Strategy 2: Search with just Philippines (for less common places)
+    queries.push(`${searchTerm}, Philippines`);
+
+    // Strategy 3: If multi-word (space-separated), try the first significant word
+    const spaceParts = firstToken.split(/\s+/).filter(Boolean);
+    if (spaceParts.length > 0) {
+        queries.push(`${spaceParts[0]}, Bohol, Philippines`);
+        if (spaceParts.length > 1) {
+            queries.push(`${spaceParts.slice(-1)[0]}, Bohol, Philippines`);
+        }
+    }
+
+    // Strategy 4: If user typed a short trailing municipality hint like ", C",
+    // try municipalities that start with that hint (e.g., Carmen, Candijay, Calape)
+    if (secondIsShort) {
+        const hint = secondToken.toLowerCase();
+        BOHOL_MUNICIPALITY_NAMES.filter((m) => m.toLowerCase().startsWith(hint))
+            .slice(0, 5)
+            .forEach((m) => {
+                queries.push(`${firstToken}, ${m}, Bohol`);
+            });
+    }
+
+    // Strategy 5: Try all municipalities as context (cap the total queries later)
+    BOHOL_MUNICIPALITY_NAMES.forEach((municipality) => {
+        queries.push(`${firstToken}, ${municipality}, Bohol`);
+    });
+
+    try {
+        // Search with all strategies in parallel
+        const responses = await Promise.all(
+            queries.slice(0, 8).map(async (query) => {
+                // Limit to 5 concurrent requests
+                const encoded = encodeURIComponent(query);
+                // Constrain search to Bohol viewbox and PH country to improve precision
+                const viewbox = `${BOHOL_BOUNDS.west},${BOHOL_BOUNDS.north},${BOHOL_BOUNDS.east},${BOHOL_BOUNDS.south}`;
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&countrycodes=ph&bounded=1&viewbox=${viewbox}&q=${encoded}&limit=5&addressdetails=1`,
+                    {
+                        headers: {
+                            "User-Agent": "GeoCasa-Bohol/1.0",
+                        },
+                    }
+                );
+                return response.json();
+            })
+        );
+
+        // Flatten and deduplicate results
+        const seenLocations = new Set();
+        responses.forEach((data) => {
+            if (data && Array.isArray(data)) {
+                data.forEach((result) => {
+                    const locationKey = `${parseFloat(result.lat).toFixed(
+                        4
+                    )},${parseFloat(result.lon).toFixed(4)}`;
+                    if (!seenLocations.has(locationKey)) {
+                        seenLocations.add(locationKey);
+                        results.push({
+                            lat: parseFloat(result.lat),
+                            lng: parseFloat(result.lon),
+                            name:
+                                result.name ||
+                                result.display_name.split(",")[0],
+                            display_name: result.display_name,
+                            type:
+                                result.type || result.addresstype || "location",
+                            source: "osm",
+                            importance: parseFloat(result.importance || 0.5),
+                        });
+                    }
+                });
+            }
+        });
+    } catch (error) {
+        console.error("Nominatim search error:", error);
+    }
+
+    return results;
+};
+
+// Calculate distance between two points (Haversine formula)
+const getDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+};
+
+// Main geocode function (for button click)
+const geocodeAddress = async () => {
+    await geocodeAddressWithResults();
+
+    // Auto-select first result if available
+    if (searchResults.value.length > 0) {
+        selectSearchResult(searchResults.value[0]);
     }
 };
 
@@ -411,6 +762,14 @@ defineExpose({
 // Initialize on mount
 onMounted(() => {
     initMap();
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+        const picker = e.target.closest(".map-location-picker");
+        if (!picker) {
+            showResults.value = false;
+        }
+    });
 });
 </script>
 

@@ -18,7 +18,9 @@ use Inertia\Inertia;
 use App\Events\InquiryStatusUpdated;
 use App\Events\NewInquiryReceived;
 use App\Events\TransactionCreated;
+use App\Events\MessageSent;
 use App\Mail\InquiryResponseMail;
+use App\Notifications\MessageNotification;
 
 class InquiryController extends Controller
 {
@@ -161,7 +163,7 @@ class InquiryController extends Controller
         }
         
         $inquiry->load([
-            'property:id,title,slug,address,municipality,type,total_price,broker_id,images',
+            'property:id,title,slug,address,municipality,type,total_price,broker_id,status,pending_at,sold_at,images',
             'property.broker:id,name,email',
             'client:id,name,email,phone',
             'transaction:id,inquiry_id,status,transaction_number,created_at,updated_at,inquiry_date,first_contact_date,viewing_date,offer_date,acceptance_date,contract_date,closing_date,finalized_date,offered_price,final_price',
@@ -174,8 +176,97 @@ class InquiryController extends Controller
                 'respond' => $user->role === 'admin' || $user->role === 'broker',
                 'edit' => $user->role === 'admin' || ($user->role === 'broker' && $inquiry->property->broker_id === $user->id),
                 'delete' => $user->role === 'admin',
+                'update_property_status' => $user->role === 'admin' || $user->role === 'broker',
             ]
         ]);
+    }
+
+    /**
+     * Update the linked property's status from the inquiry context.
+     * Allows brokers/admins to quickly set: available, reserved, under_negotiation, pending, sold.
+     * When setting sold, optionally capture sold_price and link to the inquiry's client/transaction.
+     */
+    public function updatePropertyStatus(Request $request, Inquiry $inquiry)
+    {
+        $user = Auth::user();
+
+        if (!in_array($user->role, ['admin', 'broker'])) {
+            abort(403);
+        }
+
+        // If broker, ensure they are assigned to this inquiry
+        if ($user->role === 'broker' && $inquiry->assigned_broker_id !== $user->id) {
+            abort(403);
+        }
+
+        if (!$inquiry->property) {
+            return redirect()->back()->with('error', 'No property associated with this inquiry.');
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:available,reserved,under_negotiation,pending,sold',
+            'sold_price' => 'nullable|numeric|min:0',
+        ]);
+
+        $property = $inquiry->property;
+        $newStatus = $validated['status'];
+
+        // Short-circuit if no change
+        if ($property->status === $newStatus) {
+            return redirect()->back()->with('info', 'Property status is already ' . $newStatus . '.');
+        }
+
+        // Apply status-specific updates
+        switch ($newStatus) {
+            case 'available':
+                $property->update([
+                    'status' => 'available',
+                ]);
+                break;
+            case 'reserved':
+                $property->update([
+                    'status' => 'reserved',
+                ]);
+                break;
+            case 'under_negotiation':
+                $property->update([
+                    'status' => 'under_negotiation',
+                ]);
+                break;
+            case 'pending':
+                $property->update([
+                    'status' => 'pending',
+                    'pending_at' => now(),
+                ]);
+                break;
+            case 'sold':
+                $property->update([
+                    'status' => 'sold',
+                    'sold_at' => now(),
+                    'sold_price' => $validated['sold_price'] ?? ($property->sold_price ?? $property->total_price),
+                    'sold_to_client_id' => $inquiry->client_id,
+                    'sold_via_transaction_id' => optional($inquiry->transaction)->id,
+                ]);
+                break;
+        }
+
+        // If moving into a transaction-like state and inquiry already has a transaction, keep them in sync lightly
+        if (in_array($newStatus, ['under_negotiation', 'pending']) && $inquiry->transaction) {
+            $tx = $inquiry->transaction;
+            if ($newStatus === 'under_negotiation' && $tx->status === 'initial_contact') {
+                $tx->update(['status' => 'negotiation']);
+            }
+            if ($newStatus === 'pending' && !in_array($tx->status, ['accepted','contract_signed','finalized'])) {
+                $tx->update(['status' => 'accepted']);
+            }
+        }
+
+        // Refresh inquiry relation for UI
+        $inquiry->load('property');
+
+        return redirect()
+            ->route('inquiries.show', $inquiry)
+            ->with('success', 'Property status updated to ' . str_replace('_', ' ', $newStatus) . '.');
     }
 
     /**
@@ -473,7 +564,22 @@ class InquiryController extends Controller
         // Create or get conversation for ongoing communication
         $conversation = $inquiry->conversation;
         if (!$conversation) {
-            $conversation = Conversation::createForInquiry($inquiry->fresh(['property', 'client']));
+            // Reload inquiry with fresh relationships to ensure we have latest client data
+            $freshInquiry = $inquiry->fresh(['property', 'client.user']);
+            
+            // Log for debugging to check if client has user_id
+            \Log::info('Creating conversation for inquiry', [
+                'inquiry_id' => $freshInquiry->id,
+                'inquiry_user_id' => $freshInquiry->user_id,
+                'client_id' => $freshInquiry->client_id,
+                'client_user_id' => $freshInquiry->client?->user_id ?? 'NULL',
+                'property_broker_id' => $freshInquiry->property?->broker_id
+            ]);
+            
+            $conversation = Conversation::createForInquiry($freshInquiry);
+            
+            // Reload the inquiry to get the conversation relationship
+            $inquiry->load('conversation');
             
             // Create initial system message
             Message::create([
@@ -482,6 +588,32 @@ class InquiryController extends Controller
                 'content' => "Conversation started. {$user->name} responded to the inquiry about {$inquiry->property->title}.",
                 'is_system_message' => true,
             ]);
+        }
+        
+        // Send the broker's response as an actual message in the conversation
+        // This ensures the buyer can see the broker's message in their inbox
+        $responseMessage = Message::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $user->id,
+            'content' => $validated['broker_response'],
+            'type' => 'text',
+        ]);
+        
+        // Update conversation's last message timestamp
+        $conversation->update([
+            'last_message_at' => now()
+        ]);
+        
+        // Broadcast the message to other participants
+        broadcast(new \App\Events\MessageSent($responseMessage))->toOthers();
+        
+        // Notify other participants in the conversation
+        $otherParticipants = $conversation->participantUsers()
+            ->where('users.id', '!=', $user->id)
+            ->get();
+            
+        foreach ($otherParticipants as $participant) {
+            $participant->notify(new \App\Notifications\MessageNotification($responseMessage));
         }
 
         // Send email notification to the client

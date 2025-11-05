@@ -38,60 +38,6 @@
             enctype="multipart/form-data"
             class="space-y-8"
         >
-            <!-- Stepper / Progress Indicator -->
-            <div
-                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 sticky top-20 z-20"
-            >
-                <div class="flex items-center justify-between">
-                    <div class="flex-1 mr-4">
-                        <div
-                            class="h-2 bg-gray-100 rounded-full overflow-hidden"
-                        >
-                            <div
-                                class="h-full bg-blue-600 transition-all"
-                                :style="{ width: progressPercent + '%' }"
-                            ></div>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-600">
-                            Step {{ currentStep }} of {{ steps.length }}
-                        </div>
-                    </div>
-                    <div class="hidden md:flex items-center space-x-3">
-                        <template v-for="(s, idx) in steps" :key="s.id">
-                            <button
-                                type="button"
-                                @click="goToStep(idx + 1)"
-                                class="flex items-center"
-                            >
-                                <div
-                                    class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                                    :class="
-                                        idx + 1 <= currentStep
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-200 text-gray-700'
-                                    "
-                                >
-                                    {{ idx + 1 }}
-                                </div>
-                                <span
-                                    class="ml-2 text-sm"
-                                    :class="
-                                        idx + 1 <= currentStep
-                                            ? 'text-gray-900'
-                                            : 'text-gray-500'
-                                    "
-                                >
-                                    {{ s.label }}
-                                </span>
-                            </button>
-                            <div
-                                v-if="idx < steps.length - 1"
-                                class="w-6 h-[2px] bg-gray-200"
-                            ></div>
-                        </template>
-                    </div>
-                </div>
-            </div>
             <!-- Basic Information -->
             <div
                 id="step-basic"
@@ -160,13 +106,44 @@
                         >
                             <option value="">Select Property Type</option>
                             <option
-                                v-for="type in propertyTypes"
+                                v-for="type in props.types"
                                 :key="type.value"
                                 :value="type.value"
                             >
                                 {{ type.label }}
                             </option>
                         </select>
+                        <div v-if="form.type === 'other'" class="mt-3">
+                            <label
+                                for="type_other"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Specify Other Type
+                            </label>
+                            <input
+                                id="type_other"
+                                v-model="form.type_other"
+                                type="text"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                :class="{
+                                    'border-red-500 ring-red-500':
+                                        errors.type_other,
+                                }"
+                                placeholder="e.g., Hillside Farmland"
+                                :required="form.type === 'other'"
+                                maxlength="100"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">
+                                We'll record this in notes to keep your listing
+                                accurate while keeping filters consistent.
+                            </p>
+                            <div
+                                v-if="errors.type_other"
+                                class="text-red-500 text-sm mt-1"
+                            >
+                                {{ errors.type_other }}
+                            </div>
+                        </div>
                         <div
                             v-if="errors.type"
                             class="text-red-500 text-sm mt-1"
@@ -252,7 +229,7 @@
                         >
                             <option value="">Select Municipality</option>
                             <option
-                                v-for="municipality in municipalities"
+                                v-for="municipality in props.municipalities"
                                 :key="municipality"
                                 :value="municipality"
                             >
@@ -272,7 +249,7 @@
                             for="barangay"
                             class="block text-sm font-medium text-gray-700 mb-2"
                         >
-                            Barangay *
+                            Barangay
                         </label>
                         <input
                             id="barangay"
@@ -283,7 +260,6 @@
                                 'border-red-500 ring-red-500': errors.barangay,
                             }"
                             placeholder="e.g., Poblacion"
-                            required
                         />
                         <div
                             v-if="errors.barangay"
@@ -345,6 +321,7 @@
                         <MapLocationPicker
                             v-model="coordinates"
                             label="Property Location (GPS Coordinates)"
+                            :google-api-key="googleMapsApiKey"
                             :error="
                                 errors.coordinates_lat || errors.coordinates_lng
                             "
@@ -465,7 +442,7 @@
                             for="lot_area_sqm"
                             class="block text-sm font-medium text-gray-700 mb-2"
                         >
-                            Lot Area (sqm) *
+                            Lot Area (sqm) <span class="text-red-500">*</span>
                         </label>
                         <input
                             id="lot_area_sqm"
@@ -474,13 +451,13 @@
                             step="0.01"
                             min="0"
                             inputmode="decimal"
+                            required
                             class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                             :class="{
                                 'border-red-500 ring-red-500':
                                     errors.lot_area_sqm,
                             }"
                             placeholder="e.g., 1000"
-                            required
                             @input="onLotAreaChange"
                         />
                         <div
@@ -496,7 +473,8 @@
                             for="price_per_sqm"
                             class="block text-sm font-medium text-gray-700 mb-2"
                         >
-                            Price per sqm (₱) *
+                            Price per sqm (₱)
+                            <span class="text-red-500">*</span>
                         </label>
                         <input
                             id="price_per_sqm"
@@ -505,6 +483,7 @@
                             step="0.01"
                             min="0"
                             inputmode="decimal"
+                            required
                             class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                             :class="{
                                 'border-red-500 ring-red-500':
@@ -516,7 +495,6 @@
                                     ? 'Auto-calculated'
                                     : 'e.g., 5000'
                             "
-                            required
                             @input="onPricePerSqmChange"
                         />
                         <div
@@ -526,13 +504,12 @@
                             {{ errors.price_per_sqm }}
                         </div>
                     </div>
-
                     <div>
                         <label
                             for="total_price"
                             class="block text-sm font-medium text-gray-700 mb-2"
                         >
-                            Total Price (₱) *
+                            Total Price (₱) <span class="text-red-500">*</span>
                         </label>
                         <input
                             id="total_price"
@@ -541,6 +518,7 @@
                             step="0.01"
                             min="0"
                             inputmode="decimal"
+                            required
                             class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                             :class="{
                                 'border-red-500 ring-red-500':
@@ -895,24 +873,24 @@
                             class="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                         />
                         <span class="text-sm font-medium text-gray-700">
-                            🌟 Enable Virtual Tour for this property
+                            🌟 Enable Panoramic View for this property
                         </span>
                     </label>
                     <p class="text-xs text-gray-500 mt-1 ml-6">
-                        Virtual tours help potential buyers explore your
-                        property in 360°
+                        Panoramic views help potential buyers explore your
+                        property with wide-angle imagery
                     </p>
                 </div>
 
                 <div v-if="form.has_virtual_tour" class="space-y-6">
-                    <!-- 360° Image Upload with Live Preview -->
+                    <!-- Panoramic Image Upload with Live Preview -->
                     <div>
                         <h4 class="text-sm font-medium text-gray-700 mb-4">
-                            Upload 360° Panoramic Images
+                            Upload Panoramic Images
                         </h4>
                         <FileUpload
                             v-model="virtualTourFile"
-                            label="360° Photo (JPG only)"
+                            label="Panoramic Photo (JPG only)"
                             accept=".jpg,.jpeg"
                             :maxSize="10 * 1024 * 1024"
                             :error="errors.virtual_tour_images"
@@ -920,26 +898,26 @@
                             multiple
                         />
                         <p class="text-xs text-gray-500 mt-2">
-                            Upload 360-degree panoramic images. Recommended:
+                            Upload wide-angle panoramic images. Recommended:
                             Equirectangular format, minimum 2048x1024 resolution
                         </p>
                     </div>
 
-                    <!-- Live 360° Preview -->
+                    <!-- Live Panorama Preview -->
                     <div v-if="current360ImageUrl" class="mt-6">
                         <h4 class="text-sm font-medium text-gray-700 mb-3">
-                            Interactive 360° Preview:
+                            Interactive Panorama Preview:
                         </h4>
                         <VirtualTourViewer360 :imageUrl="current360ImageUrl" />
                         <p class="text-xs text-gray-500 mt-2 text-center">
-                            Click and drag to explore the 360° view
+                            Click and drag to explore the panoramic view
                         </p>
                     </div>
 
                     <!-- Multiple Images Preview (if uploaded) -->
                     <div v-if="virtualTourImagePreview.length > 0" class="mt-4">
                         <h4 class="text-sm font-medium text-gray-700 mb-2">
-                            All Uploaded 360° Images:
+                            All Uploaded Panoramic Images:
                         </h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div
@@ -969,7 +947,7 @@
                                 <div
                                     class="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded"
                                 >
-                                    360° View {{ index + 1 }}
+                                    Panorama {{ index + 1 }}
                                 </div>
                                 <div
                                     class="absolute inset-0 bg-purple-500 bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center"
@@ -1242,26 +1220,9 @@
                     </Link>
                     <div class="flex items-center space-x-3">
                         <button
-                            type="button"
-                            @click="prevStep"
-                            :disabled="currentStep === 1"
-                            class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            Back
-                        </button>
-                        <button
-                            v-if="currentStep < steps.length"
-                            type="button"
-                            @click="nextStep"
-                            class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                        >
-                            Next
-                        </button>
-                        <button
-                            v-else
                             type="submit"
                             :disabled="processing"
-                            class="px-6 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-50 flex items-center space-x-2"
+                            class="px-6 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-50 flex items-center space-x-2"
                         >
                             <svg
                                 v-if="processing"
@@ -1318,6 +1279,16 @@ import MapLocationPicker from "@/Components/MapLocationPicker.vue";
 import FileUpload from "@/Components/FileUpload.vue";
 import VirtualTourViewer360 from "@/Components/VirtualTourViewer360.vue";
 
+const props = defineProps({
+    clients: Array,
+    types: Array,
+    statuses: Array,
+    municipalities: Array,
+    googleMapsApiKey: String,
+    gisConfig: Object,
+    virtualTourConfig: Object,
+});
+
 const page = usePage();
 
 // GIS Mapping toggle
@@ -1327,6 +1298,7 @@ const form = useForm({
     title: "",
     description: "",
     type: "",
+    type_other: "",
     municipality: "",
     barangay: "",
     address: "",
@@ -1369,18 +1341,8 @@ const coordinates = ref({
     lng: form.coordinates_lng ? parseFloat(form.coordinates_lng) : null,
 });
 
-// Property types aligned with backend App\Models\Property::TYPES
-const propertyTypes = [
-    { value: "residential_lot", label: "Residential Lot" },
-    { value: "agricultural_land", label: "Agricultural Land" },
-    { value: "commercial_lot", label: "Commercial Lot" },
-    { value: "industrial_lot", label: "Industrial Lot" },
-    { value: "beachfront", label: "Beachfront" },
-    { value: "mountain_view", label: "Mountain View" },
-    { value: "rice_field", label: "Rice Field" },
-    { value: "coconut_plantation", label: "Coconut Plantation" },
-    { value: "subdivision_lot", label: "Subdivision Lot" },
-];
+// Types provided by backend (label/value pairs), with 'Other (specify)'
+const types = computed(() => page.props.types || []);
 
 // Bohol municipalities
 const municipalities = [
@@ -1601,86 +1563,25 @@ watch(nearbyLandmarksText, (newValue) => {
     }
 });
 
-// Wizard steps
-const steps = [
-    { id: "basic", label: "Basic" },
-    { id: "location", label: "Location" },
-    { id: "pricing", label: "Pricing" },
-    { id: "virtual-tour", label: "Virtual Tour" },
-    { id: "images", label: "Images" },
-    { id: "status", label: "Status" },
-];
-const currentStep = ref(1);
-const progressPercent = computed(() =>
-    Math.round(((currentStep.value - 1) / (steps.length - 1)) * 100)
-);
-
-const scrollToStep = async (stepIdx) => {
-    const id = steps[stepIdx - 1]?.id;
-    if (!id) return;
-    await nextTick();
-    const el = document.getElementById(`step-${id}`);
-    if (el && typeof el.scrollIntoView === "function") {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-};
-
-const basicValid = computed(
-    () => !!form.title && !!form.type && !!form.description
-);
-const locationValid = computed(() => !!form.municipality && !!form.barangay);
-const pricingValid = computed(
-    () => !!form.lot_area_sqm && !!form.price_per_sqm && !!form.total_price
-);
-// Virtual tour optional, images optional on create depending on policy; keep optional to reduce friction.
-
-const canProceed = (step) => {
-    switch (step) {
-        case 1:
-            return basicValid.value;
-        case 2:
-            return locationValid.value;
-        case 3:
-            return pricingValid.value;
-        default:
-            return true;
-    }
-};
-
-const nextStep = () => {
-    if (!canProceed(currentStep.value)) {
-        // Lightweight inline feedback
-        window?.alert?.(
-            "Please complete the required fields before continuing."
-        );
-        return;
-    }
-    if (currentStep.value < steps.length) {
-        currentStep.value += 1;
-        scrollToStep(currentStep.value);
-    }
-};
-
-const prevStep = () => {
-    if (currentStep.value > 1) {
-        currentStep.value -= 1;
-        scrollToStep(currentStep.value);
-    }
-};
-
-const goToStep = (n) => {
-    currentStep.value = n;
-    scrollToStep(currentStep.value);
-};
-
 const submit = () => {
+    console.log("Submit function called");
+
+    // Clean up type_other - only send if type is 'other'
+    if (form.type !== "other") {
+        form.type_other = null;
+    }
+
+    console.log("Form data:", form.data());
+
     processing.value = true;
 
     form.post(route("broker.properties.store"), {
         onSuccess: () => {
+            console.log("Success!");
             processing.value = false;
         },
-        onError: () => {
+        onError: (errors) => {
+            console.log("Errors:", errors);
             processing.value = false;
         },
     });

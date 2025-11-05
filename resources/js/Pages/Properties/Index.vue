@@ -37,108 +37,19 @@
                 </div>
             </div>
 
-            <!-- Filters Section -->
-            <div class="bg-white rounded-md shadow-sm p-4">
-                <h3 class="text-base font-semibold text-gray-900 mb-3">
-                    Search & Filter Properties
-                </h3>
-
-                <!-- Primary Filters -->
-                <div
-                    class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-3"
-                >
-                    <input
-                        v-model="filters.search"
-                        type="text"
-                        placeholder="Search properties..."
-                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        @input="filterProperties"
-                    />
-                    <select
-                        v-model="filters.type"
-                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        @change="filterProperties"
-                    >
-                        <option value="">All Types</option>
-                        <option v-for="type in types" :key="type" :value="type">
-                            {{ formatType(type) }}
-                        </option>
-                    </select>
-                    <select
-                        v-model="filters.municipality"
-                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        @change="filterProperties"
-                    >
-                        <option value="">All Municipalities</option>
-                        <option
-                            v-for="municipality in municipalities"
-                            :key="municipality"
-                            :value="municipality"
-                        >
-                            {{ municipality }}
-                        </option>
-                    </select>
-                    <select
-                        v-model="filters.status"
-                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        @change="filterProperties"
-                    >
-                        <option value="">All Statuses</option>
-                        <option
-                            v-for="status in statuses"
-                            :key="status"
-                            :value="status"
-                        >
-                            {{ formatStatus(status) }}
-                        </option>
-                    </select>
-                    <input
-                        v-model="filters.min_price"
-                        type="number"
-                        placeholder="Min Price (₱)"
-                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        @input="filterProperties"
-                    />
-                    <input
-                        v-model="filters.max_price"
-                        type="number"
-                        placeholder="Max Price (₱)"
-                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        @input="filterProperties"
-                    />
-                </div>
-
-                <!-- Secondary Filters -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <input
-                        v-model="filters.min_area"
-                        type="number"
-                        placeholder="Min Area (sqm)"
-                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        @input="filterProperties"
-                    />
-                    <input
-                        v-model="filters.max_area"
-                        type="number"
-                        placeholder="Max Area (sqm)"
-                        class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        @input="filterProperties"
-                    />
-                    <label
-                        class="flex items-center space-x-2 bg-gray-50 rounded-md px-3 py-1.5"
-                    >
-                        <input
-                            v-model="filters.utilities"
-                            type="checkbox"
-                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            @change="filterProperties"
-                        />
-                        <span class="text-sm text-gray-700"
-                            >With Utilities</span
-                        >
-                    </label>
-                </div>
-            </div>
+            <!-- Unified Search & Filter -->
+            <UnifiedSearchFilter
+                title="Search & Filter Properties"
+                :search="filters.search"
+                search-placeholder="Search properties by title, location, or description..."
+                :filters="filters"
+                :result-count="properties.total"
+                :primary-filters="primaryFilters"
+                :secondary-filters="secondaryFilters"
+                @search-change="handleSearchChange"
+                @filter-change="handleFilterChange"
+                @clear-filters="clearAllFilters"
+            />
 
             <!-- Properties Grid -->
             <div class="bg-white rounded-md shadow-sm p-4">
@@ -394,6 +305,7 @@
 import { ref, computed } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UnifiedSearchFilter from "@/Components/UnifiedSearchFilter.vue";
 import Pagination from "@/Components/Pagination.vue";
 import { debounce } from "lodash";
 
@@ -420,6 +332,89 @@ const filters = ref({
     utilities: props.filters.utilities || false,
     featured: props.filters.featured || false,
 });
+
+// Filter configurations for UnifiedSearchFilter
+const primaryFilters = computed(() => [
+    {
+        key: "type",
+        label: "Property Type",
+        type: "select",
+        span: 2,
+        options: props.types.map((type) => ({
+            value: type,
+            label: formatType(type),
+        })),
+    },
+    {
+        key: "municipality",
+        label: "Municipality",
+        type: "select",
+        span: 2,
+        options: props.municipalities.map((municipality) => ({
+            value: municipality,
+            label: municipality,
+        })),
+    },
+    {
+        key: "status",
+        label: "Status",
+        type: "select",
+        span: 2,
+        options: props.statuses.map((status) => ({
+            value: status,
+            label: formatStatus(status),
+        })),
+    },
+]);
+
+const secondaryFilters = computed(() => [
+    {
+        key: "min_price",
+        label: "Min Price",
+        type: "number",
+        placeholder: "Minimum price (₱)",
+    },
+    {
+        key: "max_price",
+        label: "Max Price",
+        type: "number",
+        placeholder: "Maximum price (₱)",
+    },
+    {
+        key: "min_area",
+        label: "Min Area",
+        type: "number",
+        placeholder: "Minimum area (sqm)",
+    },
+    {
+        key: "max_area",
+        label: "Max Area",
+        type: "number",
+        placeholder: "Maximum area (sqm)",
+    },
+]);
+
+// Event handlers for UnifiedSearchFilter
+const handleSearchChange = (value) => {
+    filters.value.search = value;
+    filterProperties();
+};
+
+const handleFilterChange = (key, value) => {
+    filters.value[key] = value;
+    filterProperties();
+};
+
+const clearAllFilters = () => {
+    Object.keys(filters.value).forEach((key) => {
+        if (typeof filters.value[key] === "boolean") {
+            filters.value[key] = false;
+        } else {
+            filters.value[key] = "";
+        }
+    });
+    filterProperties();
+};
 
 const canCreateProperty = computed(() => {
     const user = page.props.auth.user;

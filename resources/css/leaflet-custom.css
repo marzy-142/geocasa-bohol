@@ -1,0 +1,29 @@
+/* Custom Leaflet styles for GeoCasa */
+.leaflet-container {
+    font-family: inherit;
+    border-radius: 0.5rem;
+}
+
+.leaflet-popup-content {
+    margin: 8px 12px;
+    line-height: 1.4;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+}
+
+.leaflet-control-layers {
+    border-radius: 6px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Custom marker shadow fix */
+.leaflet-marker-icon {
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Control positioning */
+.leaflet-top.leaflet-right {
+    top: 50px; /* Make room for our custom controls */
+}

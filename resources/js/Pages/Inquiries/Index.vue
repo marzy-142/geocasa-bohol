@@ -15,244 +15,25 @@
                         Manage and respond to client inquiries efficiently
                     </p>
                 </div>
-
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-3 gap-3 md:gap-4">
-                    <div
-                        class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center"
-                    >
-                        <div class="text-2xl md:text-3xl font-bold mb-1">
-                            {{ newInquiriesCount }}
-                        </div>
-                        <div class="text-xs md:text-sm opacity-90">New</div>
-                        <div v-if="newInquiriesCount > 0" class="mt-1">
-                            <span
-                                class="inline-flex h-2 w-2 rounded-full bg-red-400 animate-pulse"
-                            ></span>
-                        </div>
-                    </div>
-                    <div
-                        class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center"
-                    >
-                        <div class="text-2xl md:text-3xl font-bold mb-1">
-                            {{ pendingInquiriesCount }}
-                        </div>
-                        <div class="text-xs md:text-sm opacity-90">
-                            In Progress
-                        </div>
-                    </div>
-                    <div
-                        class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center"
-                    >
-                        <div class="text-2xl md:text-3xl font-bold mb-1">
-                            {{ completedTodayCount }}
-                        </div>
-                        <div class="text-xs md:text-sm opacity-90">
-                            Completed
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div
-                class="flex flex-wrap gap-2 mt-6 pt-4 border-t border-white/20"
-            >
-                <button
-                    @click="markAllAsRead"
-                    class="bg-white/20 hover:bg-white/30 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors"
-                >
-                    Mark All Read
-                </button>
-                <button
-                    @click="exportInquiries"
-                    class="bg-white/20 hover:bg-white/30 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors"
-                >
-                    Export
-                </button>
             </div>
         </div>
 
         <div class="space-y-6">
-            <!-- Simple Status Tabs -->
-            <div class="bg-white rounded-lg shadow-sm p-3 md:p-4">
-                <div class="flex flex-wrap gap-2">
-                    <button
-                        @click="setStatusTab('')"
-                        :class="[
-                            'px-3 py-1.5 rounded-full text-sm font-medium border',
-                            selectedStatus === ''
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
-                        ]"
-                    >
-                        All
-                    </button>
-                    <button
-                        @click="setStatusTab('new')"
-                        :class="[
-                            'px-3 py-1.5 rounded-full text-sm font-medium border',
-                            selectedStatus === 'new'
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
-                        ]"
-                    >
-                        New
-                    </button>
-                    <button
-                        @click="setStatusTab('contacted')"
-                        :class="[
-                            'px-3 py-1.5 rounded-full text-sm font-medium border',
-                            selectedStatus === 'contacted'
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
-                        ]"
-                    >
-                        In Discussion
-                    </button>
-                    <button
-                        @click="setStatusTab('scheduled')"
-                        :class="[
-                            'px-3 py-1.5 rounded-full text-sm font-medium border',
-                            selectedStatus === 'scheduled'
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
-                        ]"
-                    >
-                        Scheduled
-                    </button>
-                    <button
-                        @click="setStatusTab('done')"
-                        :class="[
-                            'px-3 py-1.5 rounded-full text-sm font-medium border',
-                            selectedStatus === 'completed' ||
-                            selectedStatus === 'closed'
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
-                        ]"
-                    >
-                        Done
-                    </button>
-                </div>
-            </div>
-            <!-- Compact Search & Filter Section -->
-            <div class="bg-white rounded-lg shadow-sm p-4 md:p-6">
-                <div
-                    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4"
-                >
-                    <h2 class="text-lg font-semibold text-gray-900">
-                        Search & Filter
-                    </h2>
-                    <button
-                        @click="clearFilters"
-                        class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                        Clear all filters
-                    </button>
-                </div>
+            <!-- Unified Search & Filter -->
+            <UnifiedSearchFilter
+                title="Search & Filter Inquiries"
+                :search="search"
+                search-placeholder="Search by name, email, or message content..."
+                :filters="filterObject"
+                :result-count="inquiries.total"
+                :primary-filters="primaryFilters"
+                :secondary-filters="secondaryFilters"
+                @search-change="handleSearchChange"
+                @filter-change="handleFilterChange"
+                @clear-filters="clearAllFilters"
+            />
 
-                <!-- Primary Filters -->
-                <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3"
-                >
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Search</label
-                        >
-                        <input
-                            v-model="search"
-                            type="text"
-                            placeholder="Name, email, message..."
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            @input="applyFilters"
-                        />
-                    </div>
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Status</label
-                        >
-                        <select
-                            v-model="selectedStatus"
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            @change="applyFilters"
-                        >
-                            <option value="">All Statuses</option>
-                            <option value="new">New</option>
-                            <option value="contacted">Contacted</option>
-                            <option value="scheduled">Scheduled</option>
-                            <option value="completed">Completed</option>
-                            <option value="closed">Closed</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Type</label
-                        >
-                        <select
-                            v-model="selectedType"
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            @change="applyFilters"
-                        >
-                            <option value="">All Types</option>
-                            <option value="general">General</option>
-                            <option value="viewing">Viewing</option>
-                            <option value="purchase">Purchase</option>
-                            <option value="information">Information</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Property</label
-                        >
-                        <select
-                            v-model="selectedProperty"
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            @change="applyFilters"
-                        >
-                            <option value="">All Properties</option>
-                            <option
-                                v-for="property in properties"
-                                :key="property.id"
-                                :value="property.id"
-                            >
-                                {{ property.title }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Date Filters -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Date From</label
-                        >
-                        <input
-                            v-model="dateFrom"
-                            type="date"
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            @change="applyFilters"
-                        />
-                    </div>
-                    <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1"
-                            >Date To</label
-                        >
-                        <input
-                            v-model="dateTo"
-                            type="date"
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            @change="applyFilters"
-                        />
-                    </div>
-                </div>
-            </div>
+            <!-- Inquiries List -->
 
             <!-- Enhanced Inquiries Grid -->
             <div class="bg-white rounded-lg shadow-sm p-4 md:p-6">
@@ -325,6 +106,7 @@
                         </div>
 
                         <!-- Bottom: Action buttons with single accent color -->
+                        <!-- Bottom: Action buttons with single accent color -->
                         <div class="flex gap-2 pt-4 border-t border-gray-100">
                             <button
                                 v-if="primaryActionLabel(inquiry)"
@@ -339,6 +121,14 @@
                             >
                                 View
                             </Link>
+                            <button
+                                v-if="isAdmin"
+                                @click="deleteInquiry(inquiry)"
+                                class="py-2 px-3 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                title="Delete Inquiry (Admin Only)"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -407,6 +197,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UnifiedSearchFilter from "@/Components/UnifiedSearchFilter.vue";
 import { Link } from "@inertiajs/vue3";
 import Pagination from "@/Components/Pagination.vue";
 
@@ -420,10 +211,95 @@ const props = defineProps({
 // Existing reactive variables
 const search = ref(props.filters.search || "");
 const selectedStatus = ref(props.filters.status || "");
-const selectedType = ref(props.filters.inquiry_type || "");
 const selectedProperty = ref(props.filters.property_id || "");
 const dateFrom = ref(props.filters.date_from || "");
 const dateTo = ref(props.filters.date_to || "");
+
+// Filter object for UnifiedSearchFilter
+const filterObject = computed(() => ({
+    status: selectedStatus.value,
+    property_id: selectedProperty.value,
+    date_from: dateFrom.value,
+    date_to: dateTo.value,
+}));
+
+// Filter configurations for UnifiedSearchFilter
+const primaryFilters = computed(() => [
+    {
+        key: "status",
+        label: "Status",
+        type: "select",
+        span: 6,
+        options: [
+            { value: "new", label: "New" },
+            { value: "contacted", label: "Contacted" },
+            { value: "scheduled", label: "Scheduled" },
+            { value: "completed", label: "Completed" },
+            { value: "closed", label: "Closed" },
+        ],
+    },
+]);
+
+const secondaryFilters = computed(() => [
+    {
+        key: "property_id",
+        label: "Property",
+        type: "select",
+        options: props.properties.map((property) => ({
+            value: property.id,
+            label: property.title,
+        })),
+    },
+    {
+        key: "date_from",
+        label: "Date From",
+        type: "date",
+        placeholder: "Start date",
+    },
+    {
+        key: "date_to",
+        label: "Date To",
+        type: "date",
+        placeholder: "End date",
+    },
+]);
+
+// Event handlers for UnifiedSearchFilter
+const handleSearchChange = (value) => {
+    search.value = value;
+    applyFilters();
+};
+
+const handleFilterChange = (key, value) => {
+    switch (key) {
+        case "status":
+            selectedStatus.value = value;
+            break;
+        case "property_id":
+            selectedProperty.value = value;
+            break;
+        case "date_from":
+            dateFrom.value = value;
+            break;
+        case "date_to":
+            dateTo.value = value;
+            break;
+    }
+    applyFilters();
+};
+
+const clearAllFilters = () => {
+    search.value = "";
+    selectedStatus.value = "";
+    selectedProperty.value = "";
+    dateFrom.value = "";
+    dateTo.value = "";
+    applyFilters();
+};
+
+// Determine if current user is admin to conditionally show admin actions
+const page = usePage();
+const isAdmin = computed(() => page.props?.auth?.user?.role === "admin");
 
 // New reactive variables for enhanced features
 const selectedPriority = ref(props.filters.priority || "");
@@ -436,41 +312,6 @@ const selectedInquiry = ref(null);
 // Real-time functionality
 const notifications = ref([]);
 const isConnected = ref(false);
-
-// Computed properties for dashboard indicators
-const newInquiriesCount = computed(() => {
-    return props.inquiries.data.filter((inquiry) => inquiry.status === "new")
-        .length;
-});
-
-const pendingInquiriesCount = computed(() => {
-    return props.inquiries.data.filter((inquiry) =>
-        ["contacted", "scheduled"].includes(inquiry.status)
-    ).length;
-});
-
-const completedTodayCount = computed(() => {
-    const today = new Date().toDateString();
-    return props.inquiries.data.filter(
-        (inquiry) =>
-            inquiry.status === "completed" &&
-            new Date(inquiry.responded_at).toDateString() === today
-    ).length;
-});
-
-// Map simple tab clicks to filters and apply
-const setStatusTab = (tab) => {
-    if (tab === "") {
-        selectedStatus.value = "";
-    } else if (tab === "done") {
-        // "Done" aggregates completed + closed; backend only accepts one status,
-        // so default to completed for server-side filtering
-        selectedStatus.value = "completed";
-    } else {
-        selectedStatus.value = tab;
-    }
-    applyFilters();
-};
 
 // Decide primary action per inquiry status
 const primaryActionLabel = (inquiry) => {
@@ -504,7 +345,6 @@ const applyFilters = () => {
         {
             search: search.value,
             status: selectedStatus.value,
-            inquiry_type: selectedType.value,
             property_id: selectedProperty.value,
             date_from: dateFrom.value,
             date_to: dateTo.value,
@@ -519,7 +359,6 @@ const applyFilters = () => {
 const clearFilters = () => {
     search.value = "";
     selectedStatus.value = "";
-    selectedType.value = "";
     selectedProperty.value = "";
     dateFrom.value = "";
     dateTo.value = "";
@@ -548,21 +387,23 @@ const getTypeColor = (type) => {
 };
 
 const deleteInquiry = (inquiry) => {
-    if (confirm("Are you sure you want to delete this inquiry?")) {
+    if (
+        confirm(
+            `Are you sure you want to delete this inquiry from ${inquiry.name}?\n\nThis action cannot be undone and will permanently remove all inquiry data.`
+        )
+    ) {
         router.delete(route("inquiries.destroy", inquiry.id));
     }
 };
 
 // Enhanced helper functions
 const getPriorityLevel = (inquiry) => {
-    // Logic to determine priority based on inquiry age, type, etc.
+    // Logic to determine priority based on inquiry age
     const daysSinceCreated = Math.floor(
         (new Date() - new Date(inquiry.created_at)) / (1000 * 60 * 60 * 24)
     );
-    if (inquiry.inquiry_type === "purchase" || daysSinceCreated > 3)
-        return "HIGH";
-    if (inquiry.inquiry_type === "viewing" || daysSinceCreated > 1)
-        return "MED";
+    if (daysSinceCreated > 3) return "HIGH";
+    if (daysSinceCreated > 1) return "MED";
     return "LOW";
 };
 
@@ -717,16 +558,6 @@ const togglePriority = (inquiry) => {
     console.log("Toggle priority for inquiry:", inquiry.id);
 };
 
-const markAllAsRead = () => {
-    // Implementation for marking all as read
-    console.log("Mark all as read");
-};
-
-const exportInquiries = () => {
-    // Implementation for exporting inquiries
-    window.open(route("inquiries.export", props.filters));
-};
-
 // Real-time connection setup
 onMounted(() => {
     // Initialize Echo for real-time updates
@@ -842,6 +673,7 @@ const clearAllNotifications = () => {
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

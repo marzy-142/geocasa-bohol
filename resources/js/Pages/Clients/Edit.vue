@@ -390,7 +390,9 @@
                                             errors.preferred_location,
                                     }"
                                 >
-                                    <option value="">Any Location</option>
+                                    <option value="">
+                                        No location preference
+                                    </option>
                                     <option
                                         v-for="municipality in municipalities"
                                         :key="municipality"

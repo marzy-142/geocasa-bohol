@@ -737,7 +737,7 @@ watch(
                                 v-if="property.has_virtual_tour"
                                 class="bg-blue-600 text-white px-2.5 py-1 rounded-md text-xs font-medium"
                             >
-                                Virtual Tour
+                                Panorama
                             </span>
                         </div>
 

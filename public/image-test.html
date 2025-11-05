@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Property Images Test</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+            .image-test {
+                margin: 20px 0;
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+            }
+            img {
+                max-width: 300px;
+                height: auto;
+                margin: 10px 0;
+                border: 1px solid #ccc;
+            }
+            .status {
+                padding: 5px 10px;
+                border-radius: 4px;
+                margin: 5px 0;
+                display: inline-block;
+            }
+            .success {
+                background-color: #d4edda;
+                color: #155724;
+            }
+            .error {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Property Images Test</h1>
+
+        <div class="image-test">
+            <h3>Direct Storage Link Test</h3>
+            <p>
+                Testing direct access to:
+                <code>/storage/properties/images/beachfront_0.jpg</code>
+            </p>
+            <img
+                src="/storage/properties/images/beachfront_0.jpg"
+                alt="Beachfront Property"
+                onload="showStatus(this, 'success')"
+                onerror="showStatus(this, 'error')"
+            />
+            <div id="status1" class="status"></div>
+        </div>
+
+        <div class="image-test">
+            <h3>Alternative Image Test</h3>
+            <p>
+                Testing:
+                <code>/storage/properties/images/chocolate_hills_0.jpg</code>
+            </p>
+            <img
+                src="/storage/properties/images/chocolate_hills_0.jpg"
+                alt="Mountain View Property"
+                onload="showStatus(this, 'success')"
+                onerror="showStatus(this, 'error')"
+            />
+            <div id="status2" class="status"></div>
+        </div>
+
+        <div class="image-test">
+            <h3>Commercial Property Test</h3>
+            <p>
+                Testing:
+                <code>/storage/properties/images/commercial_0.jpg</code>
+            </p>
+            <img
+                src="/storage/properties/images/commercial_0.jpg"
+                alt="Commercial Property"
+                onload="showStatus(this, 'success')"
+                onerror="showStatus(this, 'error')"
+            />
+            <div id="status3" class="status"></div>
+        </div>
+
+        <script>
+            function showStatus(img, status) {
+                const statusDiv = img.nextElementSibling;
+                if (status === "success") {
+                    statusDiv.textContent = "✅ Image loaded successfully!";
+                    statusDiv.className = "status success";
+                } else {
+                    statusDiv.textContent = "❌ Image failed to load";
+                    statusDiv.className = "status error";
+                }
+            }
+
+            // Test fetch API
+            document.addEventListener("DOMContentLoaded", function () {
+                fetch("/storage/properties/images/beachfront_0.jpg")
+                    .then((response) => {
+                        console.log(
+                            "Fetch test - Response status:",
+                            response.status
+                        );
+                        console.log(
+                            "Fetch test - Content type:",
+                            response.headers.get("content-type")
+                        );
+                    })
+                    .catch((error) => {
+                        console.error("Fetch test failed:", error);
+                    });
+            });
+        </script>
+    </body>
+</html>

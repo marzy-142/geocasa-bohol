@@ -49,21 +49,18 @@
                     </div>
                 </div>
 
+                <!-- Commission / monetary summaries removed for privacy -->
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center">
                         <div class="p-2 bg-yellow-100 rounded-lg">
-                            <CurrencyDollarIcon
-                                class="h-6 w-6 text-yellow-600"
-                            />
+                            <ChartBarIcon class="h-6 w-6 text-yellow-600" />
                         </div>
                         <div class="ml-4">
                             <p class="text-sm font-medium text-gray-600">
-                                Avg Sales Value
+                                Avg Transactions / Month
                             </p>
                             <p class="text-2xl font-bold text-gray-900">
-                                ₱{{
-                                    formatNumber(totalStats.averageCommission)
-                                }}
+                                {{ Math.round(getTotalSales() / 12) || 0 }}
                             </p>
                         </div>
                     </div>
@@ -113,13 +110,9 @@
                                 <div
                                     class="w-3 h-3 bg-green-500 rounded-full"
                                 ></div>
-                                <span class="text-gray-600">Sales</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="w-3 h-3 bg-purple-500 rounded-full"
-                                ></div>
-                                <span class="text-gray-600">Sales Value</span>
+                                <span class="text-gray-600"
+                                    >Completed Deals</span
+                                >
                             </div>
                         </div>
                     </div>
@@ -157,7 +150,7 @@
                                     <p
                                         class="text-sm font-medium text-green-700"
                                     >
-                                        Total Sales
+                                        Completed Deals
                                     </p>
                                     <p
                                         class="text-2xl font-bold text-green-900"
@@ -165,7 +158,7 @@
                                         {{ getTotalSales() }}
                                     </p>
                                     <p class="text-xs text-green-600">
-                                        Completed transactions
+                                        Total finalized transactions
                                     </p>
                                 </div>
                                 <TrophyIcon class="w-8 h-8 text-green-600" />
@@ -180,22 +173,18 @@
                                     <p
                                         class="text-sm font-medium text-purple-700"
                                     >
-                                        Total Sales Value
+                                        Properties Added
                                     </p>
                                     <p
                                         class="text-2xl font-bold text-purple-900"
                                     >
-                                        ₱{{
-                                            formatNumber(getTotalCommission())
-                                        }}
+                                        {{ getTotalPropertiesAdded() }}
                                     </p>
                                     <p class="text-xs text-purple-600">
-                                        Earned from sales
+                                        Last 12 months
                                     </p>
                                 </div>
-                                <CurrencyDollarIcon
-                                    class="w-8 h-8 text-purple-600"
-                                />
+                                <ChartBarIcon class="w-8 h-8 text-purple-600" />
                             </div>
                         </div>
                     </div>
@@ -259,12 +248,7 @@
                                     <th
                                         class="text-right py-2 font-medium text-gray-600"
                                     >
-                                        Sales
-                                    </th>
-                                    <th
-                                        class="text-right py-2 font-medium text-gray-600"
-                                    >
-                                        Commission
+                                        Completed Deals
                                     </th>
                                     <th
                                         class="text-right py-2 font-medium text-gray-600"
@@ -287,9 +271,6 @@
                                     </td>
                                     <td class="py-2 text-right text-green-600">
                                         {{ month.transactions }}
-                                    </td>
-                                    <td class="py-2 text-right text-purple-600">
-                                        ₱{{ formatNumber(month.commission) }}
                                     </td>
                                     <td class="py-2 text-right">
                                         <span
@@ -442,21 +423,21 @@ const getTotalSales = () => {
     );
 };
 
-const getTotalCommission = () => {
+// Sum of properties added over the period
+const getTotalPropertiesAdded = () => {
     if (!props.monthlyData) return 0;
-    return props.monthlyData.reduce((sum, month) => sum + month.commission, 0);
+    return props.monthlyData.reduce(
+        (sum, month) => sum + (month.properties_added || 0),
+        0
+    );
 };
 
 const getBestMonth = () => {
     if (!props.monthlyData || props.monthlyData.length === 0) return "N/A";
 
     const bestMonth = props.monthlyData.reduce((best, current) => {
-        const bestScore =
-            best.inquiries + best.transactions + best.commission / 10000;
-        const currentScore =
-            current.inquiries +
-            current.transactions +
-            current.commission / 10000;
+        const bestScore = best.inquiries + best.transactions;
+        const currentScore = current.inquiries + current.transactions;
         return currentScore > bestScore ? current : best;
     });
 
@@ -535,10 +516,15 @@ const createMonthlyChart = () => {
     const padding = 40;
 
     // Find max values for scaling
-    const maxInquiries = Math.max(...data.map((d) => d.inquiries));
-    const maxTransactions = Math.max(...data.map((d) => d.transactions));
-    const maxCommission = Math.max(...data.map((d) => d.commission));
-    const maxValue = Math.max(maxInquiries, maxTransactions, maxCommission);
+    const maxInquiries = Math.max(0, ...data.map((d) => d.inquiries || 0));
+    const maxTransactions = Math.max(
+        0,
+        ...data.map((d) => d.transactions || 0)
+    );
+    let maxValue = Math.max(maxInquiries, maxTransactions);
+    if (!isFinite(maxValue) || maxValue === 0) {
+        maxValue = 1; // avoid division by zero
+    }
 
     // Draw axes
     ctx.strokeStyle = "#e5e7eb";

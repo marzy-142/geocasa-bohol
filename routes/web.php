@@ -408,6 +408,9 @@ Route::middleware(['auth'])->group(function () {
         ->name('inquiries.mark-as-won');
     Route::post('inquiries/{inquiry}/accept', [InquiryController::class, 'accept'])
         ->name('inquiries.accept');
+    // Broker-friendly: Update the linked property's status from the inquiry page
+    Route::patch('inquiries/{inquiry}/property-status', [InquiryController::class, 'updatePropertyStatus'])
+        ->name('inquiries.update-property-status');
 });
 
 // Analytics routes
