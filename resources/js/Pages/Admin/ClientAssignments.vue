@@ -23,14 +23,6 @@
                             </p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button
-                            @click="refreshData"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                        >
-                            Refresh
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -204,16 +196,6 @@
                     >
                         Clear Filters
                     </button>
-
-                    <div class="flex gap-2">
-                        <button
-                            @click="showBulkAssignModal = true"
-                            :disabled="selectedRequests.length === 0"
-                            class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                        >
-                            Bulk Assign ({{ selectedRequests.length }})
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -225,14 +207,6 @@
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-6 py-3 text-left">
-                                    <input
-                                        type="checkbox"
-                                        :checked="allSelected"
-                                        @change="toggleSelectAll"
-                                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
                                 >
@@ -277,18 +251,6 @@
                                 class="hover:bg-slate-50"
                             >
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <input
-                                        type="checkbox"
-                                        :checked="
-                                            selectedRequests.includes(
-                                                request.id
-                                            )
-                                        "
-                                        @change="toggleSelection(request.id)"
-                                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div>
                                         <div
                                             class="text-sm font-medium text-slate-900"
@@ -332,7 +294,13 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div v-if="request.assigned_broker">
+                                    <div
+                                        v-if="
+                                            request.assigned_broker &&
+                                            (request.status === 'approved' ||
+                                                request.status === 'listed')
+                                        "
+                                    >
                                         <div
                                             class="text-sm font-medium text-slate-900"
                                         >
@@ -342,6 +310,11 @@
                                             {{ request.assigned_broker.email }}
                                         </div>
                                     </div>
+                                    <span
+                                        v-else-if="request.assigned_broker_id"
+                                        class="text-sm text-slate-500 italic"
+                                        >Under Review</span
+                                    >
                                     <span
                                         v-else
                                         class="text-sm text-slate-500 italic"
@@ -369,13 +342,6 @@
                                             class="text-green-600 hover:text-green-900"
                                         >
                                             Assign
-                                        </button>
-                                        <button
-                                            v-else
-                                            @click="showReassignModal(request)"
-                                            class="text-orange-600 hover:text-orange-900"
-                                        >
-                                            Reassign
                                         </button>
                                     </div>
                                 </td>
@@ -671,10 +637,6 @@ const clearFilters = () => {
     applyFilters();
 };
 
-const refreshData = () => {
-    router.reload({ only: ["sellerRequests", "stats"] });
-};
-
 const viewRequest = (request) => {
     // Navigate to seller request details
     window.open(route("seller-requests.show", request.id), "_blank");
@@ -684,10 +646,6 @@ const openAssignModal = (request) => {
     selectedRequest.value = request;
     assignForm.seller_request_id = request.id;
     showAssignModal.value = true;
-};
-
-const showReassignModal = (request) => {
-    openAssignModal(request);
 };
 
 const assignBroker = () => {

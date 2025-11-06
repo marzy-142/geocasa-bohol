@@ -1,7 +1,7 @@
 <template>
     <ModernDashboardLayout>
         <div class="space-y-6">
-        <!-- Header -->
+            <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">
@@ -10,15 +10,6 @@
                     <p class="text-gray-600">
                         Manage all users, roles, and permissions
                     </p>
-                </div>
-                <div class="flex space-x-3">
-                    <button
-                        @click="exportUsers"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
-                        Export Users
-                    </button>
                 </div>
             </div>
 
@@ -40,13 +31,13 @@
                                     <dd
                                         class="text-lg font-medium text-gray-900"
                                     >
-                                {{ stats.total }}
+                                        {{ stats.total }}
                                     </dd>
                                 </dl>
                             </div>
                         </div>
-                            </div>
-                        </div>
+                    </div>
+                </div>
 
                 <div class="bg-white overflow-hidden shadow rounded-lg">
                     <div class="p-5">
@@ -91,10 +82,10 @@
                                         {{ stats.clients }}
                                     </dd>
                                 </dl>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
                 <div class="bg-white overflow-hidden shadow rounded-lg">
                     <div class="p-5">
@@ -102,8 +93,8 @@
                             <div class="flex-shrink-0">
                                 <ExclamationTriangleIcon
                                     class="h-6 w-6 text-red-400"
-                        />
-                    </div>
+                                />
+                            </div>
                             <div class="ml-5 w-0 flex-1">
                                 <dl>
                                     <dt
@@ -144,32 +135,32 @@
                             <option value="broker">Broker</option>
                             <option value="client">Client</option>
                         </select>
-                </div>
+                    </div>
 
-                <div>
+                    <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-2"
                         >
                             Status
                         </label>
-                    <select
+                        <select
                             v-model="filters.status"
                             @change="applyFilters"
                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                    >
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="suspended">Suspended</option>
-                    </select>
-                </div>
+                        >
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
 
-                <div>
+                    <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-2"
                         >
                             Approval Status
                         </label>
-                    <select
+                        <select
                             v-model="filters.approval_status"
                             @change="applyFilters"
                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
@@ -178,8 +169,8 @@
                             <option value="approved">Approved</option>
                             <option value="pending">Pending</option>
                             <option value="rejected">Rejected</option>
-                    </select>
-                </div>
+                        </select>
+                    </div>
 
                     <div>
                         <label
@@ -194,8 +185,8 @@
                             placeholder="Search users..."
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         />
-            </div>
-        </div>
+                    </div>
+                </div>
 
                 <div class="mt-4 flex justify-between">
                     <button
@@ -206,18 +197,18 @@
                     </button>
                     <div class="flex space-x-2">
                         <button
-            v-if="selectedUsers.length > 0"
+                            v-if="selectedUsers.length > 0"
                             @click="showBulkActions = true"
                             class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                         >
                             <UsersIcon class="w-4 h-4 mr-2" />
                             Bulk Actions ({{ selectedUsers.length }})
                         </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Users Table -->
+            <!-- Users Table -->
             <div class="bg-white shadow overflow-hidden sm:rounded-md">
                 <div class="px-4 py-5 sm:p-6">
                     <div class="flex items-center justify-between mb-4">
@@ -288,8 +279,8 @@
                                     class="hover:bg-gray-50"
                                 >
                                     <td class="px-6 py-4 whitespace-nowrap">
-                <input
-                    type="checkbox"
+                                        <input
+                                            type="checkbox"
                                             :value="user.id"
                                             v-model="selectedUsers"
                                             class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
@@ -307,40 +298,40 @@
                                                         class="h-5 w-5 text-gray-500"
                                                     />
                                                 </div>
-                    </div>
+                                            </div>
                                             <div class="ml-4">
                                                 <div
                                                     class="text-sm font-medium text-gray-900"
                                                 >
                                                     {{ user.name }}
-                        </div>
+                                                </div>
                                                 <div
                                                     class="text-sm text-gray-500"
                                                 >
                                                     {{ user.email }}
-                        </div>
-                    </div>
-                </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                <span
+                                        <span
                                             :class="
                                                 getRoleBadgeClass(user.role)
                                             "
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
                                         >
                                             {{ formatRole(user.role) }}
-                </span>
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                <span
+                                        <span
                                             :class="
                                                 getStatusBadgeClass(user.status)
                                             "
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
                                         >
                                             {{ formatStatus(user.status) }}
-                </span>
+                                        </span>
                                     </td>
                                     <td
                                         class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
@@ -371,25 +362,25 @@
                                                 v-if="user.status === 'active'"
                                                 @click="suspendUser(user)"
                                                 class="text-red-600 hover:text-red-900"
-                    >
-                        Suspend
+                                            >
+                                                Suspend
                                             </button>
                                             <button
                                                 v-else
                                                 @click="reactivateUser(user)"
                                                 class="text-green-600 hover:text-green-900"
-                    >
-                        Reactivate
+                                            >
+                                                Reactivate
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
-                </div>
+                    </div>
 
-        <!-- Pagination -->
-        <div v-if="users.links" class="mt-6">
+                    <!-- Pagination -->
+                    <div v-if="users.links" class="mt-6">
                         <nav class="flex items-center justify-between">
                             <div class="flex-1 flex justify-between sm:hidden">
                                 <Link
@@ -426,7 +417,7 @@
                                         }}</span>
                                         results
                                     </p>
-                </div>
+                                </div>
                                 <div>
                                     <nav
                                         class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
@@ -437,9 +428,9 @@
                                         >
                                             <Link
                                                 v-if="link.url"
-                            :href="link.url"
-                            :class="[
-                                link.active
+                                                :href="link.url"
+                                                :class="[
+                                                    link.active
                                                         ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                                                         : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
                                                     'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
@@ -456,10 +447,10 @@
                                                 ]"
                                             >
                                                 <span
-                            v-html="link.label"
+                                                    v-html="link.label"
                                                 ></span>
                                             </span>
-                    </template>
+                                        </template>
                                     </nav>
                                 </div>
                             </div>
@@ -478,9 +469,9 @@
                 class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
             >
                 <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
                         Suspend User
-                </h3>
+                    </h3>
                     <form @submit.prevent="confirmSuspend">
                         <div class="mb-4">
                             <label
@@ -568,15 +559,15 @@
                                 class="block text-sm font-medium text-gray-700 mb-2"
                             >
                                 Reason for Suspension
-                    </label>
-                    <textarea
-                        v-model="bulkForm.reason"
-                        rows="3"
+                            </label>
+                            <textarea
+                                v-model="bulkForm.reason"
+                                rows="3"
                                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Enter reason for suspension..."
+                                placeholder="Enter reason for suspension..."
                                 required
-                    ></textarea>
-                </div>
+                            ></textarea>
+                        </div>
                         <div class="mb-4">
                             <p class="text-sm text-gray-600">
                                 This action will affect
@@ -588,8 +579,8 @@
                                 type="button"
                                 @click="showBulkActions = false"
                                 class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                    >
-                        Cancel
+                            >
+                                Cancel
                             </button>
                             <button
                                 type="submit"
@@ -605,8 +596,8 @@
                         </div>
                     </form>
                 </div>
-                </div>
             </div>
+        </div>
     </ModernDashboardLayout>
 </template>
 
@@ -733,15 +724,6 @@ const confirmBulkAction = () => {
             bulkForm.reason = "";
         },
     });
-};
-
-const exportUsers = () => {
-    const params = new URLSearchParams(filters);
-    window.open(route("admin.users.export") + "?" + params.toString());
-};
-
-const refreshData = () => {
-    router.reload();
 };
 
 const getRoleBadgeClass = (role) => {

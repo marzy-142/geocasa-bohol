@@ -401,11 +401,6 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { usePage, router, Link } from "@inertiajs/vue3";
-import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
-import UserAvatar from "@/Components/UserAvatar.vue";
-
 const props = defineProps({
     client: {
         type: Object,
@@ -418,6 +413,19 @@ const props = defineProps({
 });
 
 const { props: pageProps } = usePage();
+
+const canEdit = computed(() => {
+    const user = pageProps.auth.user;
+    return (
+        user.role === "admin" ||
+        (user.role === "broker" && user.id === props.client.broker_id)
+    );
+});
+
+const canDelete = computed(() => {
+    const user = pageProps.auth.user;
+    return user.role === "admin";
+});
 
 const formatCurrency = (amount) => {
     if (!amount) return "Not specified";
@@ -435,5 +443,28 @@ const formatDate = (date) => {
     });
 };
 
-// Quick actions removed per request
+const editClient = () => {
+    router.visit(route("clients.edit", props.client.id));
+};
+
+const deleteClient = () => {
+    if (confirm("Are you sure you want to delete this client?")) {
+        router.delete(route("clients.destroy", props.client.id));
+    }
+};
+
+const sendEmail = () => {
+    // Implement email functionality
+    console.log("Send email to client");
+};
+
+const scheduleCall = () => {
+    // Implement call scheduling functionality
+    console.log("Schedule call with client");
+};
+
+const addNote = () => {
+    // Implement note adding functionality
+    console.log("Add note for client");
+};
 </script>

@@ -103,10 +103,24 @@ class InquiryController extends Controller
                 'status' => 'pending'
             ]);
 
+            // Load relationships for notification
+            $inquiry->load(['property', 'property.user']);
+
+            // Send notification to property broker
+            if ($property->broker_id) {
+                $broker = \App\Models\User::find($property->broker_id);
+                if ($broker) {
+                    $broker->notify(new \App\Notifications\NewInquiryNotification($inquiry));
+                }
+            }
+
+            // Broadcast real-time event
+            broadcast(new \App\Events\NewInquiryReceived($inquiry));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Inquiry submitted successfully',
-                'data' => new InquiryResource($inquiry->load(['property', 'property.user']))
+                'data' => new InquiryResource($inquiry)
             ], Response::HTTP_CREATED);
         } catch (ModelNotFoundException $e) {
             return response()->json([

@@ -39,6 +39,7 @@ class DashboardController extends Controller
             'totalTransactions' => Transaction::where('status', 'finalized')->count(),
             'activeBrokers' => User::where('role', 'broker')
                 ->where('is_approved', true)
+                ->whereNull('suspended_at')
                 ->whereHas('properties')
                 ->count(),
             'totalInquiries' => Inquiry::count(),
@@ -99,6 +100,7 @@ class DashboardController extends Controller
         
         $activeBrokers = User::where('role', 'broker')
             ->where('is_approved', true)
+            ->whereNull('suspended_at')
             ->whereHas('assignedSellerRequests', function($query) {
                 $query->whereIn('status', ['under_review', 'approved', 'listed']);
             })

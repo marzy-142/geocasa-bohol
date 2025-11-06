@@ -1,74 +1,195 @@
 <template>
     <ModernDashboardLayout>
-        <div class="max-w-5xl mx-auto p-4">
+        <div class="max-w-6xl mx-auto p-4 lg:p-6">
+            <!-- Back button -->
+            <div class="mb-4">
+                <button
+                    @click="goBack"
+                    class="inline-flex items-center text-gray-600 hover:text-gray-800"
+                    aria-label="Go back"
+                >
+                    <ArrowLeftIcon class="w-5 h-5 mr-1" />
+                    <span>Back</span>
+                </button>
+            </div>
             <!-- Title -->
-            <div class="bg-white p-6 rounded mb-4">
-                <h1 class="text-3xl font-bold mb-2">{{ property.title }}</h1>
-                <p class="text-gray-600 mb-3">{{ property.full_address }}</p>
-                <div class="flex gap-3 items-center">
-                    <div class="text-2xl font-bold text-blue-600">
-                        {{ property.formatted_total_price }}
+            <div
+                class="bg-white p-6 rounded-xl shadow-sm mb-6 border border-gray-200"
+            >
+                <div
+                    class="flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                >
+                    <div>
+                        <h1
+                            class="text-2xl md:text-3xl font-bold text-gray-900 mb-1"
+                        >
+                            {{ property.title }}
+                        </h1>
+                        <p class="text-gray-600">{{ property.full_address }}</p>
                     </div>
-                    <span
-                        :class="getStatusColor(property.status)"
-                        class="px-3 py-1 rounded text-sm text-white"
-                    >
-                        {{ formatStatus(property.status) }}
-                    </span>
+                    <div class="flex items-center gap-3">
+                        <div class="text-2xl font-extrabold text-blue-700">
+                            {{ property.formatted_total_price }}
+                        </div>
+                        <span
+                            :class="getStatusColor(property.status)"
+                            class="px-3 py-1.5 rounded-full text-sm text-white"
+                        >
+                            {{ formatStatus(property.status) }}
+                        </span>
+                    </div>
+                </div>
+                <div
+                    v-if="property.is_under_transaction"
+                    class="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3"
+                >
+                    This property is part of an active transaction.
                 </div>
             </div>
 
             <!-- Photos -->
             <div
                 v-if="property.images && property.images.length > 0"
-                class="bg-white p-6 rounded mb-4"
+                class="bg-white p-4 md:p-6 rounded-xl shadow-sm mb-6 border border-gray-200"
             >
-                <h2 class="font-semibold mb-3">Photos</h2>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <h2 class="font-semibold text-gray-900 mb-4">Photos</h2>
+                <div class="space-y-3">
                     <div
-                        v-for="(image, index) in property.images"
-                        :key="index"
-                        class="relative"
+                        class="relative w-full aspect-[16/9] bg-gray-100 rounded-lg overflow-hidden"
                     >
                         <img
-                            :src="getImageUrl(image)"
-                            :alt="`Photo ${index + 1}`"
-                            class="w-full h-40 object-cover rounded"
-                            @error="handleImageError($event, image)"
+                            :src="getImageUrl(property.images[mainImageIndex])"
+                            class="w-full h-full object-cover"
+                            :alt="`Photo ${mainImageIndex + 1}`"
+                            @error="
+                                handleImageError(
+                                    $event,
+                                    property.images[mainImageIndex]
+                                )
+                            "
                         />
+                    </div>
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                        <button
+                            v-for="(image, index) in property.images"
+                            :key="`thumb-${index}`"
+                            @click="mainImageIndex = index"
+                            :aria-label="`Show photo ${index + 1}`"
+                            class="relative flex-shrink-0 w-20 h-14 md:w-24 md:h-16 rounded-lg overflow-hidden border transition ring-2"
+                            :class="
+                                index === mainImageIndex
+                                    ? 'border-blue-500 ring-blue-200'
+                                    : 'border-gray-200 ring-transparent'
+                            "
+                        >
+                            <img
+                                :src="getImageUrl(image)"
+                                class="w-full h-full object-cover"
+                                :alt="`Thumbnail ${index + 1}`"
+                                @error="handleImageError($event, image)"
+                            />
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Content -->
-                <div class="lg:col-span-2 space-y-4">
+                <div class="lg:col-span-2 space-y-6">
                     <!-- Description -->
-                    <div class="bg-white p-6 rounded">
-                        <h2 class="font-semibold mb-2">Description</h2>
-                        <p class="text-gray-700">{{ property.description }}</p>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"
+                    >
+                        <h2 class="font-semibold text-gray-900 mb-2">
+                            Description
+                        </h2>
+                        <p class="text-gray-700 leading-relaxed">
+                            {{ property.description }}
+                        </p>
                     </div>
 
-                    <!-- Details -->
-                    <div class="bg-white p-6 rounded">
-                        <h2 class="font-semibold mb-3">Details</h2>
-                        <div class="space-y-2 text-sm">
-                            <div>
-                                <span class="text-gray-500">Area:</span>
-                                <strong>{{ property.formatted_area }}</strong>
-                            </div>
-                            <div>
-                                <span class="text-gray-500">Location:</span>
-                                <strong
-                                    >{{ property.municipality }},
-                                    {{ property.barangay }}</strong
+                    <!-- Key Facts -->
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"
+                    >
+                        <h2 class="font-semibold text-gray-900 mb-3">
+                            Key Facts
+                        </h2>
+                        <div
+                            class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm"
+                        >
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <p
+                                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
                                 >
+                                    Area
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{ property.formatted_area }}
+                                </p>
                             </div>
-                            <div v-if="property.title_type">
-                                <span class="text-gray-500">Title:</span>
-                                <strong>{{
-                                    formatTitleType(property.title_type)
-                                }}</strong>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <p
+                                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                                >
+                                    Types
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{
+                                        property.formatted_types?.length
+                                            ? property.formatted_types.join(
+                                                  ", "
+                                              )
+                                            : property.type || "—"
+                                    }}
+                                </p>
+                            </div>
+                            <div
+                                class="bg-gray-50 rounded-lg p-3"
+                                v-if="property.formatted_price_per_sqm"
+                            >
+                                <p
+                                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                                >
+                                    Price per sqm
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{ property.formatted_price_per_sqm }}
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <p
+                                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                                >
+                                    Status
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{ formatStatus(property.status) }}
+                                </p>
+                            </div>
+                            <div
+                                class="bg-gray-50 rounded-lg p-3"
+                                v-if="property.title_type"
+                            >
+                                <p
+                                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                                >
+                                    Title
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{ formatTitleType(property.title_type) }}
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <p
+                                    class="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                                >
+                                    Location
+                                </p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{ property.municipality }},
+                                    {{ property.barangay }}
+                                </p>
                             </div>
                         </div>
 
@@ -103,17 +224,19 @@
                         v-if="
                             property.coordinates_lat && property.coordinates_lng
                         "
-                        class="bg-white p-6 rounded"
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"
                     >
-                        <h2 class="font-semibold mb-3">Location</h2>
+                        <h2 class="font-semibold text-gray-900 mb-3">
+                            Location
+                        </h2>
                         <div
                             ref="mapContainer"
-                            class="w-full h-48 bg-gray-200 rounded mb-3"
+                            class="w-full h-56 md:h-72 bg-gray-200 rounded-lg mb-3"
                         ></div>
                         <a
                             :href="`https://www.google.com/maps/dir/?api=1&destination=${property.coordinates_lat},${property.coordinates_lng}`"
                             target="_blank"
-                            class="inline-block px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                            class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
                         >
                             Get Directions
                         </a>
@@ -122,8 +245,10 @@
 
                 <!-- Sidebar -->
                 <div>
-                    <div class="bg-white p-6 rounded sticky top-4">
-                        <h3 class="font-semibold mb-3">Broker</h3>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 sticky top-4"
+                    >
+                        <h3 class="font-semibold text-gray-900 mb-3">Broker</h3>
                         <div class="mb-4">
                             <div class="font-medium">
                                 {{ property.broker?.name }}
@@ -134,16 +259,25 @@
                         </div>
 
                         <div class="space-y-2">
-                            <button
-                                class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            <Link
+                                :href="
+                                    route(
+                                        'public.properties.show',
+                                        property.slug
+                                    )
+                                "
+                                class="block w-full py-2 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700"
                             >
-                                Send Inquiry
-                            </button>
-                            <button
-                                class="w-full py-2 border rounded hover:bg-gray-50"
+                                Inquire on Public Page
+                            </Link>
+                            <a
+                                v-if="property.google_maps_link"
+                                :href="property.google_maps_link"
+                                target="_blank"
+                                class="block w-full py-2 border rounded-lg text-center hover:bg-gray-50"
                             >
-                                Call
-                            </button>
+                                View on Google Maps
+                            </a>
                         </div>
 
                         <!-- Admin -->
@@ -158,7 +292,7 @@
                                         property.slug
                                     )
                                 "
-                                class="block w-full py-2 bg-yellow-500 text-white text-center rounded hover:bg-yellow-600"
+                                class="block w-full py-2 bg-yellow-500 text-white text-center rounded-lg hover:bg-yellow-600"
                             >
                                 ✏️ Edit Property
                             </Link>
@@ -169,7 +303,7 @@
                                         ? 'bg-gray-500 hover:bg-gray-600'
                                         : 'bg-yellow-500 hover:bg-yellow-600'
                                 "
-                                class="w-full py-2 text-white rounded transition-colors"
+                                class="w-full py-2 text-white rounded-lg transition-colors"
                             >
                                 {{
                                     property.is_featured
@@ -179,10 +313,21 @@
                             </button>
                             <button
                                 @click="deleteProperty"
-                                class="w-full py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                             >
                                 🗑️ Delete Property
                             </button>
+                            <Link
+                                :href="
+                                    route(
+                                        'public.properties.show',
+                                        property.slug
+                                    )
+                                "
+                                class="block w-full py-2 border rounded-lg text-center hover:bg-gray-50"
+                            >
+                                🔗 Open Public View
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -195,6 +340,7 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import { ArrowLeftIcon } from "@heroicons/vue/24/outline";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -216,6 +362,7 @@ const props = defineProps({
 const mapContainer = ref(null);
 const map = ref(null);
 const page = usePage();
+const mainImageIndex = ref(0);
 
 const canEditProperty = computed(() => {
     const user = page.props.auth.user;
@@ -327,4 +474,20 @@ onUnmounted(() => {
         map.value.remove();
     }
 });
+
+// Navigation: back with sensible fallback by role
+const goBack = () => {
+    if (window.history.length > 1) {
+        window.history.back();
+        return;
+    }
+    const role = page.props?.auth?.user?.role;
+    if (role === "broker") {
+        router.visit(route("broker.properties.index"));
+    } else if (role === "admin") {
+        router.visit(route("admin.properties.index"));
+    } else {
+        router.visit(route("client.properties"));
+    }
+};
 </script>

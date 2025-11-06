@@ -228,15 +228,25 @@ class InquiryController extends Controller
 
         // Assign broker: prioritize property broker, fallback to client's broker
         $property = Property::find($request->property_id);
+        $assignedBroker = null;
+        
         if ($property && $property->broker_id) {
             $inquiry->update(['assigned_broker_id' => $property->broker_id]);
+            $assignedBroker = \App\Models\User::find($property->broker_id);
         } elseif ($client->broker_id) {
             $inquiry->update(['assigned_broker_id' => $client->broker_id]);
+            $assignedBroker = \App\Models\User::find($client->broker_id);
+        }
+
+        // Load relationships for notification
+        $inquiry->load(['property', 'client']);
+
+        // Send notification to the assigned broker
+        if ($assignedBroker) {
+            $assignedBroker->notify(new \App\Notifications\NewInquiryNotification($inquiry));
         }
 
         // Broadcast real-time event so broker views update immediately
-        // Ensure property relation is loaded for event payload
-        $inquiry->load('property');
         broadcast(new \App\Events\NewInquiryReceived($inquiry));
 
         return redirect()

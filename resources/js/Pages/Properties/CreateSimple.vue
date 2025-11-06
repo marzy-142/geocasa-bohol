@@ -90,66 +90,56 @@
                         </div>
                     </div>
 
-                    <!-- Property Type -->
-                    <div>
-                        <label
-                            for="type"
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                            Property Type *
-                        </label>
-                        <select
-                            id="type"
-                            v-model="form.type"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            :class="{
-                                'border-red-500 ring-red-500': errors.type,
-                            }"
+                    <!-- Property Types (Multi-Select) -->
+                    <div class="md:col-span-2">
+                        <PropertyTypeMultiSelect
+                            v-model="form.types"
+                            :available-types="types"
+                            label="Property Type(s)"
+                            placeholder="Select one or more property types"
+                            :error="errors.types || errors.type"
+                            help-text="Select all applicable types. Mixed-use properties (e.g., commercial + residential) can have multiple types."
                             required
-                        >
-                            <option value="">Select Property Type</option>
-                            <option
-                                v-for="type in types"
-                                :key="type.value"
-                                :value="type.value"
-                            >
-                                {{ type.label }}
-                            </option>
-                        </select>
-                        <div
-                            v-if="errors.type"
-                            class="text-red-500 text-sm mt-1"
-                        >
-                            {{ errors.type }}
-                        </div>
-                    </div>
-
-                    <!-- Other Type Specification (only if "other" is selected) -->
-                    <div v-if="form.type === 'other'">
-                        <label
-                            for="type_other"
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                            Specify Property Type *
-                        </label>
-                        <input
-                            id="type_other"
-                            v-model="form.type_other"
-                            type="text"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            :class="{
-                                'border-red-500 ring-red-500':
-                                    errors.type_other,
-                            }"
-                            placeholder="e.g., Resort, Hotel, etc."
-                            :required="form.type === 'other'"
                         />
-                        <div
-                            v-if="errors.type_other"
-                            class="text-red-500 text-sm mt-1"
+                        
+                        <!-- Custom Type Input (shown if "other" is selected) -->
+                        <transition
+                            enter-active-class="transition ease-out duration-200"
+                            enter-from-class="opacity-0 transform -translate-y-2"
+                            enter-to-class="opacity-100 transform translate-y-0"
+                            leave-active-class="transition ease-in duration-150"
+                            leave-from-class="opacity-100 transform translate-y-0"
+                            leave-to-class="opacity-0 transform -translate-y-2"
                         >
-                            {{ errors.type_other }}
-                        </div>
+                            <div v-show="form.types.includes('other')" class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+                                <label
+                                    for="custom_type_text"
+                                    class="block text-sm font-semibold text-gray-900 mb-2"
+                                >
+                                    ✏️ Specify Property Type *
+                                </label>
+                                <input
+                                    id="custom_type_text"
+                                    v-model="form.custom_type_text"
+                                    type="text"
+                                    class="w-full border-2 border-blue-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    :class="{
+                                        'border-red-500 ring-red-500': errors.custom_type_text,
+                                    }"
+                                    placeholder="e.g., Resort Land, Heritage Site, Eco Farm"
+                                    :required="form.types.includes('other')"
+                                />
+                                <p class="text-xs text-blue-700 mt-2 font-medium">
+                                    💡 This type will be automatically available for all users to filter
+                                </p>
+                                <div
+                                    v-if="errors.custom_type_text"
+                                    class="text-red-600 text-sm mt-2 font-medium"
+                                >
+                                    {{ errors.custom_type_text }}
+                                </div>
+                            </div>
+                        </transition>
                     </div>
 
                     <!-- Description -->
@@ -1534,6 +1524,7 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { useForm, usePage, Link } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import PropertyTypeMultiSelect from "@/Components/PropertyTypeMultiSelect.vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -1550,8 +1541,9 @@ const errors = computed(() => pageProps.errors);
 // Form data
 const form = useForm({
     title: "",
-    type: "",
-    type_other: "",
+    types: [], // Multi-type array
+    type: "", // Deprecated, kept for backward compatibility
+    custom_type_text: "", // For "other" custom types
     description: "",
     municipality: "",
     barangay: "",
@@ -3394,10 +3386,20 @@ const calculateTotalPrice = () => {
 const submit = () => {
     console.log("Submit function called");
 
-    // Clean up type_other - only send if type is 'other'
-    if (form.type !== "other") {
-        form.type_other = null;
+    // Ensure at least one type is selected
+    if (!form.types || form.types.length === 0) {
+        console.error("At least one property type must be selected");
+        return;
     }
+
+    // Validate custom type if "other" is selected
+    if (form.types.includes('other') && !form.custom_type_text) {
+        console.error("Please specify the custom property type");
+        return;
+    }
+
+    // Set the first type as the legacy 'type' field for backward compatibility
+    form.type = form.types[0];
 
     console.log("Form data:", form.data());
 

@@ -5,6 +5,7 @@ import { useFormValidation } from "@/Composables/useFormValidation.js";
 import { useSmartValidation } from "@/Composables/useSmartValidation.js";
 import PublicNavigation from "@/Components/PublicNavigation.vue";
 import PublicFooter from "@/Components/PublicFooter.vue";
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import ModernButton from "@/Components/ModernButton.vue";
 import FormField from "@/Components/FormField.vue";
 import ValidationSummary from "@/Components/ValidationSummary.vue";
@@ -30,11 +31,13 @@ const props = defineProps({
     availableFeatures: Array,
     municipalities: Array,
     auth: Object,
+    client: Object, // For pre-filling contact info when user is logged in
+    availableBrokers: Array, // List of available brokers for selection
 });
 
 // Initialize form validation with enhanced rules - FIXED: Match backend field names
 const validationRules = {
-    name: {
+    contact_name: {
         required: true,
         minLength: 2,
         maxLength: 255,
@@ -44,7 +47,7 @@ const validationRules = {
         patternMessage:
             "Name can only contain letters, spaces, hyphens, and periods",
     },
-    email: {
+    contact_email: {
         required: true,
         email: true,
         custom: (value) => {
@@ -66,7 +69,7 @@ const validationRules = {
         requiredMessage: "Email address is required",
         emailMessage: "Please enter a valid email address",
     },
-    phone: {
+    contact_phone: {
         required: true,
         custom: (value) => {
             const phoneDigits = value.replace(/[^0-9]/g, "");
@@ -79,10 +82,9 @@ const validationRules = {
         phoneMessage: "Please enter a valid phone number",
     },
     address: {
-        required: true,
+        required: false, // Changed to optional
         minLength: 10,
         maxLength: 500,
-        requiredMessage: "Current address is required",
         minLengthMessage: "Please provide a complete address",
     },
     property_title: {
@@ -148,7 +150,30 @@ const validationRules = {
                 "subdivision_lot",
                 "titled_land",
                 "tax_declared",
+                "other", // Allow "other" option
             ];
+
+            // Handle array of property types
+            if (Array.isArray(value)) {
+                if (value.length === 0) {
+                    return "Please select at least one property type.";
+                }
+                // Check if all selected types are valid
+                const invalidTypes = value.filter(
+                    (type) => !validTypes.includes(type)
+                );
+                if (invalidTypes.length > 0) {
+                    return `Invalid property type(s): ${invalidTypes.join(
+                        ", "
+                    )}`;
+                }
+                return null;
+            }
+
+            // Handle single property type (for backward compatibility)
+            if (!value || value.trim() === "") {
+                return "Property type is required";
+            }
             if (!validTypes.includes(value)) {
                 return "Please select a valid property type.";
             }
@@ -178,27 +203,50 @@ const validationRules = {
         maxMessage:
             "Asking price seems unreasonably high. Please verify the amount.",
     },
-    lot_area: {
+    lot_area_sqm: {
+        required: true,
         numeric: true,
         min: 1,
         max: 1000000,
         custom: (value, formData) => {
-            if (!value) return null; // Optional field
+            if (!value) return "Lot area is required";
 
             // Since GeoCasa exclusively deals with land properties,
             // we'll use a general minimum area validation
             const area = parseFloat(value);
-            const minArea = 100; // Minimum area for land properties in square meters
+            const minArea = 1; // Minimum area for land properties in square meters
 
             if (area < minArea) {
-                return `The lot area seems unusually small for land property. Please verify the measurement.`;
+                return `The lot area must be at least 1 square meter.`;
             }
             return null;
         },
+        requiredMessage: "Lot area is required",
         numericMessage: "Lot area must be a valid number",
         minMessage: "Lot area must be at least 1 square meter",
         maxMessage:
             "Lot area seems unreasonably large. Please verify the measurement.",
+    },
+    custom_property_type: {
+        required: false, // Will be required conditionally
+        minLength: 2,
+        maxLength: 100,
+        custom: (value, formData) => {
+            // Required if property_type includes "other"
+            if (
+                formData.property_type &&
+                Array.isArray(formData.property_type) &&
+                formData.property_type.includes("other")
+            ) {
+                if (!value || value.trim() === "") {
+                    return "Please specify the property type when 'Other' is selected";
+                }
+            }
+            return null;
+        },
+        requiredMessage:
+            "Custom property type is required when 'Other' is selected",
+        minLengthMessage: "Property type must be at least 2 characters",
     },
     // Location rules aligned to backend
     municipality: {
@@ -207,8 +255,24 @@ const validationRules = {
         requiredMessage: "Municipality is required",
     },
     barangay: {
-        required: false,
+        required: true,
         maxLength: 100,
+        requiredMessage: "Barangay is required",
+    },
+    title_type: {
+        required: true,
+        maxLength: 100,
+        custom: (value) => {
+            if (!value || value.trim() === "") {
+                return "Title type is required";
+            }
+            if (value.length < 2) {
+                return "Title type must be at least 2 characters";
+            }
+            return null;
+        },
+        requiredMessage: "Title type is required",
+        maxLengthMessage: "Title type cannot exceed 100 characters",
     },
     terms_accepted: {
         required: true,
@@ -264,29 +328,63 @@ const {
     submit: submitWithValidation,
 } = useFormValidation(
     {
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
+        // Contact Information - NEW field names matching backend
+        contact_name: props.client?.name || "",
+        contact_email: props.client?.email || "",
+        contact_phone: props.client?.phone || "",
+
+        // Property Information
         property_title: "",
         property_description: "",
-        property_type: "",
+        property_type: [], // Array of types
+        custom_property_type: "",
         asking_price: "",
+        lot_area_sqm: "", // Changed from lot_area
+        price_expectation: "",
+
+        // Location
         municipality: "",
         barangay: "",
-        lot_area: "",
+        address: "",
+        nearby_landmarks: "",
+
+        // Title Information
         title_type: "",
-        features: [],
+        title_number: "",
         zoning_classification: "",
+
+        // Features
+        features: [],
+
+        // Utilities (booleans)
         road_access: false,
         water_source: false,
-        electricity_available: false,
-        internet_available: false,
+        electricity: false,
+        internet: false,
+
+        // GIS
+        coordinates_lat: null,
+        coordinates_lng: null,
+
+        // Files - using uploaded_images to match backend and existing code
         uploaded_images: [],
+        property_documents: [],
+        ownership_documents: [],
+
+        // Additional
         additional_notes: "",
+        urgency_level: "medium",
+        preferred_contact_method: "both",
+        best_time_to_contact: "",
+
+        // Consent
         marketing_consent: false,
         newsletter_consent: false,
         terms_accepted: false,
+
+        // Broker Selection
+        broker_selection_method: "manual",
+        preferred_broker_id: null,
     },
     validationRules
 );
@@ -296,13 +394,16 @@ const form = useForm(validationForm);
 // Initialize smart validation
 const { getSmartSuggestions, getQuickActions } = useSmartValidation();
 
+// Determine if user is logged in (client prop exists)
+const isAuthenticatedUser = computed(() => !!props.client);
+
 // Form initialization complete
 
 const imageFiles = ref([]);
 const propertyDocuments = ref([]);
 const ownershipDocuments = ref([]);
 const currentStep = ref(1);
-const totalSteps = 4; // Updated to 4 steps (removed broker selection)
+const totalSteps = 5; // 5 steps: Contact, Property, Location, Images, Broker Selection
 const isSubmitting = ref(false);
 const submissionStatus = ref(null); // 'success', 'error', or null
 const submissionMessage = ref("");
@@ -313,7 +414,11 @@ const getStepValidationErrors = (step) => {
 
     switch (step) {
         case 1:
-            const step1Fields = ["name", "email", "phone", "address"];
+            const step1Fields = [
+                "contact_name",
+                "contact_email",
+                "contact_phone",
+            ];
             step1Fields.forEach((field) => {
                 if (
                     !validationForm[field] ||
@@ -321,7 +426,11 @@ const getStepValidationErrors = (step) => {
                 ) {
                     errors.push(
                         `${
-                            field.charAt(0).toUpperCase() + field.slice(1)
+                            field
+                                .replace("contact_", "")
+                                .charAt(0)
+                                .toUpperCase() +
+                            field.replace("contact_", "").slice(1)
                         } is required`
                     );
                 } else if (errors.value && errors.value[field]) {
@@ -336,14 +445,23 @@ const getStepValidationErrors = (step) => {
                 "property_description",
                 "property_type",
                 "asking_price",
+                "lot_area_sqm",
             ];
             step2Fields.forEach((field) => {
-                if (
+                if (field === "property_type") {
+                    if (
+                        !validationForm[field] ||
+                        !Array.isArray(validationForm[field]) ||
+                        validationForm[field].length === 0
+                    ) {
+                        errors.push("Property type is required");
+                    }
+                } else if (
                     !validationForm[field] ||
                     validationForm[field].toString().trim() === ""
                 ) {
                     const fieldName = field
-                        .replace("_", " ")
+                        .replace(/_/g, " ")
                         .replace(/\b\w/g, (l) => l.toUpperCase());
                     errors.push(`${fieldName} is required`);
                 } else if (errors.value && errors.value[field]) {
@@ -353,14 +471,14 @@ const getStepValidationErrors = (step) => {
             break;
 
         case 3:
-            const step3Fields = ["municipality", "address"];
+            const step3Fields = ["municipality", "barangay", "title_type"];
             step3Fields.forEach((field) => {
                 if (
                     !validationForm[field] ||
                     validationForm[field].toString().trim() === ""
                 ) {
                     const fieldName = field
-                        .replace("_", " ")
+                        .replace(/_/g, " ")
                         .replace(/\b\w/g, (l) => l.toUpperCase());
                     errors.push(`${fieldName} is required`);
                 } else if (errors.value && errors.value[field]) {
@@ -393,7 +511,9 @@ const canProceedWithFeedback = computed(() => {
 
 // Form validation with enhanced logic - FIXED: Updated field names
 const isStep1Valid = computed(() => {
-    const step1Fields = ["name", "email", "phone", "address"];
+    const step1Fields = ["contact_name", "contact_email", "contact_phone"];
+    const fieldValidation = {};
+
     const isValid = step1Fields.every((field) => {
         const hasValue =
             validationForm[field] && validationForm[field].trim() !== "";
@@ -419,19 +539,22 @@ const isStep1Valid = computed(() => {
         const hasError =
             !validation.isValid || (errors.value && errors.value[field]);
 
-        // Debug logging for step 1 validation
-        if (!hasValue || hasError) {
-            console.log(`Step 1 field ${field} validation:`, {
-                hasValue,
-                validation,
-                hasError,
-                fieldValue: validationForm[field],
-                errorValue: errors.value[field],
-            });
-        }
+        fieldValidation[field] = {
+            hasValue,
+            isValid: validation.isValid,
+            hasError,
+            value: validationForm[field],
+        };
 
         return hasValue && !hasError;
     });
+
+    console.log(
+        "Step 1 validation details:",
+        fieldValidation,
+        "Overall valid:",
+        isValid
+    );
     return isValid;
 });
 
@@ -441,27 +564,64 @@ const isStep2Valid = computed(() => {
         "property_description",
         "property_type",
         "asking_price",
+        "lot_area_sqm",
     ];
+    const fieldValidation = {};
+
     const isValid = step2Fields.every((field) => {
-        const hasValue =
-            validationForm[field] &&
-            validationForm[field].toString().trim() !== "";
+        if (field === "property_type") {
+            // Check if it's an array with at least one element
+            const valid =
+                Array.isArray(validationForm[field]) &&
+                validationForm[field].length > 0;
+            fieldValidation[field] = {
+                isArray: Array.isArray(validationForm[field]),
+                length: validationForm[field]?.length,
+                valid,
+                value: validationForm[field],
+            };
+            return valid;
+        }
 
         // Use the composable's validateField function to ensure proper validation
         const validation = validateFieldComposable(
             field,
             validationForm[field]
         );
+
+        // For numeric and text fields, check if value exists
+        const value = validationForm[field];
+        const hasValue =
+            value !== null &&
+            value !== undefined &&
+            value !== "" &&
+            (typeof value === "number" || value.toString().trim() !== "");
+
         const hasError =
             !validation.isValid || (errors.value && errors.value[field]);
 
-        return hasValue && !hasError;
+        fieldValidation[field] = {
+            hasValue,
+            isValid: validation.isValid,
+            hasError,
+            value: validationForm[field],
+        };
+
+        // Field is valid if validation passes (which includes checking if required fields have values)
+        return validation.isValid && !hasError;
     });
+
+    console.log(
+        "Step 2 validation details:",
+        fieldValidation,
+        "Overall valid:",
+        isValid
+    );
     return isValid;
 });
 
 const isStep3Valid = computed(() => {
-    const step3Fields = ["municipality", "address"];
+    const step3Fields = ["municipality", "barangay", "title_type"];
     const isValid = step3Fields.every((field) => {
         const hasValue =
             validationForm[field] &&
@@ -477,25 +637,41 @@ const isStep3Valid = computed(() => {
 
         return hasValue && !hasError;
     });
-    // Step 3 should not require terms acceptance; validate it on final step instead
     return isValid;
 });
 
 const canProceed = computed(() => {
     switch (currentStep.value) {
         case 1:
+            console.log("Step 1 validation:", isStep1Valid.value);
             return isStep1Valid.value;
         case 2:
+            console.log("Step 2 validation:", isStep2Valid.value);
             return isStep2Valid.value;
         case 3:
+            console.log("Step 3 validation:", isStep3Valid.value);
             return isStep3Valid.value;
         case 4:
-            // Final step - check all previous steps and images
+            console.log("Step 4 validation (images):", imageFiles.value.length);
+            return imageFiles.value.length > 0;
+        case 5:
+            // Final step - broker selection - check all previous steps and broker selection
             const canSubmit =
                 isStep1Valid.value &&
                 isStep2Valid.value &&
                 isStep3Valid.value &&
-                imageFiles.value.length > 0;
+                imageFiles.value.length > 0 &&
+                validationForm.preferred_broker_id !== null;
+
+            console.log("Step 5 validation:", {
+                step1: isStep1Valid.value,
+                step2: isStep2Valid.value,
+                step3: isStep3Valid.value,
+                images: imageFiles.value.length,
+                broker: validationForm.preferred_broker_id,
+                canSubmit,
+            });
+
             return canSubmit;
         default:
             return false;
@@ -518,25 +694,30 @@ const getStepValidationClass = (step) => {
 
         console.log("Validating form data:", validationForm);
 
-        // Step 1 validation
-        if (!validationForm.name || validationForm.name.trim() === "") {
-            allErrors.name = ["Full name is required"];
+        // Step 1 validation - FIXED: Use contact_* field names
+        if (
+            !validationForm.contact_name ||
+            validationForm.contact_name.trim() === ""
+        ) {
+            allErrors.contact_name = ["Full name is required"];
             console.log("Name validation failed");
         }
-        if (!validationForm.email || validationForm.email.trim() === "") {
-            allErrors.email = ["Email address is required"];
+        if (
+            !validationForm.contact_email ||
+            validationForm.contact_email.trim() === ""
+        ) {
+            allErrors.contact_email = ["Email address is required"];
             console.log("Email validation failed - empty");
-        } else if (!isValidEmail(validationForm.email)) {
-            allErrors.email = ["Please enter a valid email address"];
+        } else if (!isValidEmail(validationForm.contact_email)) {
+            allErrors.contact_email = ["Please enter a valid email address"];
             console.log("Email validation failed - invalid format");
         }
-        if (!validationForm.phone || validationForm.phone.trim() === "") {
-            allErrors.phone = ["Phone number is required"];
+        if (
+            !validationForm.contact_phone ||
+            validationForm.contact_phone.trim() === ""
+        ) {
+            allErrors.contact_phone = ["Phone number is required"];
             console.log("Phone validation failed");
-        }
-        if (!validationForm.address || validationForm.address.trim() === "") {
-            allErrors.address = ["Property address is required"];
-            console.log("Address validation failed");
         }
 
         // Step 2 validation
@@ -558,14 +739,21 @@ const getStepValidationClass = (step) => {
         }
         if (
             !validationForm.property_type ||
-            validationForm.property_type.trim() === ""
+            (Array.isArray(validationForm.property_type) &&
+                validationForm.property_type.length === 0)
         ) {
-            allErrors.property_type = ["Property type is required"];
+            allErrors.property_type = [
+                "Please select at least one property type",
+            ];
             console.log("Property type validation failed");
         }
         if (!validationForm.asking_price || validationForm.asking_price <= 0) {
             allErrors.asking_price = ["Valid asking price is required"];
             console.log("Asking price validation failed");
+        }
+        if (!validationForm.lot_area_sqm || validationForm.lot_area_sqm <= 0) {
+            allErrors.lot_area_sqm = ["Valid lot area is required"];
+            console.log("Lot area validation failed");
         }
 
         // Step 3 validation
@@ -576,9 +764,16 @@ const getStepValidationClass = (step) => {
             allErrors.municipality = ["Municipality is required"];
             console.log("Municipality validation failed");
         }
-        if (!validationForm.address || validationForm.address.trim() === "") {
-            allErrors.address = ["Complete address is required"];
-            console.log("Address validation failed (step 3)");
+        if (!validationForm.barangay || validationForm.barangay.trim() === "") {
+            allErrors.barangay = ["Barangay is required"];
+            console.log("Barangay validation failed");
+        }
+        if (
+            !validationForm.title_type ||
+            validationForm.title_type.trim() === ""
+        ) {
+            allErrors.title_type = ["Title type is required"];
+            console.log("Title type validation failed");
         }
 
         console.log("All validation errors found:", allErrors);
@@ -595,13 +790,19 @@ const getStepValidationClass = (step) => {
     // Auto-fix common validation issues
     const autoFixErrors = () => {
         // Auto-fix email format
-        if (validationForm.email && validationForm.email.includes(" ")) {
-            validationForm.email = validationForm.email.replace(/\s+/g, "");
+        if (
+            validationForm.contact_email &&
+            validationForm.contact_email.includes(" ")
+        ) {
+            validationForm.contact_email = validationForm.contact_email.replace(
+                /\s+/g,
+                ""
+            );
         }
 
         // Auto-fix phone number format
-        if (validationForm.phone) {
-            validationForm.phone = validationForm.phone.replace(
+        if (validationForm.contact_phone) {
+            validationForm.contact_phone = validationForm.contact_phone.replace(
                 /[^\d+()-\s]/g,
                 ""
             );
@@ -709,7 +910,11 @@ const nextStep = async () => {
 const getFirstInvalidField = (step) => {
     switch (step) {
         case 1:
-            const step1Fields = ["name", "email", "phone", "address"];
+            const step1Fields = [
+                "contact_name",
+                "contact_email",
+                "contact_phone",
+            ];
             return step1Fields.find(
                 (field) =>
                     !validationForm[field] ||
@@ -721,6 +926,7 @@ const getFirstInvalidField = (step) => {
                 "property_title",
                 "property_description",
                 "asking_price",
+                "lot_area_sqm",
             ];
             return step2Fields.find(
                 (field) =>
@@ -729,7 +935,7 @@ const getFirstInvalidField = (step) => {
                     errors.value[field]
             );
         case 3:
-            const step3Fields = ["municipality", "address"];
+            const step3Fields = ["municipality", "barangay", "title_type"];
             const invalidField = step3Fields.find(
                 (field) =>
                     !validationForm[field] ||
@@ -845,6 +1051,7 @@ const handleImageUpload = async (event) => {
         if (successfulFiles.length > 0) {
             imageFiles.value.push(...successfulFiles);
             form.uploaded_images = [...imageFiles.value];
+            validationForm.uploaded_images = [...imageFiles.value];
             showNotification(
                 "success",
                 `${successfulFiles.length} image(s) uploaded successfully`
@@ -860,6 +1067,7 @@ const removeImage = (index) => {
     const removedFile = imageFiles.value[index];
     imageFiles.value.splice(index, 1);
     form.uploaded_images = [...imageFiles.value];
+    validationForm.uploaded_images = [...imageFiles.value];
     showNotification("info", `Removed ${removedFile.name}`);
 };
 
@@ -925,6 +1133,7 @@ const handlePropertyDocumentUpload = (event) => {
     if (validFiles.length > 0) {
         propertyDocuments.value.push(...validFiles);
         form.property_documents = [...propertyDocuments.value];
+        validationForm.property_documents = [...propertyDocuments.value];
         showNotification(
             "success",
             `${validFiles.length} document(s) uploaded successfully`
@@ -936,6 +1145,7 @@ const removePropertyDocument = (index) => {
     const removedFile = propertyDocuments.value[index];
     propertyDocuments.value.splice(index, 1);
     form.property_documents = [...propertyDocuments.value];
+    validationForm.property_documents = [...propertyDocuments.value];
     showNotification("info", `Removed ${removedFile.name}`);
 };
 
@@ -1002,6 +1212,7 @@ const handleOwnershipDocumentUpload = (event) => {
     if (validFiles.length > 0) {
         ownershipDocuments.value.push(...validFiles);
         form.ownership_documents = [...ownershipDocuments.value];
+        validationForm.ownership_documents = [...ownershipDocuments.value];
         showNotification(
             "success",
             `${validFiles.length} ownership document(s) uploaded successfully`
@@ -1013,6 +1224,7 @@ const removeOwnershipDocument = (index) => {
     const removedFile = ownershipDocuments.value[index];
     ownershipDocuments.value.splice(index, 1);
     form.ownership_documents = [...ownershipDocuments.value];
+    validationForm.ownership_documents = [...ownershipDocuments.value];
     showNotification("info", `Removed ${removedFile.name}`);
 };
 
@@ -1455,22 +1667,28 @@ const submitForm = async () => {
                     const firstErrorField = Object.keys(errors)[0];
                     if (firstErrorField) {
                         const step1Fields = [
-                            "name",
-                            "email",
-                            "phone",
-                            "address",
+                            "contact_name",
+                            "contact_email",
+                            "contact_phone",
                         ];
                         const step2Fields = [
                             "property_title",
                             "property_description",
+                            "property_type",
                             "asking_price",
+                            "lot_area_sqm",
                         ];
-                        const step3Fields = ["municipality", "address"];
+                        const step3Fields = [
+                            "municipality",
+                            "barangay",
+                            "title_type",
+                            "address",
+                        ];
+                        const step4Fields = ["uploaded_images"];
                         const step5Fields = [
-                            "uploaded_images",
                             "terms_accepted",
-                            "marketing_consent",
-                            "newsletter_consent",
+                            "broker_selection_method",
+                            "preferred_broker_id",
                         ];
 
                         if (step1Fields.includes(firstErrorField)) {
@@ -1479,6 +1697,8 @@ const submitForm = async () => {
                             currentStep.value = 2;
                         } else if (step3Fields.includes(firstErrorField)) {
                             currentStep.value = 3;
+                        } else if (step4Fields.includes(firstErrorField)) {
+                            currentStep.value = 4;
                         } else if (step5Fields.includes(firstErrorField)) {
                             currentStep.value = 5;
                         }
@@ -1670,7 +1890,7 @@ const formatFieldName = (field) => {
         uploaded_images: "Property Images",
         municipality: "Municipality",
         barangay: "Barangay",
-        lot_area: "Lot Area",
+        lot_area_sqm: "Lot Area",
         title_type: "Title Type",
         zoning_classification: "Zoning Classification",
         property_type: "Property Type",
@@ -1687,17 +1907,19 @@ const formatFieldName = (field) => {
 
 // Define required fields at component level for reuse
 const requiredFields = [
-    "name",
-    "email",
-    "phone",
-    "address",
+    "contact_name",
+    "contact_email",
+    "contact_phone",
     "property_title",
     "property_description",
     "property_type",
     "asking_price",
-    "lot_area",
+    "lot_area_sqm",
     "municipality",
+    "barangay",
+    "title_type",
     "terms_accepted",
+    "preferred_broker_id",
 ];
 
 // Enhanced field validation with specific error messages
@@ -1796,7 +2018,7 @@ const validateField = (field, value) => {
             }
             break;
 
-        case "lot_area":
+        case "lot_area_sqm":
             const areaNum = parseFloat(value);
             if (isNaN(areaNum) || areaNum <= 0) {
                 errors.push("Please enter a valid lot area greater than 0");
@@ -1817,7 +2039,9 @@ const validateField = (field, value) => {
                         "Please enter a valid floor area greater than 0"
                     );
                 }
-                if (floorAreaNum > parseFloat(validationForm.lot_area || 0)) {
+                if (
+                    floorAreaNum > parseFloat(validationForm.lot_area_sqm || 0)
+                ) {
                     errors.push("Floor area cannot be larger than lot area");
                 }
             }
@@ -1952,1199 +2176,1602 @@ const handleFieldQuickAction = (fieldName, action) => {
 <template>
     <Head title="Sell Your Property - GeoCasa Bohol" />
 
-    <!-- Public Navigation -->
-    <PublicNavigation :auth="auth" current-route="seller-requests.create" />
+    <!-- Conditional Layout Wrapper -->
+    <component :is="isAuthenticatedUser ? ModernDashboardLayout : 'div'">
+        <!-- Public Navigation (only for non-authenticated users) -->
+        <PublicNavigation
+            v-if="!isAuthenticatedUser"
+            :auth="auth"
+            current-route="seller-requests.create"
+        />
 
-    <!-- Main Content -->
-    <main class="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100">
-        <!-- Hero Section (Full Width) -->
-        <section class="relative py-16 lg:py-20 overflow-hidden mb-12">
-            <div
-                class="absolute inset-0 bg-gradient-to-r from-primary-600/10 to-accent-600/10"
-            ></div>
-            <div
-                class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+        <!-- Main Content -->
+        <main
+            :class="
+                isAuthenticatedUser
+                    ? 'min-h-screen bg-gray-50 py-8'
+                    : 'min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100'
+            "
+        >
+            <!-- Hero Section (Only for Public Users) -->
+            <section
+                v-if="!isAuthenticatedUser"
+                class="relative py-16 lg:py-20 overflow-hidden mb-12"
             >
-                <h1
-                    class="text-3xl md:text-5xl lg:text-6xl font-bold text-neutral-900 mb-6"
-                >
-                    Sell Your
-                    <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600"
-                    >
-                        Property
-                    </span>
-                    in Bohol
-                </h1>
-                <p
-                    class="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto"
-                >
-                    List your property with GeoCasa Bohol and reach qualified
-                    buyers
-                </p>
-            </div>
-        </section>
-
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-            <!-- Enhanced Submission Status -->
-            <div v-if="submissionStatus" class="mb-8">
-                <!-- Success Message -->
                 <div
-                    v-if="submissionStatus === 'success'"
-                    class="p-6 rounded-2xl border bg-green-50 border-green-200"
-                >
-                    <div class="flex items-start gap-4">
-                        <CheckCircleIcon
-                            class="w-8 h-8 text-green-600 flex-shrink-0 mt-1"
-                        />
-                        <div class="flex-1">
-                            <h3
-                                class="text-lg font-semibold text-green-800 mb-2"
-                            >
-                                Success!
-                            </h3>
-                            <p class="text-green-700 whitespace-pre-line">
-                                {{ submissionMessage }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Error Message -->
+                    class="absolute inset-0 bg-gradient-to-r from-primary-600/10 to-accent-600/10"
+                ></div>
                 <div
-                    v-else-if="submissionStatus === 'error'"
-                    class="p-6 rounded-2xl border bg-red-50 border-red-200"
+                    class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
                 >
-                    <div class="flex items-start gap-4">
-                        <ExclamationTriangleIcon
-                            class="w-8 h-8 text-red-600 flex-shrink-0 mt-1"
-                        />
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-red-800 mb-2">
-                                Submission Failed
-                            </h3>
-                            <p class="text-red-700 whitespace-pre-line mb-4">
-                                {{ submissionMessage }}
-                            </p>
-
-                            <!-- Detailed Error Information -->
-                            <div
-                                v-if="Object.keys(errors).length > 0"
-                                class="bg-red-100 rounded-lg p-4 mb-4"
-                            >
-                                <h4
-                                    class="text-sm font-semibold text-red-800 mb-3"
-                                >
-                                    Specific Issues Found:
-                                </h4>
-                                <ul class="space-y-2">
-                                    <li
-                                        v-for="(errorMessages, field) in errors"
-                                        :key="field"
-                                        class="flex items-start gap-2 text-sm text-red-700"
-                                    >
-                                        <span
-                                            class="font-medium capitalize min-w-0 flex-shrink-0"
-                                        >
-                                            {{ formatFieldName(field) }}:
-                                        </span>
-                                        <span class="flex-1">
-                                            <span
-                                                v-if="
-                                                    Array.isArray(errorMessages)
-                                                "
-                                                >{{
-                                                    errorMessages.join(", ")
-                                                }}</span
-                                            >
-                                            <span v-else>{{
-                                                errorMessages
-                                            }}</span>
-                                        </span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <!-- Action Buttons for Error Recovery -->
-                            <div class="flex flex-wrap gap-3">
-                                <button
-                                    @click="clearErrors"
-                                    class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 text-sm font-medium rounded-lg transition-colors"
-                                >
-                                    Clear Errors
-                                </button>
-                                <button
-                                    @click="validateAllSteps"
-                                    class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 text-sm font-medium rounded-lg transition-colors"
-                                >
-                                    Re-validate Form
-                                </button>
-                                <button
-                                    @click="autoFixErrors"
-                                    class="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-sm font-medium rounded-lg transition-colors"
-                                >
-                                    Auto-fix Issues
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Warning Message -->
-                <div
-                    v-else-if="submissionStatus === 'warning'"
-                    class="p-6 rounded-2xl border bg-yellow-50 border-yellow-200"
-                >
-                    <div class="flex items-start gap-4">
-                        <ExclamationTriangleIcon
-                            class="w-8 h-8 text-yellow-600 flex-shrink-0 mt-1"
-                        />
-                        <div class="flex-1">
-                            <h3
-                                class="text-lg font-semibold text-yellow-800 mb-2"
-                            >
-                                Warning
-                            </h3>
-                            <p class="text-yellow-700 whitespace-pre-line">
-                                {{ submissionMessage }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Validation Summary -->
-            <ValidationSummary
-                v-if="hasErrors && submissionStatus === 'error'"
-                :errors="errors"
-                :format-field-name="formatFieldName"
-                @auto-fix="autoFixErrors"
-                class="mb-8"
-            />
-
-            <!-- Benefits Banner -->
-            <div
-                class="bg-white border border-neutral-200 p-8 mb-12 rounded-xl shadow-sm"
-            >
-                <div class="grid md:grid-cols-3 gap-8 text-center">
-                    <div class="flex flex-col items-center">
-                        <div
-                            class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4"
-                        >
-                            <ShieldCheckIcon class="w-7 h-7 text-primary-600" />
-                        </div>
-                        <h3 class="text-lg font-bold mb-2 text-neutral-900">
-                            Licensed Brokers
-                        </h3>
-                        <p class="text-sm text-neutral-600">
-                            Work with verified professionals
-                        </p>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <div
-                            class="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4"
-                        >
-                            <ClockIcon class="w-7 h-7 text-accent-600" />
-                        </div>
-                        <h3 class="text-lg font-bold mb-2 text-neutral-900">
-                            Quick Process
-                        </h3>
-                        <p class="text-sm text-neutral-600">
-                            Listed within 24-48 hours
-                        </p>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <div
-                            class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4"
-                        >
-                            <StarIcon class="w-7 h-7 text-primary-600" />
-                        </div>
-                        <h3 class="text-lg font-bold mb-2 text-neutral-900">
-                            Premium Exposure
-                        </h3>
-                        <p class="text-sm text-neutral-600">
-                            Maximum visibility to buyers
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Progress Indicator -->
-            <div class="mb-12">
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-sm font-medium text-neutral-600"
-                        >Step {{ currentStep }} of {{ totalSteps }}</span
+                    <h1
+                        class="text-3xl md:text-5xl lg:text-6xl font-bold text-neutral-900 mb-6"
                     >
-                    <span class="text-sm text-neutral-500"
-                        >{{ Math.round((currentStep / totalSteps) * 100) }}%
-                        Complete</span
-                    >
-                </div>
-                <div class="w-full bg-neutral-200 rounded-full h-2 mb-8">
-                    <div
-                        class="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full transition-all duration-500 ease-out"
-                        :style="{
-                            width: `${(currentStep / totalSteps) * 100}%`,
-                        }"
-                    ></div>
-                </div>
-
-                <!-- Step Icons -->
-                <div class="flex justify-between items-center">
-                    <div
-                        v-for="step in totalSteps"
-                        :key="step"
-                        class="flex flex-col items-center"
-                    >
-                        <div
-                            :class="[
-                                'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300',
-                                step < currentStep
-                                    ? 'bg-green-500 text-white shadow-lg'
-                                    : step === currentStep
-                                    ? getStepValidationClass(step)
-                                    : 'bg-neutral-200 text-neutral-400',
-                            ]"
-                        >
-                            <CheckIcon
-                                v-if="step < currentStep"
-                                class="w-5 h-5"
-                            />
-                            <ExclamationTriangleIcon
-                                v-else-if="
-                                    step === currentStep &&
-                                    submissionStatus === 'error'
-                                "
-                                class="w-5 h-5"
-                            />
-                            <component
-                                v-else
-                                :is="getStepIcon(step)"
-                                class="w-5 h-5"
-                            />
-                        </div>
+                        Sell Your
                         <span
-                            :class="[
-                                'text-xs mt-2 font-medium transition-colors',
-                                step <= currentStep
-                                    ? 'text-primary-600'
-                                    : 'text-neutral-400',
-                            ]"
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-600"
                         >
-                            {{
-                                ["Contact", "Property", "Location", "Images"][
-                                    step - 1
-                                ]
-                            }}
+                            Property
                         </span>
+                        in Bohol
+                    </h1>
+                    <p
+                        class="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto"
+                    >
+                        List your property with GeoCasa Bohol and reach
+                        qualified buyers
+                    </p>
+                </div>
+            </section>
+
+            <!-- Simple Header for Logged-in Users -->
+            <div v-else class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">
+                            List Your Property for Sale
+                        </h1>
+                        <p class="text-gray-600">
+                            Fill out the form below to submit your property
+                            listing request.
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Form Card -->
-            <div class="form-card">
-                <form @submit.prevent="submitForm" @input="saveDraft">
-                    <!-- Step 1: Contact Information -->
-                    <div v-if="currentStep === 1" class="form-section">
-                        <div class="form-section-header">
-                            <UserIcon class="form-section-icon" />
-                            <h2 class="form-section-title">
-                                Contact Information
-                            </h2>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <FormField
-                                id="name"
-                                v-model="validationForm.name"
-                                label="Full Name"
-                                type="text"
-                                placeholder="Enter your full name"
-                                :error="errors.name"
-                                :required="true"
-                                help-text="This will be used to contact you about your property"
-                                @update:model-value="
-                                    enhancedSetFieldValue('name', $event)
-                                "
-                                @blur="handleFieldBlur('name')"
-                                @focus="handleFieldFocus('name')"
-                                @apply-suggestion="
-                                    handleFieldSuggestion('name', $event)
-                                "
-                                @quick-action="
-                                    handleFieldQuickAction('name', $event)
-                                "
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+                <!-- Enhanced Submission Status -->
+                <div v-if="submissionStatus" class="mb-8">
+                    <!-- Success Message -->
+                    <div
+                        v-if="submissionStatus === 'success'"
+                        class="p-6 rounded-2xl border bg-green-50 border-green-200"
+                    >
+                        <div class="flex items-start gap-4">
+                            <CheckCircleIcon
+                                class="w-8 h-8 text-green-600 flex-shrink-0 mt-1"
                             />
-
-                            <FormField
-                                id="email"
-                                v-model="validationForm.email"
-                                label="Email Address"
-                                type="email"
-                                placeholder="your.email@example.com"
-                                :error="errors.email"
-                                :required="true"
-                                help-text="We'll send updates about your property listing here"
-                                @update:model-value="
-                                    enhancedSetFieldValue('email', $event)
-                                "
-                                @blur="handleFieldBlur('email')"
-                                @focus="handleFieldFocus('email')"
-                                @apply-suggestion="
-                                    handleFieldSuggestion('email', $event)
-                                "
-                                @quick-action="
-                                    handleFieldQuickAction('email', $event)
-                                "
-                            />
-
-                            <FormField
-                                id="phone"
-                                v-model="validationForm.phone"
-                                label="Phone Number"
-                                type="tel"
-                                placeholder="+63 XXX XXX XXXX"
-                                :error="errors.phone"
-                                :required="true"
-                                help-text="For quick communication about your property"
-                                @update:model-value="
-                                    enhancedSetFieldValue('phone', $event)
-                                "
-                                @blur="handleFieldBlur('phone')"
-                                @focus="handleFieldFocus('phone')"
-                                @apply-suggestion="
-                                    handleFieldSuggestion('phone', $event)
-                                "
-                                @quick-action="
-                                    handleFieldQuickAction('phone', $event)
-                                "
-                            />
-
-                            <FormField
-                                id="address"
-                                v-model="validationForm.address"
-                                label="Current Address"
-                                type="text"
-                                placeholder="Your current address"
-                                :error="errors.address"
-                                :required="true"
-                                help-text="Your current residential address"
-                                @update:model-value="
-                                    enhancedSetFieldValue('address', $event)
-                                "
-                                @blur="handleFieldBlur('address')"
-                                @focus="handleFieldFocus('address')"
-                            />
+                            <div class="flex-1">
+                                <h3
+                                    class="text-lg font-semibold text-green-800 mb-2"
+                                >
+                                    Success!
+                                </h3>
+                                <p class="text-green-700 whitespace-pre-line">
+                                    {{ submissionMessage }}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Step 2: Property Details -->
-                    <div v-if="currentStep === 2" class="form-section">
-                        <div class="form-section-header">
-                            <DocumentTextIcon class="form-section-icon" />
-                            <h2 class="form-section-title">Property Details</h2>
+                    <!-- Error Message -->
+                    <div
+                        v-else-if="submissionStatus === 'error'"
+                        class="p-6 rounded-2xl border bg-red-50 border-red-200"
+                    >
+                        <div class="flex items-start gap-4">
+                            <ExclamationTriangleIcon
+                                class="w-8 h-8 text-red-600 flex-shrink-0 mt-1"
+                            />
+                            <div class="flex-1">
+                                <h3
+                                    class="text-lg font-semibold text-red-800 mb-2"
+                                >
+                                    Submission Failed
+                                </h3>
+                                <p
+                                    class="text-red-700 whitespace-pre-line mb-4"
+                                >
+                                    {{ submissionMessage }}
+                                </p>
+
+                                <!-- Detailed Error Information -->
+                                <div
+                                    v-if="Object.keys(errors).length > 0"
+                                    class="bg-red-100 rounded-lg p-4 mb-4"
+                                >
+                                    <h4
+                                        class="text-sm font-semibold text-red-800 mb-3"
+                                    >
+                                        Specific Issues Found:
+                                    </h4>
+                                    <ul class="space-y-2">
+                                        <li
+                                            v-for="(
+                                                errorMessages, field
+                                            ) in errors"
+                                            :key="field"
+                                            class="flex items-start gap-2 text-sm text-red-700"
+                                        >
+                                            <span
+                                                class="font-medium capitalize min-w-0 flex-shrink-0"
+                                            >
+                                                {{ formatFieldName(field) }}:
+                                            </span>
+                                            <span class="flex-1">
+                                                <span
+                                                    v-if="
+                                                        Array.isArray(
+                                                            errorMessages
+                                                        )
+                                                    "
+                                                    >{{
+                                                        errorMessages.join(", ")
+                                                    }}</span
+                                                >
+                                                <span v-else>{{
+                                                    errorMessages
+                                                }}</span>
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <!-- Action Buttons for Error Recovery -->
+                                <div class="flex flex-wrap gap-3">
+                                    <button
+                                        @click="clearErrors"
+                                        class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 text-sm font-medium rounded-lg transition-colors"
+                                    >
+                                        Clear Errors
+                                    </button>
+                                    <button
+                                        @click="validateAllSteps"
+                                        class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 text-sm font-medium rounded-lg transition-colors"
+                                    >
+                                        Re-validate Form
+                                    </button>
+                                    <button
+                                        @click="autoFixErrors"
+                                        class="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-sm font-medium rounded-lg transition-colors"
+                                    >
+                                        Auto-fix Issues
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warning Message -->
+                    <div
+                        v-else-if="submissionStatus === 'warning'"
+                        class="p-6 rounded-2xl border bg-yellow-50 border-yellow-200"
+                    >
+                        <div class="flex items-start gap-4">
+                            <ExclamationTriangleIcon
+                                class="w-8 h-8 text-yellow-600 flex-shrink-0 mt-1"
+                            />
+                            <div class="flex-1">
+                                <h3
+                                    class="text-lg font-semibold text-yellow-800 mb-2"
+                                >
+                                    Warning
+                                </h3>
+                                <p class="text-yellow-700 whitespace-pre-line">
+                                    {{ submissionMessage }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Summary -->
+                <ValidationSummary
+                    v-if="hasErrors && submissionStatus === 'error'"
+                    :errors="errors"
+                    :format-field-name="formatFieldName"
+                    @auto-fix="autoFixErrors"
+                    class="mb-8"
+                />
+
+                <!-- Benefits Banner (Only for Public Users) -->
+                <div
+                    v-if="!isAuthenticatedUser"
+                    class="bg-white border border-neutral-200 p-8 mb-12 rounded-xl shadow-sm"
+                >
+                    <div class="grid md:grid-cols-3 gap-8 text-center">
+                        <div class="flex flex-col items-center">
+                            <div
+                                class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4"
+                            >
+                                <ShieldCheckIcon
+                                    class="w-7 h-7 text-primary-600"
+                                />
+                            </div>
+                            <h3 class="text-lg font-bold mb-2 text-neutral-900">
+                                Licensed Brokers
+                            </h3>
+                            <p class="text-sm text-neutral-600">
+                                Work with verified professionals
+                            </p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div
+                                class="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4"
+                            >
+                                <ClockIcon class="w-7 h-7 text-accent-600" />
+                            </div>
+                            <h3 class="text-lg font-bold mb-2 text-neutral-900">
+                                Quick Process
+                            </h3>
+                            <p class="text-sm text-neutral-600">
+                                Listed within 24-48 hours
+                            </p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div
+                                class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4"
+                            >
+                                <StarIcon class="w-7 h-7 text-primary-600" />
+                            </div>
+                            <h3 class="text-lg font-bold mb-2 text-neutral-900">
+                                Premium Exposure
+                            </h3>
+                            <p class="text-sm text-neutral-600">
+                                Maximum visibility to buyers
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Indicator (Simplified for Logged-in Users) -->
+                <div v-if="!isAuthenticatedUser" class="mb-12">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-medium text-neutral-600"
+                            >Step {{ currentStep }} of {{ totalSteps }}</span
+                        >
+                        <span class="text-sm text-neutral-500"
+                            >{{ Math.round((currentStep / totalSteps) * 100) }}%
+                            Complete</span
+                        >
+                    </div>
+                    <div class="w-full bg-neutral-200 rounded-full h-2 mb-8">
+                        <div
+                            class="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full transition-all duration-500 ease-out"
+                            :style="{
+                                width: `${(currentStep / totalSteps) * 100}%`,
+                            }"
+                        ></div>
+                    </div>
+
+                    <!-- Step Icons -->
+                    <div class="flex justify-between items-center">
+                        <div
+                            v-for="step in totalSteps"
+                            :key="step"
+                            class="flex flex-col items-center"
+                        >
+                            <div
+                                :class="[
+                                    'w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300',
+                                    step < currentStep
+                                        ? 'bg-green-500 text-white shadow-lg'
+                                        : step === currentStep
+                                        ? getStepValidationClass(step)
+                                        : 'bg-neutral-200 text-neutral-400',
+                                ]"
+                            >
+                                <CheckIcon
+                                    v-if="step < currentStep"
+                                    class="w-5 h-5"
+                                />
+                                <ExclamationTriangleIcon
+                                    v-else-if="
+                                        step === currentStep &&
+                                        submissionStatus === 'error'
+                                    "
+                                    class="w-5 h-5"
+                                />
+                                <component
+                                    v-else
+                                    :is="getStepIcon(step)"
+                                    class="w-5 h-5"
+                                />
+                            </div>
+                            <span
+                                :class="[
+                                    'text-xs mt-2 font-medium transition-colors',
+                                    step <= currentStep
+                                        ? 'text-primary-600'
+                                        : 'text-neutral-400',
+                                ]"
+                            >
+                                {{
+                                    [
+                                        "Contact",
+                                        "Property",
+                                        "Location",
+                                        "Images",
+                                        "Broker",
+                                    ][step - 1]
+                                }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Card (Simpler for Logged-in Users) -->
+                <div
+                    :class="
+                        isAuthenticatedUser
+                            ? 'bg-white rounded-lg shadow-sm border border-gray-200 p-6'
+                            : 'form-card'
+                    "
+                >
+                    <form @submit.prevent="submitForm" @input="saveDraft">
+                        <!-- Step 1: Contact Information -->
+                        <div v-if="currentStep === 1" class="form-section">
+                            <div
+                                :class="
+                                    isAuthenticatedUser
+                                        ? 'mb-6'
+                                        : 'form-section-header'
+                                "
+                            >
+                                <UserIcon
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'w-5 h-5 text-blue-600 inline-block mr-2'
+                                            : 'form-section-icon'
+                                    "
+                                />
+                                <h2
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'text-lg font-semibold text-gray-900 inline-block'
+                                            : 'form-section-title'
+                                    "
+                                >
+                                    Contact Information
+                                </h2>
+                            </div>
+
+                            <div class="form-grid-2">
+                                <FormField
+                                    id="contact_name"
+                                    v-model="validationForm.contact_name"
+                                    label="Full Name"
+                                    type="text"
+                                    placeholder="Enter your full name"
+                                    :error="errors.contact_name"
+                                    :required="true"
+                                    help-text="This will be used to contact you about your property"
+                                    @update:model-value="
+                                        enhancedSetFieldValue(
+                                            'contact_name',
+                                            $event
+                                        )
+                                    "
+                                    @blur="handleFieldBlur('contact_name')"
+                                    @focus="handleFieldFocus('contact_name')"
+                                    @apply-suggestion="
+                                        handleFieldSuggestion(
+                                            'contact_name',
+                                            $event
+                                        )
+                                    "
+                                    @quick-action="
+                                        handleFieldQuickAction(
+                                            'contact_name',
+                                            $event
+                                        )
+                                    "
+                                />
+
+                                <FormField
+                                    id="contact_email"
+                                    v-model="validationForm.contact_email"
+                                    label="Email Address"
+                                    type="email"
+                                    placeholder="your.email@example.com"
+                                    :error="errors.contact_email"
+                                    :required="true"
+                                    help-text="We'll send updates about your property listing here"
+                                    @update:model-value="
+                                        enhancedSetFieldValue(
+                                            'contact_email',
+                                            $event
+                                        )
+                                    "
+                                    @blur="handleFieldBlur('contact_email')"
+                                    @focus="handleFieldFocus('contact_email')"
+                                    @apply-suggestion="
+                                        handleFieldSuggestion(
+                                            'contact_email',
+                                            $event
+                                        )
+                                    "
+                                    @quick-action="
+                                        handleFieldQuickAction(
+                                            'contact_email',
+                                            $event
+                                        )
+                                    "
+                                />
+
+                                <FormField
+                                    id="contact_phone"
+                                    v-model="validationForm.contact_phone"
+                                    label="Phone Number"
+                                    type="tel"
+                                    placeholder="+63 XXX XXX XXXX"
+                                    :error="errors.contact_phone"
+                                    :required="true"
+                                    help-text="For quick communication about your property"
+                                    @update:model-value="
+                                        enhancedSetFieldValue(
+                                            'contact_phone',
+                                            $event
+                                        )
+                                    "
+                                    @blur="handleFieldBlur('contact_phone')"
+                                    @focus="handleFieldFocus('contact_phone')"
+                                    @apply-suggestion="
+                                        handleFieldSuggestion(
+                                            'contact_phone',
+                                            $event
+                                        )
+                                    "
+                                    @quick-action="
+                                        handleFieldQuickAction(
+                                            'contact_phone',
+                                            $event
+                                        )
+                                    "
+                                />
+
+                                <FormField
+                                    id="address"
+                                    v-model="validationForm.address"
+                                    label="Current Address"
+                                    type="text"
+                                    placeholder="Your current address"
+                                    :error="errors.address"
+                                    :required="true"
+                                    help-text="Your current residential address"
+                                    @update:model-value="
+                                        enhancedSetFieldValue('address', $event)
+                                    "
+                                    @blur="handleFieldBlur('address')"
+                                    @focus="handleFieldFocus('address')"
+                                />
+                            </div>
                         </div>
 
-                        <div class="space-y-6">
-                            <FormField
-                                id="property_title"
-                                v-model="validationForm.property_title"
-                                label="Property Title"
-                                type="text"
-                                placeholder="e.g., Beautiful 3-Bedroom House in Tagbilaran"
-                                :error="errors.property_title"
-                                :required="true"
-                                help-text="Create an attractive title that highlights your property's best features"
-                                :show-character-count="true"
-                                :max-length="200"
-                                @update:model-value="
-                                    enhancedSetFieldValue(
-                                        'property_title',
-                                        $event
-                                    )
+                        <!-- Step 2: Property Details -->
+                        <div v-if="currentStep === 2" class="form-section">
+                            <div
+                                :class="
+                                    isAuthenticatedUser
+                                        ? 'mb-6'
+                                        : 'form-section-header'
                                 "
-                                @blur="handleFieldBlur('property_title')"
-                                @focus="handleFieldFocus('property_title')"
-                            />
-
-                            <FormField
-                                id="property_description"
-                                v-model="validationForm.property_description"
-                                label="Property Description"
-                                type="textarea"
-                                placeholder="Describe your property in detail... Include features, condition, nearby amenities, etc."
-                                :error="errors.property_description"
-                                :required="true"
-                                help-text="Provide a detailed description to attract potential buyers"
-                                :show-character-count="true"
-                                :max-length="2000"
-                                :rows="5"
-                                @update:model-value="
-                                    enhancedSetFieldValue(
-                                        'property_description',
-                                        $event
-                                    )
-                                "
-                                @blur="handleFieldBlur('property_description')"
-                                @focus="
-                                    handleFieldFocus('property_description')
-                                "
-                            />
-
-                            <FormField
-                                id="property_type"
-                                v-model="validationForm.property_type"
-                                label="Property Type"
-                                type="select"
-                                :error="errors.property_type"
-                                :required="true"
-                                help-text="Select the type of land property you're selling"
-                                @update:model-value="
-                                    enhancedSetFieldValue(
-                                        'property_type',
-                                        $event
-                                    )
-                                "
-                                @blur="handleFieldBlur('property_type')"
-                                @focus="handleFieldFocus('property_type')"
                             >
-                                <option value="">Select Property Type</option>
-                                <option value="residential_lot">
-                                    Residential Lot
-                                </option>
-                                <option value="agricultural_land">
-                                    Agricultural Land
-                                </option>
-                                <option value="commercial_lot">
-                                    Commercial Lot
-                                </option>
-                                <option value="industrial_lot">
-                                    Industrial Lot
-                                </option>
-                                <option value="beachfront">Beachfront</option>
-                                <option value="mountain_view">
-                                    Mountain View
-                                </option>
-                                <option value="rice_field">Rice Field</option>
-                                <option value="coconut_plantation">
-                                    Coconut Plantation
-                                </option>
-                                <option value="subdivision_lot">
-                                    Subdivision Lot
-                                </option>
-                            </FormField>
-
-                            <div class="form-grid-3">
-                                <FormField
-                                    id="asking_price"
-                                    v-model="validationForm.asking_price"
-                                    label="Asking Price (₱)"
-                                    type="number"
-                                    placeholder="5000000"
-                                    :error="errors.asking_price"
-                                    :required="true"
-                                    help-text="Enter your desired selling price"
-                                    @update:model-value="
-                                        enhancedSetFieldValue(
-                                            'asking_price',
-                                            $event
-                                        )
+                                <DocumentTextIcon
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'w-5 h-5 text-blue-600 inline-block mr-2'
+                                            : 'form-section-icon'
                                     "
-                                    @blur="handleFieldBlur('asking_price')"
-                                    @focus="handleFieldFocus('asking_price')"
+                                />
+                                <h2
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'text-lg font-semibold text-gray-900 inline-block'
+                                            : 'form-section-title'
+                                    "
                                 >
-                                    <template
-                                        #suffix
-                                        v-if="validationForm.asking_price"
-                                    >
-                                        <div
-                                            class="text-sm text-neutral-600 mt-1"
-                                        >
-                                            ₱{{
-                                                formatPrice(
-                                                    validationForm.asking_price
-                                                )
-                                            }}
-                                        </div>
-                                    </template>
-                                </FormField>
+                                    Property Details
+                                </h2>
+                            </div>
 
+                            <div class="space-y-6">
                                 <FormField
-                                    id="lot_area"
-                                    v-model="validationForm.lot_area"
-                                    label="Lot Area (sqm)"
-                                    type="number"
-                                    placeholder="120"
-                                    :error="errors.lot_area"
-                                    help-text="Total lot area in square meters"
-                                    @update:model-value="
-                                        enhancedSetFieldValue(
-                                            'lot_area',
-                                            $event
-                                        )
-                                    "
-                                    @blur="handleFieldBlur('lot_area')"
-                                    @focus="handleFieldFocus('lot_area')"
-                                />
-
-                                <!-- Title Type -->
-                                <FormField
-                                    id="title_type"
-                                    v-model="validationForm.title_type"
-                                    label="Title Type"
+                                    id="property_title"
+                                    v-model="validationForm.property_title"
+                                    label="Property Title"
                                     type="text"
-                                    placeholder="e.g., Titled, Tax Declared, Mother Title"
-                                    :error="errors.title_type"
-                                    help-text="Enter the type of land title"
+                                    placeholder="e.g., Beautiful 3-Bedroom House in Tagbilaran"
+                                    :error="errors.property_title"
+                                    :required="true"
+                                    help-text="Create an attractive title that highlights your property's best features"
+                                    :show-character-count="true"
+                                    :max-length="200"
                                     @update:model-value="
                                         enhancedSetFieldValue(
-                                            'title_type',
+                                            'property_title',
                                             $event
                                         )
                                     "
-                                    @blur="handleFieldBlur('title_type')"
-                                    @focus="handleFieldFocus('title_type')"
+                                    @blur="handleFieldBlur('property_title')"
+                                    @focus="handleFieldFocus('property_title')"
                                 />
 
-                                <!-- Zoning Classification -->
                                 <FormField
-                                    id="zoning_classification"
+                                    id="property_description"
                                     v-model="
-                                        validationForm.zoning_classification
+                                        validationForm.property_description
                                     "
-                                    label="Zoning Classification"
-                                    type="text"
-                                    placeholder="e.g., Residential, Agricultural, Commercial"
-                                    :error="errors.zoning_classification"
-                                    help-text="Enter the zoning classification of the property"
+                                    label="Property Description"
+                                    type="textarea"
+                                    placeholder="Describe your property in detail... Include features, condition, nearby amenities, etc."
+                                    :error="errors.property_description"
+                                    :required="true"
+                                    help-text="Provide a detailed description to attract potential buyers"
+                                    :show-character-count="true"
+                                    :max-length="2000"
+                                    :rows="5"
                                     @update:model-value="
                                         enhancedSetFieldValue(
-                                            'zoning_classification',
+                                            'property_description',
                                             $event
                                         )
                                     "
                                     @blur="
-                                        handleFieldBlur('zoning_classification')
+                                        handleFieldBlur('property_description')
                                     "
                                     @focus="
-                                        handleFieldFocus(
-                                            'zoning_classification'
-                                        )
+                                        handleFieldFocus('property_description')
                                     "
                                 />
+
+                                <FormField
+                                    id="property_type"
+                                    :model-value="
+                                        Array.isArray(
+                                            validationForm.property_type
+                                        ) &&
+                                        validationForm.property_type.length > 0
+                                            ? validationForm.property_type[0]
+                                            : ''
+                                    "
+                                    label="Property Type"
+                                    type="select"
+                                    :error="errors.property_type"
+                                    :required="true"
+                                    help-text="Select the type of land property you're selling"
+                                    @update:model-value="
+                                        (value) => {
+                                            console.log(
+                                                'property_type selected:',
+                                                value
+                                            );
+                                            // Wrap the value in an array since backend expects array
+                                            validationForm.property_type = value
+                                                ? [value]
+                                                : [];
+                                            console.log(
+                                                'property_type after wrapping:',
+                                                validationForm.property_type
+                                            );
+                                            enhancedSetFieldValue(
+                                                'property_type',
+                                                validationForm.property_type
+                                            );
+                                        }
+                                    "
+                                    @blur="handleFieldBlur('property_type')"
+                                    @focus="handleFieldFocus('property_type')"
+                                >
+                                    <option value="">
+                                        Select Property Type
+                                    </option>
+                                    <option value="residential_lot">
+                                        Residential Lot
+                                    </option>
+                                    <option value="agricultural_land">
+                                        Agricultural Land
+                                    </option>
+                                    <option value="commercial_lot">
+                                        Commercial Lot
+                                    </option>
+                                    <option value="industrial_lot">
+                                        Industrial Lot
+                                    </option>
+                                    <option value="beachfront">
+                                        Beachfront
+                                    </option>
+                                    <option value="mountain_view">
+                                        Mountain View
+                                    </option>
+                                    <option value="rice_field">
+                                        Rice Field
+                                    </option>
+                                    <option value="coconut_plantation">
+                                        Coconut Plantation
+                                    </option>
+                                    <option value="subdivision_lot">
+                                        Subdivision Lot
+                                    </option>
+                                    <option value="other">
+                                        Other (Please Specify)
+                                    </option>
+                                </FormField>
+
+                                <!-- Custom Property Type Field - shown when "Other" is selected -->
+                                <FormField
+                                    v-if="
+                                        validationForm.property_type.includes(
+                                            'other'
+                                        )
+                                    "
+                                    id="custom_property_type"
+                                    v-model="
+                                        validationForm.custom_property_type
+                                    "
+                                    label="Custom Property Type"
+                                    type="text"
+                                    placeholder="e.g., Mixed-use Land, Orchard, Fishpond, etc."
+                                    :error="errors.custom_property_type"
+                                    :required="true"
+                                    help-text="Please specify the type of property you're selling"
+                                    @update:model-value="
+                                        enhancedSetFieldValue(
+                                            'custom_property_type',
+                                            $event
+                                        )
+                                    "
+                                    @blur="
+                                        handleFieldBlur('custom_property_type')
+                                    "
+                                    @focus="
+                                        handleFieldFocus('custom_property_type')
+                                    "
+                                />
+
+                                <div class="form-grid-3">
+                                    <FormField
+                                        id="asking_price"
+                                        v-model="validationForm.asking_price"
+                                        label="Asking Price (₱)"
+                                        type="number"
+                                        placeholder="5000000"
+                                        :error="errors.asking_price"
+                                        :required="true"
+                                        help-text="Enter your desired selling price"
+                                        @update:model-value="
+                                            enhancedSetFieldValue(
+                                                'asking_price',
+                                                $event
+                                            )
+                                        "
+                                        @blur="handleFieldBlur('asking_price')"
+                                        @focus="
+                                            handleFieldFocus('asking_price')
+                                        "
+                                    >
+                                        <template
+                                            #suffix
+                                            v-if="validationForm.asking_price"
+                                        >
+                                            <div
+                                                class="text-sm text-neutral-600 mt-1"
+                                            >
+                                                ₱{{
+                                                    formatPrice(
+                                                        validationForm.asking_price
+                                                    )
+                                                }}
+                                            </div>
+                                        </template>
+                                    </FormField>
+
+                                    <FormField
+                                        id="lot_area_sqm"
+                                        v-model="validationForm.lot_area_sqm"
+                                        label="Lot Area (sqm)"
+                                        type="number"
+                                        placeholder="120"
+                                        :error="errors.lot_area_sqm"
+                                        help-text="Total lot area in square meters"
+                                        @update:model-value="
+                                            enhancedSetFieldValue(
+                                                'lot_area_sqm',
+                                                $event
+                                            )
+                                        "
+                                        @blur="handleFieldBlur('lot_area_sqm')"
+                                        @focus="
+                                            handleFieldFocus('lot_area_sqm')
+                                        "
+                                    />
+
+                                    <!-- Title Type -->
+                                    <FormField
+                                        id="title_type"
+                                        v-model="validationForm.title_type"
+                                        label="Title Type"
+                                        type="text"
+                                        placeholder="e.g., Titled, Tax Declared, Mother Title"
+                                        :error="errors.title_type"
+                                        help-text="Enter the type of land title"
+                                        @update:model-value="
+                                            enhancedSetFieldValue(
+                                                'title_type',
+                                                $event
+                                            )
+                                        "
+                                        @blur="handleFieldBlur('title_type')"
+                                        @focus="handleFieldFocus('title_type')"
+                                    />
+
+                                    <!-- Zoning Classification -->
+                                    <FormField
+                                        id="zoning_classification"
+                                        v-model="
+                                            validationForm.zoning_classification
+                                        "
+                                        label="Zoning Classification"
+                                        type="text"
+                                        placeholder="e.g., Residential, Agricultural, Commercial"
+                                        :error="errors.zoning_classification"
+                                        help-text="Enter the zoning classification of the property"
+                                        @update:model-value="
+                                            enhancedSetFieldValue(
+                                                'zoning_classification',
+                                                $event
+                                            )
+                                        "
+                                        @blur="
+                                            handleFieldBlur(
+                                                'zoning_classification'
+                                            )
+                                        "
+                                        @focus="
+                                            handleFieldFocus(
+                                                'zoning_classification'
+                                            )
+                                        "
+                                    />
+                                </div>
+
+                                <!-- Utilities & Access Section -->
+                                <div class="mt-6">
+                                    <h3
+                                        class="text-base font-semibold text-gray-900 mb-4"
+                                    >
+                                        Utilities & Access
+                                    </h3>
+                                    <div
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                                    >
+                                        <!-- Road Access -->
+                                        <label
+                                            class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                v-model="
+                                                    validationForm.road_access
+                                                "
+                                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <div class="flex-1">
+                                                <span
+                                                    class="font-medium text-gray-900"
+                                                    >Road Access</span
+                                                >
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    Property has road access
+                                                </p>
+                                            </div>
+                                        </label>
+
+                                        <!-- Water Source -->
+                                        <label
+                                            class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                v-model="
+                                                    validationForm.water_source
+                                                "
+                                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <div class="flex-1">
+                                                <span
+                                                    class="font-medium text-gray-900"
+                                                    >Water Source</span
+                                                >
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    Water source available
+                                                </p>
+                                            </div>
+                                        </label>
+
+                                        <!-- Electricity -->
+                                        <label
+                                            class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                v-model="
+                                                    validationForm.electricity_available
+                                                "
+                                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <div class="flex-1">
+                                                <span
+                                                    class="font-medium text-gray-900"
+                                                    >Electricity</span
+                                                >
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    Electricity available
+                                                </p>
+                                            </div>
+                                        </label>
+
+                                        <!-- Internet -->
+                                        <label
+                                            class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                v-model="
+                                                    validationForm.internet_available
+                                                "
+                                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <div class="flex-1">
+                                                <span
+                                                    class="font-medium text-gray-900"
+                                                    >Internet</span
+                                                >
+                                                <p
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    Internet available
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Location Details -->
+                        <div v-if="currentStep === 3" class="form-section">
+                            <div
+                                :class="
+                                    isAuthenticatedUser
+                                        ? 'mb-6'
+                                        : 'form-section-header'
+                                "
+                            >
+                                <MapPinIcon
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'w-5 h-5 text-blue-600 inline-block mr-2'
+                                            : 'form-section-icon'
+                                    "
+                                />
+                                <h2
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'text-lg font-semibold text-gray-900 inline-block'
+                                            : 'form-section-title'
+                                    "
+                                >
+                                    Location Details
+                                </h2>
                             </div>
 
-                            <!-- Utilities & Access Section -->
-                            <div class="mt-6">
-                                <h3
-                                    class="text-base font-semibold text-gray-900 mb-4"
+                            <div class="space-y-6">
+                                <div class="form-grid-2">
+                                    <FormField
+                                        id="municipality"
+                                        v-model="validationForm.municipality"
+                                        label="Municipality"
+                                        type="text"
+                                        placeholder="e.g., Tagbilaran City, Panglao, Dauis"
+                                        :error="errors.municipality"
+                                        :required="true"
+                                        help-text="Enter the municipality where your property is located"
+                                        @update:model-value="
+                                            enhancedSetFieldValue(
+                                                'municipality',
+                                                $event
+                                            )
+                                        "
+                                        @blur="handleFieldBlur('municipality')"
+                                        @focus="
+                                            handleFieldFocus('municipality')
+                                        "
+                                    />
+
+                                    <FormField
+                                        id="barangay"
+                                        v-model="validationForm.barangay"
+                                        label="Barangay"
+                                        type="text"
+                                        placeholder="e.g., Poblacion, Tawala"
+                                        :error="errors.barangay"
+                                        help-text="Enter the barangay (optional)"
+                                        @update:model-value="
+                                            enhancedSetFieldValue(
+                                                'barangay',
+                                                $event
+                                            )
+                                        "
+                                        @blur="handleFieldBlur('barangay')"
+                                        @focus="handleFieldFocus('barangay')"
+                                    />
+                                </div>
+
+                                <FormField
+                                    id="address"
+                                    v-model="validationForm.address"
+                                    label="Complete Address"
+                                    type="textarea"
+                                    placeholder="Enter the full address of your property"
+                                    :error="errors.address"
+                                    :required="true"
+                                    help-text="Provide detailed address information"
+                                    :rows="3"
+                                    @update:model-value="
+                                        enhancedSetFieldValue('address', $event)
+                                    "
+                                    @blur="handleFieldBlur('address')"
+                                    @focus="handleFieldFocus('address')"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Images and Features -->
+                        <div v-if="currentStep === 4" class="space-y-8">
+                            <div
+                                :class="
+                                    isAuthenticatedUser
+                                        ? 'mb-6'
+                                        : 'flex items-center gap-3 mb-6'
+                                "
+                            >
+                                <PhotoIcon
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'w-5 h-5 text-blue-600 inline-block mr-2'
+                                            : 'w-6 h-6 text-primary-600'
+                                    "
+                                />
+                                <h2
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'text-lg font-semibold text-gray-900 inline-block'
+                                            : 'text-2xl font-bold text-neutral-900'
+                                    "
                                 >
-                                    Utilities & Access
+                                    Images & Features
+                                </h2>
+                            </div>
+
+                            <!-- Image Upload -->
+                            <div>
+                                <label class="form-label"
+                                    >Property Images</label
+                                >
+                                <div
+                                    class="border-2 border-dashed border-neutral-300 rounded-2xl p-8 text-center hover:border-primary-400 transition-colors"
+                                >
+                                    <PhotoIcon
+                                        class="w-12 h-12 text-neutral-400 mx-auto mb-4"
+                                    />
+                                    <p class="text-neutral-600 mb-4">
+                                        Drag and drop images here, or
+                                        <label
+                                            class="text-primary-600 hover:text-primary-700 cursor-pointer font-medium"
+                                        >
+                                            browse files
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="image/*"
+                                                @change="handleImageUpload"
+                                                class="hidden"
+                                            />
+                                        </label>
+                                    </p>
+                                    <p class="text-sm text-neutral-500">
+                                        Maximum 10 images, 5MB each. Supported:
+                                        JPG, PNG, GIF
+                                    </p>
+                                </div>
+
+                                <!-- Image Preview -->
+                                <div
+                                    v-if="imageFiles.length > 0"
+                                    class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"
+                                >
+                                    <div
+                                        v-for="(file, index) in imageFiles"
+                                        :key="index"
+                                        class="relative group"
+                                    >
+                                        <img
+                                            :src="createImageUrl(file)"
+                                            :alt="`Property image ${index + 1}`"
+                                            class="w-full h-24 object-cover rounded-xl"
+                                        />
+                                        <button
+                                            type="button"
+                                            @click="removeImage(index)"
+                                            class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <XMarkIcon class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Property Features -->
+                            <div
+                                v-if="
+                                    availableFeatures &&
+                                    availableFeatures.length > 0
+                                "
+                            >
+                                <label class="form-label"
+                                    >Property Features (Select up to 20)</label
+                                >
+                                <div
+                                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+                                >
+                                    <button
+                                        v-for="feature in availableFeatures"
+                                        :key="feature"
+                                        type="button"
+                                        @click="toggleFeature(feature)"
+                                        :class="[
+                                            'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+                                            form.features.includes(feature)
+                                                ? 'bg-primary-100 text-primary-700 border-2 border-primary-300'
+                                                : 'bg-neutral-100 text-neutral-700 border-2 border-transparent hover:bg-neutral-200',
+                                        ]"
+                                    >
+                                        {{ feature }}
+                                    </button>
+                                </div>
+                                <p class="text-sm text-neutral-500 mt-2">
+                                    Selected: {{ form.features.length }}/20
+                                </p>
+                            </div>
+
+                            <!-- Property Documents -->
+                            <div>
+                                <label class="form-label"
+                                    >Property Documents (Optional)</label
+                                >
+                                <p class="text-sm text-neutral-600 mb-4">
+                                    Upload relevant property documents such as
+                                    floor plans, surveys, or permits
+                                </p>
+                                <div
+                                    class="border-2 border-dashed border-neutral-300 rounded-2xl p-6 text-center hover:border-primary-400 transition-colors"
+                                >
+                                    <DocumentIcon
+                                        class="w-10 h-10 text-neutral-400 mx-auto mb-3"
+                                    />
+                                    <p class="text-neutral-600 mb-3">
+                                        <label
+                                            class="text-primary-600 hover:text-primary-700 cursor-pointer font-medium"
+                                        >
+                                            Choose property documents
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                                @change="
+                                                    handlePropertyDocumentUpload
+                                                "
+                                                class="hidden"
+                                            />
+                                        </label>
+                                    </p>
+                                    <p class="text-sm text-neutral-500">
+                                        Maximum 10 files, 10MB each. Supported:
+                                        PDF, DOC, DOCX, JPG, PNG
+                                    </p>
+                                </div>
+
+                                <!-- Property Documents Preview -->
+                                <div
+                                    v-if="propertyDocuments.length > 0"
+                                    class="mt-4 space-y-2"
+                                >
+                                    <div
+                                        v-for="(
+                                            doc, index
+                                        ) in propertyDocuments"
+                                        :key="index"
+                                        class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg"
+                                    >
+                                        <div class="flex items-center gap-3">
+                                            <DocumentIcon
+                                                class="w-5 h-5 text-neutral-500"
+                                            />
+                                            <span
+                                                class="text-sm text-neutral-700"
+                                                >{{ doc.name }}</span
+                                            >
+                                            <span
+                                                class="text-xs text-neutral-500"
+                                                >({{
+                                                    formatFileSize(doc.size)
+                                                }})</span
+                                            >
+                                        </div>
+                                        <button
+                                            type="button"
+                                            @click="
+                                                removePropertyDocument(index)
+                                            "
+                                            class="text-red-500 hover:text-red-700"
+                                        >
+                                            <XMarkIcon class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ownership Documents -->
+                            <div>
+                                <label class="form-label"
+                                    >Ownership Documents (Optional)</label
+                                >
+                                <p class="text-sm text-neutral-600 mb-4">
+                                    Upload ownership verification documents such
+                                    as title, tax declaration, or deed of sale
+                                </p>
+                                <div
+                                    class="border-2 border-dashed border-neutral-300 rounded-2xl p-6 text-center hover:border-primary-400 transition-colors"
+                                >
+                                    <DocumentIcon
+                                        class="w-10 h-10 text-neutral-400 mx-auto mb-3"
+                                    />
+                                    <p class="text-neutral-600 mb-3">
+                                        <label
+                                            class="text-primary-600 hover:text-primary-700 cursor-pointer font-medium"
+                                        >
+                                            Choose ownership documents
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept=".pdf,.jpg,.jpeg,.png"
+                                                @change="
+                                                    handleOwnershipDocumentUpload
+                                                "
+                                                class="hidden"
+                                            />
+                                        </label>
+                                    </p>
+                                    <p class="text-sm text-neutral-500">
+                                        Maximum 5 files, 10MB each. Supported:
+                                        PDF, JPG, PNG
+                                    </p>
+                                </div>
+
+                                <!-- Ownership Documents Preview -->
+                                <div
+                                    v-if="ownershipDocuments.length > 0"
+                                    class="mt-4 space-y-2"
+                                >
+                                    <div
+                                        v-for="(
+                                            doc, index
+                                        ) in ownershipDocuments"
+                                        :key="index"
+                                        class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg"
+                                    >
+                                        <div class="flex items-center gap-3">
+                                            <DocumentIcon
+                                                class="w-5 h-5 text-neutral-500"
+                                            />
+                                            <span
+                                                class="text-sm text-neutral-700"
+                                                >{{ doc.name }}</span
+                                            >
+                                            <span
+                                                class="text-xs text-neutral-500"
+                                                >({{
+                                                    formatFileSize(doc.size)
+                                                }})</span
+                                            >
+                                        </div>
+                                        <button
+                                            type="button"
+                                            @click="
+                                                removeOwnershipDocument(index)
+                                            "
+                                            class="text-red-500 hover:text-red-700"
+                                        >
+                                            <XMarkIcon class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Consent & Terms -->
+                            <div
+                                class="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
+                            >
+                                <h3
+                                    class="text-lg font-semibold mb-4 text-neutral-900"
+                                >
+                                    Consent & Terms
                                 </h3>
+                                <div class="space-y-3">
+                                    <label class="flex items-start gap-3">
+                                        <input
+                                            type="checkbox"
+                                            v-model="
+                                                validationForm.marketing_consent
+                                            "
+                                            class="mt-1 rounded text-primary-600 focus:ring-primary-500"
+                                        />
+                                        <span class="text-neutral-700">
+                                            I agree to receive updates about my
+                                            listing and related services.
+                                        </span>
+                                    </label>
+                                    <label class="flex items-start gap-3">
+                                        <input
+                                            type="checkbox"
+                                            v-model="
+                                                validationForm.newsletter_consent
+                                            "
+                                            class="mt-1 rounded text-primary-600 focus:ring-primary-500"
+                                        />
+                                        <span class="text-neutral-700">
+                                            Subscribe me to the GeoCasa
+                                            newsletter.
+                                        </span>
+                                    </label>
+                                    <label class="flex items-start gap-3">
+                                        <input
+                                            type="checkbox"
+                                            v-model="
+                                                validationForm.terms_accepted
+                                            "
+                                            class="mt-1 rounded text-primary-600 focus:ring-primary-500"
+                                        />
+                                        <span class="text-neutral-700">
+                                            <strong class="text-red-600"
+                                                >*</strong
+                                            >
+                                            I have read and agree to the
+                                            <a
+                                                href="/terms"
+                                                target="_blank"
+                                                class="text-primary-600 hover:underline font-medium"
+                                                >Terms and Conditions</a
+                                            >
+                                            and
+                                            <a
+                                                href="/privacy"
+                                                target="_blank"
+                                                class="text-primary-600 hover:underline font-medium"
+                                                >Privacy Policy</a
+                                            >.
+                                        </span>
+                                    </label>
+                                    <ValidationError
+                                        v-if="errors.terms_accepted"
+                                        :message="errors.terms_accepted"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 5: Broker Selection -->
+                        <div v-if="currentStep === 5" class="space-y-8">
+                            <div
+                                :class="
+                                    isAuthenticatedUser
+                                        ? 'mb-6'
+                                        : 'flex items-center gap-3 mb-6'
+                                "
+                            >
+                                <ShieldCheckIcon
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'w-5 h-5 text-blue-600 inline-block mr-2'
+                                            : 'w-6 h-6 text-primary-600'
+                                    "
+                                />
+                                <h2
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? 'text-lg font-semibold text-gray-900 inline-block'
+                                            : 'text-2xl font-bold text-neutral-900'
+                                    "
+                                >
+                                    Choose Your Broker
+                                </h2>
+                            </div>
+
+                            <!-- Broker List -->
+                            <div class="space-y-4">
+                                <label
+                                    class="block text-sm font-medium text-neutral-700 mb-3"
+                                >
+                                    Select Your Preferred Broker
+                                    <span class="text-red-500">*</span>
+                                </label>
+
                                 <div
                                     class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                 >
-                                    <!-- Road Access -->
                                     <label
-                                        class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                        v-for="broker in props.availableBrokers"
+                                        :key="broker.id"
+                                        class="flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all hover:border-primary-300"
+                                        :class="
+                                            validationForm.preferred_broker_id ===
+                                            broker.id
+                                                ? 'border-primary-500 bg-primary-50'
+                                                : 'border-neutral-200'
+                                        "
                                     >
                                         <input
-                                            type="checkbox"
-                                            v-model="validationForm.road_access"
-                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                        />
-                                        <div class="flex-1">
-                                            <span
-                                                class="font-medium text-gray-900"
-                                                >Road Access</span
-                                            >
-                                            <p class="text-sm text-gray-500">
-                                                Property has road access
-                                            </p>
-                                        </div>
-                                    </label>
-
-                                    <!-- Water Source -->
-                                    <label
-                                        class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                                    >
-                                        <input
-                                            type="checkbox"
+                                            type="radio"
                                             v-model="
-                                                validationForm.water_source
+                                                validationForm.preferred_broker_id
                                             "
-                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            :value="broker.id"
+                                            class="mt-1 mr-3"
                                         />
                                         <div class="flex-1">
-                                            <span
-                                                class="font-medium text-gray-900"
-                                                >Water Source</span
+                                            <div
+                                                class="font-semibold text-neutral-900"
                                             >
-                                            <p class="text-sm text-gray-500">
-                                                Water source available
-                                            </p>
-                                        </div>
-                                    </label>
-
-                                    <!-- Electricity -->
-                                    <label
-                                        class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            v-model="
-                                                validationForm.electricity_available
-                                            "
-                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                        />
-                                        <div class="flex-1">
-                                            <span
-                                                class="font-medium text-gray-900"
-                                                >Electricity</span
+                                                {{ broker.name }}
+                                            </div>
+                                            <div
+                                                class="text-sm text-neutral-600 mt-1 space-y-1"
                                             >
-                                            <p class="text-sm text-gray-500">
-                                                Electricity available
-                                            </p>
-                                        </div>
-                                    </label>
-
-                                    <!-- Internet -->
-                                    <label
-                                        class="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            v-model="
-                                                validationForm.internet_available
-                                            "
-                                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                        />
-                                        <div class="flex-1">
-                                            <span
-                                                class="font-medium text-gray-900"
-                                                >Internet</span
-                                            >
-                                            <p class="text-sm text-gray-500">
-                                                Internet available
-                                            </p>
+                                                <div v-if="broker.firm">
+                                                    <span class="font-medium"
+                                                        >Firm:</span
+                                                    >
+                                                    {{ broker.firm }}
+                                                </div>
+                                                <div v-if="broker.location">
+                                                    <span class="font-medium"
+                                                        >Location:</span
+                                                    >
+                                                    {{ broker.location }}
+                                                </div>
+                                                <div v-if="broker.experience">
+                                                    <span class="font-medium"
+                                                        >Experience:</span
+                                                    >
+                                                    {{ broker.experience }}
+                                                    years
+                                                </div>
+                                                <div
+                                                    class="flex items-center gap-4 mt-2"
+                                                >
+                                                    <span
+                                                        class="text-xs px-2 py-1 rounded-full"
+                                                        :class="
+                                                            broker.availability ===
+                                                            'Available'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-yellow-100 text-yellow-700'
+                                                        "
+                                                    >
+                                                        {{
+                                                            broker.availability
+                                                        }}
+                                                    </span>
+                                                    <span
+                                                        class="text-xs text-neutral-500"
+                                                    >
+                                                        {{ broker.workload }}
+                                                        pending requests
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </label>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Step 3: Location Details -->
-                    <div v-if="currentStep === 3" class="form-section">
-                        <div class="form-section-header">
-                            <MapPinIcon class="form-section-icon" />
-                            <h2 class="form-section-title">Location Details</h2>
-                        </div>
-
-                        <div class="space-y-6">
-                            <div class="form-grid-2">
-                                <FormField
-                                    id="municipality"
-                                    v-model="validationForm.municipality"
-                                    label="Municipality"
-                                    type="text"
-                                    placeholder="e.g., Tagbilaran City, Panglao, Dauis"
-                                    :error="errors.municipality"
-                                    :required="true"
-                                    help-text="Enter the municipality where your property is located"
-                                    @update:model-value="
-                                        enhancedSetFieldValue(
-                                            'municipality',
-                                            $event
-                                        )
-                                    "
-                                    @blur="handleFieldBlur('municipality')"
-                                    @focus="handleFieldFocus('municipality')"
-                                />
-
-                                <FormField
-                                    id="barangay"
-                                    v-model="validationForm.barangay"
-                                    label="Barangay"
-                                    type="text"
-                                    placeholder="e.g., Poblacion, Tawala"
-                                    :error="errors.barangay"
-                                    help-text="Enter the barangay (optional)"
-                                    @update:model-value="
-                                        enhancedSetFieldValue(
-                                            'barangay',
-                                            $event
-                                        )
-                                    "
-                                    @blur="handleFieldBlur('barangay')"
-                                    @focus="handleFieldFocus('barangay')"
+                                <ValidationError
+                                    v-if="errors.preferred_broker_id"
+                                    :message="errors.preferred_broker_id"
                                 />
                             </div>
-
-                            <FormField
-                                id="address"
-                                v-model="validationForm.address"
-                                label="Complete Address"
-                                type="textarea"
-                                placeholder="Enter the full address of your property"
-                                :error="errors.address"
-                                :required="true"
-                                help-text="Provide detailed address information"
-                                :rows="3"
-                                @update:model-value="
-                                    enhancedSetFieldValue('address', $event)
-                                "
-                                @blur="handleFieldBlur('address')"
-                                @focus="handleFieldFocus('address')"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Step 4: Images and Features -->
-                    <div v-if="currentStep === 4" class="space-y-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <PhotoIcon class="w-6 h-6 text-primary-600" />
-                            <h2 class="text-2xl font-bold text-neutral-900">
-                                Images & Features
-                            </h2>
                         </div>
 
-                        <!-- Image Upload -->
-                        <div>
-                            <label class="form-label">Property Images</label>
-                            <div
-                                class="border-2 border-dashed border-neutral-300 rounded-2xl p-8 text-center hover:border-primary-400 transition-colors"
-                            >
-                                <PhotoIcon
-                                    class="w-12 h-12 text-neutral-400 mx-auto mb-4"
-                                />
-                                <p class="text-neutral-600 mb-4">
-                                    Drag and drop images here, or
-                                    <label
-                                        class="text-primary-600 hover:text-primary-700 cursor-pointer font-medium"
-                                    >
-                                        browse files
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            @change="handleImageUpload"
-                                            class="hidden"
-                                        />
-                                    </label>
-                                </p>
-                                <p class="text-sm text-neutral-500">
-                                    Maximum 10 images, 5MB each. Supported: JPG,
-                                    PNG, GIF
-                                </p>
-                            </div>
-
-                            <!-- Image Preview -->
-                            <div
-                                v-if="imageFiles.length > 0"
-                                class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"
-                            >
-                                <div
-                                    v-for="(file, index) in imageFiles"
-                                    :key="index"
-                                    class="relative group"
-                                >
-                                    <img
-                                        :src="createImageUrl(file)"
-                                        :alt="`Property image ${index + 1}`"
-                                        class="w-full h-24 object-cover rounded-xl"
-                                    />
-                                    <button
-                                        type="button"
-                                        @click="removeImage(index)"
-                                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        <XMarkIcon class="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Property Features -->
+                        <!-- Navigation Buttons -->
                         <div
-                            v-if="
-                                availableFeatures &&
-                                availableFeatures.length > 0
+                            :class="
+                                isAuthenticatedUser
+                                    ? 'flex justify-between items-center pt-6 border-t border-gray-200'
+                                    : 'step-navigation'
                             "
                         >
-                            <label class="form-label"
-                                >Property Features (Select up to 20)</label
-                            >
-                            <div
-                                class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
-                            >
-                                <button
-                                    v-for="feature in availableFeatures"
-                                    :key="feature"
-                                    type="button"
-                                    @click="toggleFeature(feature)"
-                                    :class="[
-                                        'px-4 py-2 rounded-xl text-sm font-medium transition-all',
-                                        form.features.includes(feature)
-                                            ? 'bg-primary-100 text-primary-700 border-2 border-primary-300'
-                                            : 'bg-neutral-100 text-neutral-700 border-2 border-transparent hover:bg-neutral-200',
-                                    ]"
-                                >
-                                    {{ feature }}
-                                </button>
-                            </div>
-                            <p class="text-sm text-neutral-500 mt-2">
-                                Selected: {{ form.features.length }}/20
-                            </p>
-                        </div>
-
-                        <!-- Property Documents -->
-                        <div>
-                            <label class="form-label"
-                                >Property Documents (Optional)</label
-                            >
-                            <p class="text-sm text-neutral-600 mb-4">
-                                Upload relevant property documents such as floor
-                                plans, surveys, or permits
-                            </p>
-                            <div
-                                class="border-2 border-dashed border-neutral-300 rounded-2xl p-6 text-center hover:border-primary-400 transition-colors"
-                            >
-                                <DocumentIcon
-                                    class="w-10 h-10 text-neutral-400 mx-auto mb-3"
-                                />
-                                <p class="text-neutral-600 mb-3">
-                                    <label
-                                        class="text-primary-600 hover:text-primary-700 cursor-pointer font-medium"
-                                    >
-                                        Choose property documents
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                            @change="
-                                                handlePropertyDocumentUpload
-                                            "
-                                            class="hidden"
-                                        />
-                                    </label>
-                                </p>
-                                <p class="text-sm text-neutral-500">
-                                    Maximum 10 files, 10MB each. Supported: PDF,
-                                    DOC, DOCX, JPG, PNG
-                                </p>
-                            </div>
-
-                            <!-- Property Documents Preview -->
-                            <div
-                                v-if="propertyDocuments.length > 0"
-                                class="mt-4 space-y-2"
-                            >
-                                <div
-                                    v-for="(doc, index) in propertyDocuments"
-                                    :key="index"
-                                    class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg"
-                                >
-                                    <div class="flex items-center gap-3">
-                                        <DocumentIcon
-                                            class="w-5 h-5 text-neutral-500"
-                                        />
-                                        <span
-                                            class="text-sm text-neutral-700"
-                                            >{{ doc.name }}</span
-                                        >
-                                        <span class="text-xs text-neutral-500"
-                                            >({{
-                                                formatFileSize(doc.size)
-                                            }})</span
-                                        >
-                                    </div>
-                                    <button
-                                        type="button"
-                                        @click="removePropertyDocument(index)"
-                                        class="text-red-500 hover:text-red-700"
-                                    >
-                                        <XMarkIcon class="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ownership Documents -->
-                        <div>
-                            <label class="form-label"
-                                >Ownership Documents (Optional)</label
-                            >
-                            <p class="text-sm text-neutral-600 mb-4">
-                                Upload ownership verification documents such as
-                                title, tax declaration, or deed of sale
-                            </p>
-                            <div
-                                class="border-2 border-dashed border-neutral-300 rounded-2xl p-6 text-center hover:border-primary-400 transition-colors"
-                            >
-                                <DocumentIcon
-                                    class="w-10 h-10 text-neutral-400 mx-auto mb-3"
-                                />
-                                <p class="text-neutral-600 mb-3">
-                                    <label
-                                        class="text-primary-600 hover:text-primary-700 cursor-pointer font-medium"
-                                    >
-                                        Choose ownership documents
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept=".pdf,.jpg,.jpeg,.png"
-                                            @change="
-                                                handleOwnershipDocumentUpload
-                                            "
-                                            class="hidden"
-                                        />
-                                    </label>
-                                </p>
-                                <p class="text-sm text-neutral-500">
-                                    Maximum 5 files, 10MB each. Supported: PDF,
-                                    JPG, PNG
-                                </p>
-                            </div>
-
-                            <!-- Ownership Documents Preview -->
-                            <div
-                                v-if="ownershipDocuments.length > 0"
-                                class="mt-4 space-y-2"
-                            >
-                                <div
-                                    v-for="(doc, index) in ownershipDocuments"
-                                    :key="index"
-                                    class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg"
-                                >
-                                    <div class="flex items-center gap-3">
-                                        <DocumentIcon
-                                            class="w-5 h-5 text-neutral-500"
-                                        />
-                                        <span
-                                            class="text-sm text-neutral-700"
-                                            >{{ doc.name }}</span
-                                        >
-                                        <span class="text-xs text-neutral-500"
-                                            >({{
-                                                formatFileSize(doc.size)
-                                            }})</span
-                                        >
-                                    </div>
-                                    <button
-                                        type="button"
-                                        @click="removeOwnershipDocument(index)"
-                                        class="text-red-500 hover:text-red-700"
-                                    >
-                                        <XMarkIcon class="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Consent & Terms -->
-                        <div
-                            class="bg-white p-6 rounded-xl shadow-sm border border-neutral-200"
-                        >
-                            <h3
-                                class="text-lg font-semibold mb-4 text-neutral-900"
-                            >
-                                Consent & Terms
-                            </h3>
-                            <div class="space-y-3">
-                                <label class="flex items-start gap-3">
-                                    <input
-                                        type="checkbox"
-                                        v-model="
-                                            validationForm.marketing_consent
-                                        "
-                                        class="mt-1 rounded text-primary-600 focus:ring-primary-500"
-                                    />
-                                    <span class="text-neutral-700">
-                                        I agree to receive updates about my
-                                        listing and related services.
-                                    </span>
-                                </label>
-                                <label class="flex items-start gap-3">
-                                    <input
-                                        type="checkbox"
-                                        v-model="
-                                            validationForm.newsletter_consent
-                                        "
-                                        class="mt-1 rounded text-primary-600 focus:ring-primary-500"
-                                    />
-                                    <span class="text-neutral-700">
-                                        Subscribe me to the GeoCasa newsletter.
-                                    </span>
-                                </label>
-                                <label class="flex items-start gap-3">
-                                    <input
-                                        type="checkbox"
-                                        v-model="validationForm.terms_accepted"
-                                        class="mt-1 rounded text-primary-600 focus:ring-primary-500"
-                                    />
-                                    <span class="text-neutral-700">
-                                        <strong class="text-red-600">*</strong>
-                                        I have read and agree to the
-                                        <a
-                                            href="/terms"
-                                            target="_blank"
-                                            class="text-primary-600 hover:underline font-medium"
-                                            >Terms and Conditions</a
-                                        >
-                                        and
-                                        <a
-                                            href="/privacy"
-                                            target="_blank"
-                                            class="text-primary-600 hover:underline font-medium"
-                                            >Privacy Policy</a
-                                        >.
-                                    </span>
-                                </label>
-                                <ValidationError
-                                    v-if="errors.terms_accepted"
-                                    :message="errors.terms_accepted"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Navigation Buttons -->
-                    <div class="step-navigation">
-                        <ModernButton
-                            v-if="currentStep > 1"
-                            type="button"
-                            variant="ghost"
-                            @click="prevStep"
-                            class="step-button step-button-secondary flex items-center gap-2"
-                        >
-                            ← Previous
-                        </ModernButton>
-                        <div v-else></div>
-
-                        <div class="flex gap-4">
                             <ModernButton
-                                v-if="currentStep < totalSteps"
+                                v-if="currentStep > 1"
                                 type="button"
-                                variant="primary"
-                                @click="nextStep"
-                                :disabled="!canProceed"
-                                :class="[
-                                    'step-button step-button-primary flex items-center gap-2 transition-all duration-200',
-                                    !canProceed
-                                        ? 'opacity-50 cursor-not-allowed'
-                                        : 'hover:shadow-lg',
-                                ]"
-                                :title="
-                                    !canProceed
-                                        ? `Complete required fields to continue: ${canProceedWithFeedback.errors.join(
-                                              ', '
-                                          )}`
-                                        : 'Continue to next step'
+                                variant="ghost"
+                                @click="prevStep"
+                                :class="
+                                    isAuthenticatedUser
+                                        ? 'px-4 py-2 text-gray-700 hover:text-gray-900'
+                                        : 'step-button step-button-secondary flex items-center gap-2'
                                 "
                             >
-                                <span>Next</span>
-                                <svg
-                                    class="w-4 h-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                                ← Previous
+                            </ModernButton>
+                            <div v-else></div>
+
+                            <div class="flex gap-4">
+                                <ModernButton
+                                    v-if="currentStep < totalSteps"
+                                    type="button"
+                                    variant="primary"
+                                    @click="nextStep"
+                                    :disabled="!canProceed"
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? [
+                                                  'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed',
+                                              ]
+                                            : [
+                                                  'step-button step-button-primary flex items-center gap-2 transition-all duration-200',
+                                                  !canProceed
+                                                      ? 'opacity-50 cursor-not-allowed'
+                                                      : 'hover:shadow-lg',
+                                              ]
+                                    "
+                                    :title="
+                                        !canProceed
+                                            ? `Complete required fields to continue: ${canProceedWithFeedback.errors.join(
+                                                  ', '
+                                              )}`
+                                            : 'Continue to next step'
+                                    "
                                 >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 5l7 7-7 7"
-                                    ></path>
-                                </svg>
-                            </ModernButton>
+                                    <span>Next</span>
+                                    <svg
+                                        v-if="!isAuthenticatedUser"
+                                        class="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 5l7 7-7 7"
+                                        ></path>
+                                    </svg>
+                                </ModernButton>
 
-                            <ModernButton
-                                v-else
-                                type="submit"
-                                variant="primary"
-                                :disabled="!canProceed || isSubmitting"
-                                :loading="isSubmitting"
-                                :class="[
-                                    'step-button step-button-primary flex items-center gap-2 transition-all duration-200',
-                                    !canProceed || isSubmitting
-                                        ? 'opacity-50 cursor-not-allowed'
-                                        : 'hover:shadow-lg',
-                                ]"
-                                :title="
-                                    !canProceed
-                                        ? `Complete required fields to submit: ${canProceedWithFeedback.errors.join(
-                                              ', '
-                                          )}`
-                                        : 'Submit your property listing'
-                                "
-                            >
-                                <CheckCircleIcon class="w-5 h-5" />
-                                <span>Submit Property</span>
-                            </ModernButton>
+                                <ModernButton
+                                    v-else
+                                    type="submit"
+                                    variant="primary"
+                                    :disabled="!canProceed || isSubmitting"
+                                    :loading="isSubmitting"
+                                    :class="
+                                        isAuthenticatedUser
+                                            ? [
+                                                  'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed',
+                                              ]
+                                            : [
+                                                  'step-button step-button-primary flex items-center gap-2 transition-all duration-200',
+                                                  !canProceed || isSubmitting
+                                                      ? 'opacity-50 cursor-not-allowed'
+                                                      : 'hover:shadow-lg',
+                                              ]
+                                    "
+                                    :title="
+                                        !canProceed
+                                            ? `Complete required fields to submit: ${canProceedWithFeedback.errors.join(
+                                                  ', '
+                                              )}`
+                                            : 'Submit your property listing'
+                                    "
+                                >
+                                    <CheckCircleIcon class="w-5 h-5" />
+                                    <span>Submit Property</span>
+                                </ModernButton>
+                            </div>
                         </div>
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </div>
 
-            <!-- Help Section -->
-            <div
-                class="mt-12 bg-white border border-neutral-200 p-6 rounded-2xl shadow-sm"
-            >
-                <h3 class="text-lg font-semibold text-neutral-900 mb-4">
-                    Need Help?
-                </h3>
-                <div class="grid md:grid-cols-2 gap-6 text-sm text-neutral-600">
-                    <div>
-                        <p class="mb-2"><strong>What happens next?</strong></p>
-                        <ul class="space-y-1 text-neutral-600">
-                            <li>
-                                • Your submission will be reviewed within 24-48
-                                hours
-                            </li>
-                            <li>
-                                • We'll verify property details and
-                                documentation
-                            </li>
-                            <li>
-                                • Once approved, your property goes live on our
-                                platform
-                            </li>
-                            <li>
-                                • Licensed brokers will start marketing your
-                                property
-                            </li>
-                        </ul>
-                    </div>
-                    <div>
-                        <p class="mb-2"><strong>Contact Support</strong></p>
-                        <p>
-                            Email:
-                            <a
-                                href="mailto:support@geocasabohol.com"
-                                class="text-primary-600 hover:text-primary-700"
-                                >support@geocasabohol.com</a
-                            >
-                        </p>
-                        <p>
-                            Phone:
-                            <a
-                                href="tel:+631234567890"
-                                class="text-primary-600 hover:text-primary-700"
-                                >+63 123 456 7890</a
-                            >
-                        </p>
-                        <p class="mt-2 text-xs text-neutral-500">
-                            Available Mon-Sat, 8:00 AM - 6:00 PM
-                        </p>
+                <!-- Help Section -->
+                <div
+                    class="mt-12 bg-white border border-neutral-200 p-6 rounded-2xl shadow-sm"
+                >
+                    <h3 class="text-lg font-semibold text-neutral-900 mb-4">
+                        Need Help?
+                    </h3>
+                    <div
+                        class="grid md:grid-cols-2 gap-6 text-sm text-neutral-600"
+                    >
+                        <div>
+                            <p class="mb-2">
+                                <strong>What happens next?</strong>
+                            </p>
+                            <ul class="space-y-1 text-neutral-600">
+                                <li>
+                                    • Your submission will be reviewed within
+                                    24-48 hours
+                                </li>
+                                <li>
+                                    • We'll verify property details and
+                                    documentation
+                                </li>
+                                <li>
+                                    • Once approved, your property goes live on
+                                    our platform
+                                </li>
+                                <li>
+                                    • Licensed brokers will start marketing your
+                                    property
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="mb-2"><strong>Contact Support</strong></p>
+                            <p>
+                                Email:
+                                <a
+                                    href="mailto:support@geocasabohol.com"
+                                    class="text-primary-600 hover:text-primary-700"
+                                    >support@geocasabohol.com</a
+                                >
+                            </p>
+                            <p>
+                                Phone:
+                                <a
+                                    href="tel:+631234567890"
+                                    class="text-primary-600 hover:text-primary-700"
+                                    >+63 123 456 7890</a
+                                >
+                            </p>
+                            <p class="mt-2 text-xs text-neutral-500">
+                                Available Mon-Sat, 8:00 AM - 6:00 PM
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <!-- Public Footer -->
-    <PublicFooter />
+        <!-- Public Footer (only for non-authenticated users) -->
+        <PublicFooter v-if="!isAuthenticatedUser" />
+    </component>
 
     <!-- Enhanced Notification Container -->
     <div
@@ -3177,27 +3804,64 @@ const handleFieldQuickAction = (fieldName, action) => {
 
 <style scoped>
 .form-group {
-    @apply space-y-2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .form-label {
-    @apply block text-sm font-medium text-neutral-700;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(64, 64, 64);
 }
 
 .form-input {
-    @apply w-full px-4 py-3 border border-neutral-200 rounded-2xl text-neutral-900 placeholder-neutral-500 
-           focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200
-           hover:border-neutral-300;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgb(229, 229, 229);
+    border-radius: 1rem;
+    color: rgb(23, 23, 23);
+    transition: all 0.2s;
+}
+
+.form-input::placeholder {
+    color: rgb(163, 163, 163);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: rgb(14, 165, 233);
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+
+.form-input:hover {
+    border-color: rgb(212, 212, 212);
 }
 
 .form-select {
-    @apply w-full px-4 py-3 border border-neutral-200 rounded-2xl text-neutral-900 
-           focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200
-           hover:border-neutral-300 bg-white;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgb(229, 229, 229);
+    border-radius: 1rem;
+    color: rgb(23, 23, 23);
+    background-color: white;
+    transition: all 0.2s;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: rgb(14, 165, 233);
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+
+.form-select:hover {
+    border-color: rgb(212, 212, 212);
 }
 
 .form-error {
-    @apply text-red-600 text-sm;
+    color: rgb(220, 38, 38);
+    font-size: 0.875rem;
 }
 
 .tropical-gradient {
@@ -3205,7 +3869,11 @@ const handleFieldQuickAction = (fieldName, action) => {
 }
 
 .card {
-    @apply bg-white rounded-2xl shadow-soft border border-neutral-100;
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgb(245, 245, 245);
 }
 
 .shadow-soft {

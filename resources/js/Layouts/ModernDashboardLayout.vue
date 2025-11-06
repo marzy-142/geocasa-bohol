@@ -507,14 +507,6 @@ const navigationSections = computed(() => {
                             "client.seller-requests.create"
                         ),
                     },
-                    {
-                        name: "My Listing Requests",
-                        href: route("client.seller-requests.index"),
-                        icon: ClipboardDocumentListIcon,
-                        current:
-                            route().current("client.seller-requests.index") ||
-                            route().current("client.seller-requests.show"),
-                    },
                 ],
             },
         ];

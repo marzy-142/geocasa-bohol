@@ -133,12 +133,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/{search}/toggle-notifications', [\App\Http\Controllers\Client\SavedSearchController::class, 'toggleNotifications'])->name('toggle-notifications');
         });
         
-        // Seller Requests (Client selling their property)
+        // Seller Requests (Client selling their property) - keep form only
         Route::prefix('seller-requests')->name('seller-requests.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Client\SellerRequestController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\Client\SellerRequestController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Client\SellerRequestController::class, 'store'])->name('store');
-            Route::get('/{sellerRequest}', [\App\Http\Controllers\Client\SellerRequestController::class, 'show'])->name('show');
         });
         
         // Client Transaction Routes
@@ -198,7 +196,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Broker Properties Routes - Outside prefix to use /properties directly
+// Broker Properties & Transactions Routes - Outside prefix to use clean paths
 Route::middleware(['auth', 'role:broker', 'broker.approved'])->group(function () {
     Route::get('/properties', [PropertyController::class, 'brokerIndex'])->name('broker.properties.index');
     Route::get('/properties/create', [PropertyController::class, 'create'])->name('broker.properties.create');
@@ -213,6 +211,10 @@ Route::middleware(['auth', 'role:broker', 'broker.approved'])->group(function ()
     // Featured Property Routes
     Route::post('/properties/{property}/toggle-featured', [PropertyController::class, 'toggleFeatured'])->name('broker.properties.toggle-featured');
     Route::post('/properties/{property}/auto-feature', [PropertyController::class, 'autoFeature'])->name('broker.properties.auto-feature');
+
+    // Transactions (broker create/store enabled here for one-click conversion)
+    Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
+    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
 });
 
 // Admin routes

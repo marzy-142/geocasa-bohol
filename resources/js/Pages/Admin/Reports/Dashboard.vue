@@ -13,22 +13,6 @@
                                 Business intelligence and performance insights
                             </p>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <button
-                                @click="exportReport"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
-                                Export
-                            </button>
-                            <button
-                                @click="refreshData"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                <ArrowPathIcon class="w-4 h-4 mr-2" />
-                                Refresh
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -311,16 +295,6 @@ const props = defineProps({
     topBrokers: Array,
     analytics: Object,
 });
-
-// Methods
-const exportReport = () => {
-    // Implementation for exporting reports
-    alert("Export functionality would be implemented here");
-};
-
-const refreshData = () => {
-    router.reload();
-};
 
 // Time-series from backend analytics
 const hasSystemTrendSeries = computed(() => {

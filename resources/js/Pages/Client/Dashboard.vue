@@ -194,40 +194,6 @@ const getStatusColor = (status) => {
                 </Link>
             </div>
 
-            <!-- Listing Requests -->
-            <div
-                class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-all duration-300 flex flex-col h-full"
-            >
-                <div class="flex items-center justify-between mb-5">
-                    <div
-                        class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center"
-                    >
-                        <ClipboardDocumentListIcon
-                            class="w-6 h-6 text-gray-700"
-                        />
-                    </div>
-                    <span
-                        v-if="stats.pendingSellerRequests > 0"
-                        class="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded"
-                    >
-                        {{ stats.pendingSellerRequests }} pending
-                    </span>
-                </div>
-                <p class="text-3xl font-bold text-gray-900 mb-2">
-                    {{ stats.sellerRequests }}
-                </p>
-                <p class="text-sm text-gray-600 mb-4">Listing Requests</p>
-                <Link
-                    :href="route('client.seller-requests.index')"
-                    class="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium group mt-auto"
-                >
-                    View requests
-                    <ArrowRightIcon
-                        class="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                    />
-                </Link>
-            </div>
-
             <!-- Broker Card -->
             <div
                 v-if="broker"
@@ -394,62 +360,8 @@ const getStatusColor = (status) => {
                 </div>
             </div>
 
-            <!-- Right Column - Recent Activity & Seller Requests -->
+            <!-- Right Column - Recent Activity -->
             <div class="space-y-6">
-                <!-- Recent Seller Requests -->
-                <div
-                    v-if="
-                        recentSellerRequests && recentSellerRequests.length > 0
-                    "
-                    class="bg-white rounded-xl border border-gray-200 p-6"
-                >
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-bold text-gray-900">
-                            My Listing Requests
-                        </h3>
-                        <Link
-                            :href="route('client.seller-requests.index')"
-                            class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 group"
-                        >
-                            View all
-                            <ArrowRightIcon
-                                class="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                            />
-                        </Link>
-                    </div>
-
-                    <div class="space-y-3">
-                        <div
-                            v-for="request in recentSellerRequests"
-                            :key="request.id"
-                            class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                            <div class="flex items-center justify-between mb-2">
-                                <p
-                                    class="text-sm font-semibold text-gray-900 line-clamp-1"
-                                >
-                                    {{ request.property_title }}
-                                </p>
-                                <span
-                                    :class="getStatusColor(request.status)"
-                                    class="px-2 py-1 rounded text-xs font-medium border"
-                                >
-                                    {{ request.status }}
-                                </span>
-                            </div>
-                            <p
-                                v-if="request.assigned_broker"
-                                class="text-xs text-gray-600"
-                            >
-                                Broker: {{ request.assigned_broker.name }}
-                            </p>
-                            <p v-else class="text-xs text-gray-500">
-                                Waiting for broker assignment
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Recent Activity -->
                 <div class="bg-white rounded-xl border border-gray-200 p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-6">

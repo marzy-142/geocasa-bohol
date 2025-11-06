@@ -26,6 +26,14 @@ const props = defineProps({
     canManage: Boolean,
 });
 
+// Debug: Log the images data
+console.log('=== Seller Request Images Debug ===');
+console.log('Seller Request ID:', props.sellerRequest.id);
+console.log('Uploaded Images:', props.sellerRequest.uploaded_images);
+console.log('Images Type:', typeof props.sellerRequest.uploaded_images);
+console.log('Images Count:', Array.isArray(props.sellerRequest.uploaded_images) ? props.sellerRequest.uploaded_images.length : 'Not an array');
+console.log('Images Content:', JSON.stringify(props.sellerRequest.uploaded_images));
+
 // Forms
 const approveForm = useForm({
     status: "approved",

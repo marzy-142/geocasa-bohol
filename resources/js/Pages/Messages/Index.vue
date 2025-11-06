@@ -36,12 +36,7 @@
                         >
                             Conversations
                         </h3>
-                        <button
-                            @click="showArchived = !showArchived"
-                            class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                            {{ showArchived ? "Show Active" : "Show Archived" }}
-                        </button>
+                        <!-- Removed 'Show Archived' toggle per request -->
                     </div>
 
                     <!-- Search -->
@@ -311,6 +306,7 @@ const messages = ref(props.messages || []);
 const newMessage = ref("");
 const sending = ref(false);
 const searchQuery = ref("");
+// Archived toggle removed; always show active conversations only
 const showArchived = ref(false);
 const messagesContainer = ref(null);
 let echoListener = null;
@@ -326,16 +322,14 @@ const unreadCount = computed(() => {
 
 const filteredConversations = computed(() => {
     const conversationsData = props.conversations.data || [];
+    // Always show active (non-archived) conversations only
     let filtered = conversationsData.filter((conv) => {
         const matchesSearch =
             !searchQuery.value ||
             getConversationTitle(conv)
                 .toLowerCase()
                 .includes(searchQuery.value.toLowerCase());
-        const matchesArchived = showArchived.value
-            ? conv.is_archived
-            : !conv.is_archived;
-        return matchesSearch && matchesArchived;
+        return matchesSearch && !conv.is_archived;
     });
 
     // Sort conversations by last message date (newest first)

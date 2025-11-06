@@ -132,7 +132,7 @@
                                 </p>
                             </div>
                             <div
-                                class="flex justify-between text-xs text-gray-500 mb-2"
+                                class="flex justify-between items-center text-xs text-gray-500 mb-2"
                             >
                                 <span class="flex items-center">
                                     <svg
@@ -150,22 +150,17 @@
                                     </svg>
                                     {{ property.formatted_area }}
                                 </span>
-                                <span class="flex items-center">
-                                    <svg
-                                        class="w-3 h-3 mr-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                        ></path>
-                                    </svg>
-                                    {{ formatType(property.type) }}
-                                </span>
+                            </div>
+
+                            <!-- Property Type Badges -->
+                            <div class="mb-2">
+                                <PropertyTypeBadges
+                                    :types="property.formatted_types"
+                                    :custom-type-text="
+                                        property.custom_type_text
+                                    "
+                                    :max-display="2"
+                                />
                             </div>
 
                             <!-- Utilities Icons -->
@@ -302,70 +297,132 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import UnifiedSearchFilter from "@/Components/UnifiedSearchFilter.vue";
 import Pagination from "@/Components/Pagination.vue";
-import { debounce } from "lodash";
+import PropertyTypeBadges from "@/Components/PropertyTypeBadges.vue";
+// Lightweight debounce to avoid extra dependency
+function debounce(fn, wait = 300) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), wait);
+    };
+}
 
 const props = defineProps({
-    properties: Object,
-    filters: Object,
-    types: Array,
-    statuses: Array,
-    municipalities: Array,
+    properties: { type: Object, required: true },
+    filters: { type: Object, default: () => ({}) },
+    types: { type: Array, default: () => [] },
+    statuses: { type: Array, default: () => [] },
+    municipalities: { type: Array, default: () => [] },
+    brokers: { type: Array, default: () => [] },
+    isAdminView: { type: Boolean, default: false },
 });
 
 const page = usePage();
 
-// Initialize filters with proper defaults
+// Initialize filters with proper defaults (type is single-select)
 const filters = ref({
-    search: props.filters.search || "",
-    type: props.filters.type || "",
-    municipality: props.filters.municipality || "",
-    status: props.filters.status || "",
-    min_price: props.filters.min_price || "",
-    max_price: props.filters.max_price || "",
-    min_area: props.filters.min_area || "",
-    max_area: props.filters.max_area || "",
-    utilities: props.filters.utilities || false,
-    featured: props.filters.featured || false,
+    search: props.filters.search ?? "",
+    // Normalize to single string even if server sent an array
+    type: normalizeTypeToString(props.filters.type ?? props.filters.types),
+    municipality: props.filters.municipality ?? "",
+    status: props.filters.status ?? "",
+    broker_id: props.filters.broker_id ?? "",
+    min_price: props.filters.min_price ?? "",
+    max_price: props.filters.max_price ?? "",
+    min_area: props.filters.min_area ?? "",
+    max_area: props.filters.max_area ?? "",
+    utilities: props.filters.utilities ?? false,
+    featured: props.filters.featured ?? false,
 });
 
+// Helper: normalize type(s) input to a single string (first value wins)
+function normalizeTypeToString(input) {
+    if (!input) return "";
+    if (Array.isArray(input)) {
+        return input.length > 0 ? String(input[0]) : "";
+    }
+    if (typeof input === "string") return input;
+    return "";
+}
+
+// Watch for prop changes and sync local filters (important for page navigation)
+watch(
+    () => props.filters,
+    (newFilters) => {
+        filters.value = {
+            search: newFilters.search ?? "",
+            type: normalizeTypeToString(newFilters.type ?? newFilters.types),
+            municipality: newFilters.municipality ?? "",
+            status: newFilters.status ?? "",
+            broker_id: newFilters.broker_id ?? "",
+            min_price: newFilters.min_price ?? "",
+            max_price: newFilters.max_price ?? "",
+            min_area: newFilters.min_area ?? "",
+            max_area: newFilters.max_area ?? "",
+            utilities: newFilters.utilities ?? false,
+            featured: newFilters.featured ?? false,
+        };
+    },
+    { deep: true }
+);
+
 // Filter configurations for UnifiedSearchFilter
-const primaryFilters = computed(() => [
-    {
-        key: "type",
-        label: "Property Type",
-        type: "select",
-        span: 2,
-        options: props.types.map((type) => ({
-            value: type,
-            label: formatType(type),
-        })),
-    },
-    {
-        key: "municipality",
-        label: "Municipality",
-        type: "select",
-        span: 2,
-        options: props.municipalities.map((municipality) => ({
-            value: municipality,
-            label: municipality,
-        })),
-    },
-    {
-        key: "status",
-        label: "Status",
-        type: "select",
-        span: 2,
-        options: props.statuses.map((status) => ({
-            value: status,
-            label: formatStatus(status),
-        })),
-    },
-]);
+const primaryFilters = computed(() => {
+    const list = [
+        {
+            key: "type",
+            label: "Property Type",
+            type: "select",
+            span: 2,
+            placeholder: "All Property Types",
+            options: props.types, // Already formatted from backend
+        },
+        {
+            key: "municipality",
+            label: "Municipality",
+            type: "select",
+            span: 2,
+            options: props.municipalities.map((municipality) => ({
+                value: municipality,
+                label: municipality,
+            })),
+        },
+        {
+            key: "status",
+            label: "Status",
+            type: "select",
+            span: 2,
+            options: props.statuses.map((status) => ({
+                value: status,
+                label: formatStatus(status),
+            })),
+        },
+    ];
+
+    // Add broker filter for admin view only
+    if (props.isAdminView && props.brokers && props.brokers.length > 0) {
+        list.push({
+            key: "broker_id",
+            label: "Broker",
+            type: "select",
+            span: 2,
+            placeholder: "All Brokers",
+            options: props.brokers.map((broker) => ({
+                value: broker.value,
+                label: `${broker.label} (${broker.property_count || 0}) - ${
+                    broker.property_types || "No types"
+                }`,
+            })),
+        });
+    }
+
+    return list;
+});
 
 const secondaryFilters = computed(() => [
     {
@@ -401,25 +458,30 @@ const handleSearchChange = (value) => {
 };
 
 const handleFilterChange = (key, value) => {
-    filters.value[key] = value;
+    filters.value[key] = key === "type" ? normalizeTypeToString(value) : value;
     filterProperties();
 };
 
 const clearAllFilters = () => {
-    Object.keys(filters.value).forEach((key) => {
-        if (typeof filters.value[key] === "boolean") {
-            filters.value[key] = false;
-        } else {
-            filters.value[key] = "";
-        }
-    });
+    filters.value = {
+        search: "",
+        type: "",
+        municipality: "",
+        status: "",
+        broker_id: "",
+        min_price: "",
+        max_price: "",
+        min_area: "",
+        max_area: "",
+        utilities: false,
+        featured: false,
+    };
     filterProperties();
 };
-
 const canCreateProperty = computed(() => {
     const user = page.props.auth.user;
     // Only brokers can create properties, not admins
-    return user.role === "broker" && user.is_approved;
+    return user && user.role === "broker" && user.is_approved;
 });
 
 const canEditProperty = (property) => {
@@ -476,12 +538,33 @@ const filterProperties = debounce(() => {
     // Clean up empty values to avoid sending unnecessary parameters
     const cleanFilters = Object.fromEntries(
         Object.entries(filters.value).filter(([key, value]) => {
-            // Keep boolean false values, but remove empty strings and null/undefined
+            // Include arrays only if they have values
+            if (Array.isArray(value)) {
+                return value.length > 0;
+            }
+            // Only include booleans if true
+            if (typeof value === "boolean") {
+                return value === true;
+            }
+            // Exclude empty strings and null/undefined
             return value !== "" && value !== null && value !== undefined;
         })
     );
 
-    router.get(route("broker.properties.index"), cleanFilters, {
+    // Always send types[] to the backend for consistent handling (custom and standard)
+    if (typeof cleanFilters.type === "string" && cleanFilters.type !== "") {
+        cleanFilters.types = [cleanFilters.type];
+        delete cleanFilters.type;
+    }
+
+    console.log("Filtering properties with:", cleanFilters);
+
+    // Determine correct route based on user role
+    const routeName = props.isAdminView
+        ? "admin.properties.index"
+        : "broker.properties.index";
+
+    router.get(route(routeName), cleanFilters, {
         preserveState: true,
         replace: true,
         preserveScroll: true,
@@ -491,7 +574,6 @@ const filterProperties = debounce(() => {
         },
     });
 }, 300);
-
 const deleteProperty = (property) => {
     if (confirm("Are you sure you want to delete this land property?")) {
         router.delete(route("broker.properties.destroy", property.slug));

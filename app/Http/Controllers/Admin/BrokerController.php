@@ -19,7 +19,7 @@ class BrokerController extends Controller
      */
     public function index(Request $request)
     {
-        // Only show approved brokers in the main broker listing
+        // Start with all brokers (approved and non-approved for admin view)
         $query = User::where('role', 'broker')
             ->with(['properties', 'clients', 'transactions'])
             ->withCount([
@@ -37,7 +37,7 @@ class BrokerController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('license_number', 'like', "%{$search}%");
+                  ->orWhere('prc_id', 'like', "%{$search}%");
             });
         }
 
@@ -48,21 +48,57 @@ class BrokerController extends Controller
                           $q->whereNull('suspended_until')
                             ->orWhere('suspended_until', '>', now());
                       });
+            } elseif ($request->status === 'active') {
+                // Active means: approved AND not suspended
+                $query->where('application_status', 'approved')
+                      ->whereNull('suspended_at');
+            } elseif ($request->status === 'inactive') {
+                // Inactive means: not approved OR suspended
+                $query->where(function($q) {
+                    $q->where('application_status', '!=', 'approved')
+                      ->orWhereNotNull('suspended_at');
+                });
             }
-            // Note: Since we're already filtering for approved brokers,
-            // we don't need to handle pending/rejected status here
-            // Those should be handled in the BrokerApprovalController
         }
 
         if ($request->filled('verification_status')) {
-            $query->where('verification_status', $request->verification_status);
+            if ($request->verification_status === 'verified') {
+                $query->where('prc_verified', true);
+            } elseif ($request->verification_status === 'unverified') {
+                $query->where(function($q) {
+                    $q->where('prc_verified', false)
+                      ->orWhereNull('prc_verified');
+                });
+            }
         }
 
         if ($request->filled('performance_rating')) {
             // Filter by performance rating if implemented
         }
 
-        $brokers = $query->orderBy('created_at', 'desc')->paginate(15);
+        // Apply sorting
+        $sortBy = $request->get('sort', 'created_at');
+        $sortDirection = 'desc';
+        
+        switch ($sortBy) {
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'created_at':
+                $query->orderBy('created_at', $sortDirection);
+                break;
+            case 'properties_count':
+                $query->orderBy('properties_count', $sortDirection);
+                break;
+            case 'transactions_count':
+                $query->orderBy('transactions_count', $sortDirection);
+                break;
+            default:
+                $query->orderBy('created_at', $sortDirection);
+                break;
+        }
+
+        $brokers = $query->paginate(15);
 
         // Calculate stats for approved brokers only
         $stats = [
@@ -83,7 +119,7 @@ class BrokerController extends Controller
         return Inertia::render('Admin/Brokers/Index', [
             'brokers' => $brokers,
             'stats' => $stats,
-            'filters' => $request->only(['search', 'status', 'verification_status', 'performance_rating']),
+            'filters' => $request->only(['search', 'status', 'verification_status', 'performance_rating', 'sort']),
         ]);
     }
 
@@ -104,54 +140,31 @@ class BrokerController extends Controller
             }
         ]);
 
-        // Calculate performance metrics
-        $performanceMetrics = [
-            'total_properties' => $broker->properties()->count(),
-            'active_properties' => $broker->properties()->where('status', 'available')->count(),
-            'total_clients' => $broker->clients()->count(),
-            'active_clients' => $broker->clients()->where('status', 'active')->count(),
-            'total_transactions' => $broker->transactions()->count(),
-            'completed_transactions' => $broker->transactions()->where('status', 'finalized')->count(),
-            'avg_response_time' => $this->calculateAverageResponseTime($broker),
-            'client_satisfaction' => $this->calculateClientSatisfaction($broker),
-            'conversion_rate' => $this->calculateConversionRate($broker),
-        ];
-
-        // Get recent activities (mock data for now)
-        $recentActivities = [
-            [
-                'type' => 'property_listed',
-                'description' => 'Listed new property in Tagbilaran',
-                'date' => now()->subDays(1)->format('M d, Y'),
-                'icon' => 'home'
-            ],
-            [
-                'type' => 'client_assigned',
-                'description' => 'New client assigned',
-                'date' => now()->subDays(3)->format('M d, Y'),
-                'icon' => 'user'
-            ],
-        ];
+        // Simple, accurate performance metrics
+        $totalProperties = $broker->properties()->count();
+        $activeProperties = $broker->properties()->where('status', 'available')->count();
+        $totalClients = $broker->clients()->count();
+        $activeClients = $broker->clients()->where('status', 'active')->count();
+        $totalTransactions = $broker->transactions()->count();
+        $completedTransactions = $broker->transactions()->where('status', 'finalized')->count();
 
         return Inertia::render('Admin/Brokers/Show', [
             'broker' => $broker,
             'properties' => [
-                'total' => $performanceMetrics['total_properties'],
-                'active' => $performanceMetrics['active_properties'],
+                'total' => $totalProperties,
+                'active' => $activeProperties,
                 'data' => $broker->properties
             ],
             'clients' => [
-                'total' => $performanceMetrics['total_clients'],
-                'active' => $performanceMetrics['active_clients'],
+                'total' => $totalClients,
+                'active' => $activeClients,
                 'data' => $broker->clients
             ],
             'transactions' => [
-                'total' => $performanceMetrics['total_transactions'],
-                'completed' => $performanceMetrics['completed_transactions'],
+                'total' => $totalTransactions,
+                'completed' => $completedTransactions,
                 'data' => $broker->transactions
             ],
-            'performance' => $performanceMetrics,
-            'recentActivities' => $recentActivities,
         ]);
     }
 

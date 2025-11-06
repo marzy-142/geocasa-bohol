@@ -46,10 +46,24 @@ const props = defineProps({
     },
 });
 
+// Helper to parse types filter from string to array
+function parseTypesFilter(types) {
+    if (!types) return [];
+    if (Array.isArray(types)) return types;
+    if (typeof types === "string") {
+        return types
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+    }
+    return [];
+}
+
 // Reactive form state
 const form = reactive({
     search: props.filters.search || "",
-    type: props.filters.type || "",
+    type: props.filters.type || "", // Keep for backward compatibility
+    types: parseTypesFilter(props.filters.types), // New multi-type filter
     municipality: props.filters.municipality || "",
     min_price: props.filters.min_price || "",
     max_price: props.filters.max_price || "",
@@ -175,6 +189,16 @@ const search = () => {
     const payload = { ...form };
     isLoading.value = true;
 
+    // Convert types array to comma-separated string for URL
+    if (Array.isArray(payload.types) && payload.types.length > 0) {
+        payload.types = payload.types.join(",");
+    } else {
+        delete payload.types;
+    }
+
+    // Remove old single-type filter (we use types array now)
+    delete payload.type;
+
     // Remove empty filters
     Object.keys(payload).forEach((key) => {
         const value = payload[key];
@@ -182,6 +206,8 @@ const search = () => {
             delete payload[key];
         }
     });
+
+    console.log("Client search with filters:", payload);
 
     router.get(route("client.properties"), payload, {
         preserveScroll: true,
@@ -442,15 +468,17 @@ watch(
                     >
                     <select
                         v-model="form.type"
+                        @change="form.types = form.type ? [form.type] : []"
                         class="w-full px-4 py-3 border border-neutral-200 rounded-2xl focus:border-primary-500 focus:ring-primary-500 focus:outline-none"
                     >
                         <option value="">All Types</option>
-                        <option v-for="type in types" :key="type" :value="type">
-                            {{
-                                type
-                                    .replace(/_/g, " ")
-                                    .replace(/\b\w/g, (l) => l.toUpperCase())
-                            }}
+                        <option
+                            v-for="type in types"
+                            :key="type.value"
+                            :value="type.value"
+                        >
+                            {{ type.label }}
+                            <span v-if="type.count">({{ type.count }})</span>
                         </option>
                     </select>
                 </div>

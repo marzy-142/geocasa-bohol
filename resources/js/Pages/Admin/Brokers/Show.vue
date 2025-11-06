@@ -8,7 +8,6 @@ import {
     UserIcon,
     PencilIcon,
     ChartBarIcon,
-    EyeIcon,
     ArrowLeftIcon,
     CheckCircleIcon,
     XCircleIcon,
@@ -22,8 +21,6 @@ import {
     GlobeAltIcon,
     MapPinIcon,
     CalendarIcon,
-    StarIcon,
-    TrophyIcon,
     ClockIcon,
 } from "@heroicons/vue/24/outline";
 
@@ -32,8 +29,6 @@ const props = defineProps({
     properties: Object,
     clients: Object,
     transactions: Object,
-    performance: Object,
-    recentActivities: Array,
 });
 
 // Computed properties
@@ -59,44 +54,6 @@ const verificationStatus = computed(() => {
         status: "unverified",
         class: "bg-red-100 text-red-800",
         text: "Unverified",
-    };
-});
-
-const performanceRating = computed(() => {
-    const score = props.performance?.overall_score || 0;
-    if (score >= 90)
-        return {
-            rating: "excellent",
-            class: "text-green-600",
-            icon: "🏆",
-            text: "Excellent",
-        };
-    if (score >= 80)
-        return {
-            rating: "very-good",
-            class: "text-blue-600",
-            icon: "⭐",
-            text: "Very Good",
-        };
-    if (score >= 70)
-        return {
-            rating: "good",
-            class: "text-indigo-600",
-            icon: "👍",
-            text: "Good",
-        };
-    if (score >= 60)
-        return {
-            rating: "average",
-            class: "text-yellow-600",
-            icon: "📊",
-            text: "Average",
-        };
-    return {
-        rating: "poor",
-        class: "text-red-600",
-        icon: "📉",
-        text: "Needs Improvement",
     };
 });
 
@@ -295,92 +252,66 @@ const getActivityColor = (type) => {
         </div>
 
         <!-- Performance Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white rounded-2xl border border-gray-100 p-6">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-600 mb-2">
                             Properties Listed
                         </p>
-                        <p class="text-2xl font-bold text-gray-900">
+                        <p class="text-3xl font-bold text-gray-900">
                             {{ properties.total || 0 }}
                         </p>
-                        <p class="text-xs text-green-600 mt-1">
+                        <p class="text-sm text-green-600 mt-2">
                             {{ properties.active || 0 }} active
                         </p>
                     </div>
                     <div
-                        class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"
+                        class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center"
                     >
-                        <BuildingOfficeIcon class="w-6 h-6 text-blue-600" />
+                        <BuildingOfficeIcon class="w-7 h-7 text-blue-600" />
                     </div>
                 </div>
             </div>
 
             <div class="bg-white rounded-2xl border border-gray-100 p-6">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-600 mb-2">
                             Total Clients
                         </p>
-                        <p class="text-2xl font-bold text-gray-900">
+                        <p class="text-3xl font-bold text-gray-900">
                             {{ clients.total || 0 }}
                         </p>
-                        <p class="text-xs text-blue-600 mt-1">
+                        <p class="text-sm text-blue-600 mt-2">
                             {{ clients.active || 0 }} active
                         </p>
                     </div>
                     <div
-                        class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center"
+                        class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center"
                     >
-                        <UsersIcon class="w-6 h-6 text-green-600" />
+                        <UsersIcon class="w-7 h-7 text-green-600" />
                     </div>
                 </div>
             </div>
 
             <div class="bg-white rounded-2xl border border-gray-100 p-6">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-600 mb-2">
                             Transactions
                         </p>
-                        <p class="text-2xl font-bold text-gray-900">
+                        <p class="text-3xl font-bold text-gray-900">
                             {{ transactions.total || 0 }}
                         </p>
-                        <p class="text-xs text-purple-600 mt-1">
+                        <p class="text-sm text-purple-600 mt-2">
                             {{ transactions.completed || 0 }} completed
                         </p>
                     </div>
                     <div
-                        class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center"
+                        class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center"
                     >
-                        <CurrencyDollarIcon class="w-6 h-6 text-purple-600" />
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-2xl border border-gray-100 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">
-                            Performance Score
-                        </p>
-                        <div class="flex items-center gap-2">
-                            <p class="text-2xl font-bold text-gray-900">
-                                {{ performance?.overall_score || 0 }}%
-                            </p>
-                            <span class="text-lg">{{
-                                performanceRating.icon
-                            }}</span>
-                        </div>
-                        <p :class="['text-xs mt-1', performanceRating.class]">
-                            {{ performanceRating.text }}
-                        </p>
-                    </div>
-                    <div
-                        class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center"
-                    >
-                        <TrophyIcon class="w-6 h-6 text-yellow-600" />
+                        <CurrencyDollarIcon class="w-7 h-7 text-purple-600" />
                     </div>
                 </div>
             </div>
@@ -690,14 +621,26 @@ const getActivityColor = (type) => {
                             </div>
                         </div>
 
-                        <div v-if="broker.birthdate" class="flex items-center gap-3">
+                        <div
+                            v-if="broker.birthdate"
+                            class="flex items-center gap-3"
+                        >
                             <CalendarIcon class="w-5 h-5 text-gray-400" />
                             <div>
                                 <p class="text-sm text-gray-600">Birthdate</p>
                                 <p class="font-medium text-gray-900">
                                     {{ formatDate(broker.birthdate) }}
-                                    <span class="text-sm text-gray-500" v-if="calculateAge(broker.birthdate) !== null">
-                                        ({{ calculateAge(broker.birthdate) }} years)
+                                    <span
+                                        class="text-sm text-gray-500"
+                                        v-if="
+                                            calculateAge(broker.birthdate) !==
+                                            null
+                                        "
+                                    >
+                                        ({{
+                                            calculateAge(broker.birthdate)
+                                        }}
+                                        years)
                                     </span>
                                 </p>
                             </div>

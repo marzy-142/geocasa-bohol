@@ -13,6 +13,47 @@ use Inertia\Inertia;
 class PropertyController extends Controller
 {
     /**
+     * Get all property types (predefined + custom) for filtering
+     */
+    private function getAllPropertyTypes()
+    {
+        // Get predefined types with counts (only available properties for clients)
+        $predefinedTypes = collect(Property::TYPES)->map(function($type) {
+            $count = Property::where('status', 'available')
+                ->whereJsonContains('types', $type)
+                ->count();
+            return [
+                'value' => $type,
+                'label' => Property::formatPropertyType($type),
+                'count' => $count
+            ];
+        })->filter(fn($t) => $t['count'] > 0);
+
+        // Get custom types (only from available properties)
+        $customTypes = Property::where('status', 'available')
+            ->whereJsonContains('types', 'other')
+            ->whereNotNull('custom_type_text')
+            ->select('custom_type_text')
+            ->distinct()
+            ->get()
+            ->map(function($item) {
+                $count = Property::where('status', 'available')
+                    ->where('custom_type_text', $item->custom_type_text)
+                    ->count();
+                return [
+                    'value' => 'custom:' . $item->custom_type_text,
+                    'label' => $item->custom_type_text,
+                    'count' => $count
+                ];
+            });
+
+        return $predefinedTypes->concat($customTypes)
+            ->sortBy('label')
+            ->values()
+            ->toArray();
+    }
+
+    /**
      * Display property search and listing for clients
      */
     public function index(Request $request)
@@ -51,8 +92,34 @@ class PropertyController extends Controller
             });
         }
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
+        if ($request->filled('types')) {
+            $types = is_string($request->types) ? explode(',', $request->types) : $request->types;
+            
+            $query->where(function($q) use ($types) {
+                foreach ($types as $type) {
+                    // Handle custom types (prefixed with "custom:")
+                    if (str_starts_with($type, 'custom:')) {
+                        $customType = substr($type, 7);
+                        $q->orWhere('custom_type_text', $customType);
+                    } else {
+                        // Handle predefined types
+                        $q->orWhereJsonContains('types', $type);
+                    }
+                }
+            });
+        } elseif ($request->filled('type')) {
+            // Backward compatibility: single type filter
+            $type = $request->type;
+            if (str_starts_with($type, 'custom:')) {
+                $customType = substr($type, 7);
+                $query->where('custom_type_text', $customType);
+            } else {
+                $query->where(function($q) use ($type) {
+                    $q->whereJsonContains('types', $type)
+                      ->orWhere('type', $type)
+                      ->orWhereRaw("JSON_SEARCH(types, 'one', ?) IS NOT NULL", [$type]);
+                });
+            }
         }
 
         if ($request->filled('municipality')) {
@@ -125,10 +192,10 @@ class PropertyController extends Controller
         return Inertia::render('Client/Properties', [
             'properties' => $properties,
             'savedProperties' => $savedProperties,
-            'types' => Property::TYPES,
+            'types' => $this->getAllPropertyTypes(),
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
             'filters' => $request->only([
-                'search', 'type', 'municipality', 'min_price', 'max_price',
+                'search', 'type', 'types', 'municipality', 'min_price', 'max_price',
                 'min_area', 'max_area', 'utilities', 'featured', 'virtual_tour', 'sort'
             ]),
         ]);

@@ -115,33 +115,31 @@
                         </select>
                         <div v-if="form.type === 'other'" class="mt-3">
                             <label
-                                for="type_other"
+                                for="custom_type_text"
                                 class="block text-sm font-medium text-gray-700 mb-2"
                             >
                                 Specify Other Type
                             </label>
                             <input
-                                id="type_other"
-                                v-model="form.type_other"
+                                id="custom_type_text"
+                                v-model="form.custom_type_text"
                                 type="text"
                                 class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                 :class="{
                                     'border-red-500 ring-red-500':
-                                        errors.type_other,
+                                        errors.custom_type_text,
                                 }"
-                                placeholder="e.g., Hillside Farmland"
+                                placeholder="e.g., Resort Land, Heritage Site"
                                 :required="form.type === 'other'"
-                                maxlength="100"
                             />
                             <p class="text-xs text-gray-500 mt-1">
-                                We'll record this in notes to keep your listing
-                                accurate while keeping filters consistent.
+                                💡 This type will be automatically available for all users to filter
                             </p>
                             <div
-                                v-if="errors.type_other"
+                                v-if="errors.custom_type_text"
                                 class="text-red-500 text-sm mt-1"
                             >
-                                {{ errors.type_other }}
+                                {{ errors.custom_type_text }}
                             </div>
                         </div>
                         <div
@@ -1298,7 +1296,7 @@ const form = useForm({
     title: "",
     description: "",
     type: "",
-    type_other: "",
+    custom_type_text: "",
     municipality: "",
     barangay: "",
     address: "",
@@ -1566,9 +1564,9 @@ watch(nearbyLandmarksText, (newValue) => {
 const submit = () => {
     console.log("Submit function called");
 
-    // Clean up type_other - only send if type is 'other'
+    // Clean up custom_type_text - only send if type is 'other'
     if (form.type !== "other") {
-        form.type_other = null;
+        form.custom_type_text = null;
     }
 
     console.log("Form data:", form.data());

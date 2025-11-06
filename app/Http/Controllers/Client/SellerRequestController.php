@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SimpleSellerRequestRequest;
 use App\Models\SellerRequest;
 use App\Models\Client;
 use App\Models\User;
@@ -34,134 +35,215 @@ class SellerRequestController extends Controller
             ]);
         }
         
-        return Inertia::render('Client/SellProperty', [
+        // Get available features (same as public form for consistency)
+        $availableFeatures = [
+            'Swimming Pool',
+            'Garden',
+            'Parking',
+            'Security',
+            'Furnished',
+            'Air Conditioning',
+            'Balcony',
+            'Terrace',
+            'Fireplace',
+            'Storage',
+            'Laundry Room',
+            'Gym',
+            'Playground',
+            'Near Beach',
+            'Mountain View',
+            'City View',
+            'Gated Community',
+            'Pet Friendly',
+            'Solar Panels',
+        ];
+        
+        // Get available verified brokers for selection (same as public form)
+        $availableBrokers = User::where('role', 'broker')
+            ->where('is_approved', true)
+            ->where('application_status', 'approved')
+            ->where('prc_verified', true)
+            ->whereNull('suspended_at')
+            ->select([
+                'id',
+                'name',
+                'brokerage_firm_name',
+                'city',
+                'years_experience',
+                'office_contact_number'
+            ])
+            ->withCount(['properties as active_listings' => function($q) {
+                $q->where('status', 'available');
+            }])
+            ->withCount(['assignedSellerRequests as pending_requests' => function($q) {
+                $q->whereIn('status', ['pending', 'under_review', 'approved']);
+            }])
+            ->orderBy('name')
+            ->get()
+            ->map(function($broker) {
+                return [
+                    'id' => $broker->id,
+                    'name' => $broker->name,
+                    'firm' => $broker->brokerage_firm_name,
+                    'location' => $broker->city,
+                    'experience' => $broker->years_experience,
+                    'active_listings' => $broker->active_listings,
+                    'workload' => $broker->pending_requests,
+                    'availability' => $broker->pending_requests < 5 ? 'Available' : 'Busy'
+                ];
+            });
+        
+        // Use the same comprehensive form component as public route
+        // Pass client prop to enable pre-filling of contact information
+        return Inertia::render('SellerRequests/Create', [
             'client' => $client,
+            'availableFeatures' => $availableFeatures,
+            'availableBrokers' => $availableBrokers,
             'municipalities' => \App\Models\Property::BOHOL_MUNICIPALITIES,
-            'propertyTypes' => \App\Models\Property::TYPES,
         ]);
     }
 
     /**
      * Store a newly created seller request
      */
-    public function store(Request $request)
+    public function store(SimpleSellerRequestRequest $request)
     {
-        $validated = $request->validate([
-            'property_type' => 'required|string|max:255',
-            'address' => 'required|string|max:500',
-            'municipality' => 'required|string|max:255',
-            'barangay' => 'required|string|max:255',
-            'lot_area' => 'required|numeric|min:0',
-            'price_expectation' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string|max:2000',
-            'contact_name' => 'required|string|max:255',
-            'contact_email' => 'required|email|max:255',
-            'contact_phone' => 'required|string|max:20',
-            'images.*' => 'nullable|image|max:5120', // 5MB max per image
-            'documents.*' => 'nullable|file|mimes:pdf,doc,docx|max:10240', // 10MB max per document
-        ]);
-
         try {
             DB::beginTransaction();
 
-            $user = auth()->user();
+            $sellerRequest = new SellerRequest();
             
-            // Get or create client record
-            $client = Client::where('user_id', $user->id)
-                ->orWhere('email', $user->email)
-                ->first();
-                
-            if (!$client) {
-                $client = Client::create([
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'user_id' => $user->id,
-                    'phone' => $validated['contact_phone'],
-                ]);
+            // Map contact_* fields to name/email/phone in database
+            $sellerRequest->name = $request->contact_name;
+            $sellerRequest->email = $request->contact_email;
+            $sellerRequest->phone = $request->contact_phone;
+            
+            // Property Information
+            $sellerRequest->property_title = $request->property_title;
+            $sellerRequest->property_description = $request->property_description;
+            
+            // Store property types as JSON array
+            $sellerRequest->property_type = $request->property_type;
+            
+            // Custom property type
+            if (in_array('other', $request->property_type ?? []) && $request->custom_property_type) {
+                $sellerRequest->custom_property_type = $request->custom_property_type;
             }
-
-            // Auto-generate property title for land
-            $propertyTitle = number_format($validated['lot_area'], 0) . ' sqm Land in ' . $validated['municipality'];
-            if ($validated['barangay']) {
-                $propertyTitle .= ', ' . $validated['barangay'];
+            
+            // Pricing & Area - map lot_area_sqm to lot_area
+            $sellerRequest->asking_price = $request->asking_price;
+            $sellerRequest->lot_area = $request->lot_area_sqm;
+            $sellerRequest->lot_area_sqm = $request->lot_area_sqm;
+            $sellerRequest->price_expectation = $request->price_expectation;
+            
+            // Location
+            $sellerRequest->municipality = $request->municipality;
+            $sellerRequest->barangay = $request->barangay;
+            $sellerRequest->address = $request->address;
+            $sellerRequest->nearby_landmarks = $request->nearby_landmarks;
+            
+            // Title Information
+            $sellerRequest->title_type = $request->title_type;
+            $sellerRequest->title_number = $request->title_number;
+            $sellerRequest->zoning_classification = $request->zoning_classification;
+            
+            // Features
+            $sellerRequest->features = $request->features ?? [];
+            
+            // GIS
+            $sellerRequest->coordinates_lat = $request->coordinates_lat;
+            $sellerRequest->coordinates_lng = $request->coordinates_lng;
+            
+            // Additional Information
+            $sellerRequest->additional_notes = $request->additional_notes;
+            $sellerRequest->urgency_level = $request->urgency_level ?? 'medium';
+            $sellerRequest->preferred_contact_method = $request->preferred_contact_method ?? 'both';
+            $sellerRequest->best_time_to_contact = $request->best_time_to_contact;
+            
+            // Consent
+            $sellerRequest->marketing_consent = $request->marketing_consent ?? false;
+            $sellerRequest->newsletter_consent = $request->newsletter_consent ?? false;
+            
+            // Broker
+            $sellerRequest->broker_selection_method = $request->broker_selection_method ?? 'manual';
+            if ($request->preferred_broker_id) {
+                $sellerRequest->broker_id = $request->preferred_broker_id;
             }
+            $sellerRequest->status = 'pending';
+            
+            // User & Client linkage for "My Listing Requests"
+            $sellerRequest->user_id = auth()->check() ? auth()->id() : null;
 
-            // Create seller request - mapping client fields to public form structure
-            $sellerRequest = SellerRequest::create([
-                'client_id' => $client->id,
-                'name' => $validated['contact_name'],
-                'email' => $validated['contact_email'],
-                'phone' => $validated['contact_phone'],
-                'property_type' => $validated['property_type'] ?? 'residential_lot', // Default to residential_lot
-                'property_title' => $propertyTitle,
-                'property_description' => $validated['description'] ?? 'Land for sale',
-                'address' => $validated['address'],
-                'city' => $validated['municipality'],
-                'province' => 'Bohol',
-                'municipality' => $validated['municipality'],
-                'barangay' => $validated['barangay'],
-                'lot_area' => $validated['lot_area'],
-                'asking_price' => $validated['price_expectation'],
-                'price_expectation' => $validated['price_expectation'],
-                'description' => $validated['description'],
-                'contact_name' => $validated['contact_name'],
-                'contact_email' => $validated['contact_email'],
-                'contact_phone' => $validated['contact_phone'],
-                'status' => 'pending',
-                'submission_date' => now(),
-            ]);
+            // Ensure seller request is linked to the authenticated client's record
+            if (auth()->check()) {
+                $user = auth()->user();
+                $client = Client::where('user_id', $user->id)
+                    ->orWhere('email', $user->email)
+                    ->first();
 
-            // Handle image uploads - save to both fields for compatibility
-            if ($request->hasFile('images')) {
-                $images = [];
-                foreach ($request->file('images') as $image) {
+                if (!$client) {
+                    $client = Client::create([
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'user_id' => $user->id,
+                    ]);
+                }
+
+                // Link the request to client so it appears in Client/SellerRequests index
+                $sellerRequest->client_id = $client->id;
+            }
+            
+            // Upload property_images (changed from uploaded_images)
+            $imagesPaths = [];
+            if ($request->hasFile('property_images')) {
+                foreach ($request->file('property_images') as $image) {
                     $path = $image->store('seller-requests/images', 'public');
-                    $images[] = $path;
+                    $imagesPaths[] = $path;
                 }
-                $sellerRequest->update([
-                    'images' => json_encode($images),
-                    'uploaded_images' => json_encode($images), // For admin view compatibility
-                ]);
             }
-
-            // Handle document uploads - save to both fields for compatibility
-            if ($request->hasFile('documents')) {
-                $documents = [];
-                foreach ($request->file('documents') as $document) {
-                    $path = $document->store('seller-requests/documents', 'public');
-                    $documents[] = [
-                        'path' => $path,
-                        'name' => $document->getClientOriginalName(),
-                    ];
+            $sellerRequest->images = $imagesPaths;
+            
+            // Property Documents
+            $propertyDocsPaths = [];
+            if ($request->hasFile('property_documents')) {
+                foreach ($request->file('property_documents') as $doc) {
+                    $path = $doc->store('seller-requests/property-documents', 'public');
+                    $propertyDocsPaths[] = $path;
                 }
-                $sellerRequest->update([
-                    'documents' => json_encode($documents),
-                    'property_documents' => json_encode($documents), // For admin view compatibility
-                ]);
             }
+            $sellerRequest->property_documents = $propertyDocsPaths;
+            
+            // Ownership Documents
+            $ownershipDocsPaths = [];
+            if ($request->hasFile('ownership_documents')) {
+                foreach ($request->file('ownership_documents') as $doc) {
+                    $path = $doc->store('seller-requests/ownership-documents', 'public');
+                    $ownershipDocsPaths[] = $path;
+                }
+            }
+            $sellerRequest->ownership_documents = $ownershipDocsPaths;
+            
+            $sellerRequest->save();
 
             DB::commit();
 
-            Log::info('Seller request created by client', [
-                'seller_request_id' => $sellerRequest->id,
-                'client_id' => $client->id,
-                'user_id' => $user->id,
-            ]);
-
-            return redirect()->route('client.seller-requests.index')
-                ->with('success', 'Your property listing request has been submitted successfully! A broker will be assigned to you shortly.');
+            if (auth()->check()) {
+                return redirect()
+                    ->route('client.dashboard')
+                    ->with('success', 'Your property listing request has been submitted successfully!');
+            } else {
+                return redirect()
+                    ->route('home')
+                    ->with('success', 'Thank you! Your property listing request has been submitted.');
+            }
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Error creating seller request: ' . $e->getMessage());
             
-            Log::error('Failed to create seller request', [
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id(),
-            ]);
-
             return back()
                 ->withInput()
-                ->with('error', 'Failed to submit your request. Please try again.');
+                ->with('error', 'An error occurred. Please try again.');
         }
     }
 

@@ -16,8 +16,10 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             // Allow predefined types or 'other' with a companion free-text field
-            'type' => 'required|in:' . implode(',', \App\Models\Property::TYPES) . ',other',
-            'type_other' => 'nullable|required_if:type,other|string|max:100',
+            'type' => 'nullable|in:' . implode(',', \App\Models\Property::TYPES) . ',other',
+            'types' => 'nullable|array',
+            'types.*' => 'string|in:' . implode(',', \App\Models\Property::TYPES) . ',other',
+            'custom_type_text' => 'nullable|required_if:types.*,other|string|max:100',
             'municipality' => 'required|in:' . implode(',', \App\Models\Property::BOHOL_MUNICIPALITIES),
             'title_type' => 'required|in:titled,tax_declared,mother_title,cct',
             
@@ -185,14 +187,6 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
             'has_virtual_tour' => $this->has('virtual_tour_images') && !empty($this->virtual_tour_images),
         ]);
 
-        // If 'other' type is selected, ensure additional notes capture the specified type without breaking schema
-        if ($this->input('type') === 'other' && $this->filled('type_other')) {
-            $notePrefix = 'Type (other): ' . trim($this->input('type_other'));
-            $existing = trim((string) $this->input('additional_notes'));
-            $mergedNotes = $existing ? ($notePrefix . "\n" . $existing) : $notePrefix;
-            $this->merge([
-                'additional_notes' => $mergedNotes,
-            ]);
-        }
+        // No longer needed - custom_type_text is stored directly in the database
     }
 }

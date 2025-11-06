@@ -260,17 +260,39 @@ const deleteRequest = (request) => {
 const formatPropertyType = (type) => {
     if (!type) return "Property Type Not Specified";
 
+    // Handle array format (new multi-type support)
+    if (Array.isArray(type)) {
+        if (type.length === 0) return "Property Type Not Specified";
+        // Format each type and join with commas
+        return type.map((t) => formatSinglePropertyType(t)).join(", ");
+    }
+
+    // Handle single string format (legacy)
+    return formatSinglePropertyType(type);
+};
+
+const formatSinglePropertyType = (type) => {
     const typeMap = {
         land: "Land Property",
         residential: "Residential Property",
+        residential_lot: "Residential Lot",
         commercial: "Commercial Property",
+        commercial_lot: "Commercial Lot",
         industrial: "Industrial Property",
+        industrial_lot: "Industrial Lot",
         agricultural: "Agricultural Property",
+        agricultural_land: "Agricultural Land",
+        beachfront: "Beachfront",
+        mountain_view: "Mountain View",
+        rice_field: "Rice Field",
+        coconut_plantation: "Coconut Plantation",
+        subdivision_lot: "Subdivision Lot",
+        other: "Other",
     };
 
     return (
         typeMap[type] ||
-        type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+        type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
     );
 };
 
@@ -643,11 +665,19 @@ const formatLocation = (request) => {
                                             d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                                         ></path>
                                     </svg>
-                                    <span class="capitalize">{{
-                                        formatPropertyType(
-                                            request.property_type
-                                        )
-                                    }}</span>
+                                    <span class="capitalize"
+                                        >{{
+                                            formatPropertyType(
+                                                request.property_type
+                                            )
+                                        }}
+                                        <span
+                                            v-if="request.custom_property_type"
+                                            class="text-gray-500"
+                                        >
+                                            ({{ request.custom_property_type }})
+                                        </span>
+                                    </span>
                                 </div>
                             </div>
 

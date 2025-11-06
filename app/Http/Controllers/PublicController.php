@@ -25,6 +25,47 @@ class PublicController extends Controller
     }
 
     /**
+     * Get all property types (predefined + custom) for filtering
+     */
+    private function getAllPropertyTypes()
+    {
+        // Get predefined types with counts (only available properties for public)
+        $predefinedTypes = collect(Property::TYPES)->map(function($type) {
+            $count = Property::where('status', 'available')
+                ->whereJsonContains('types', $type)
+                ->count();
+            return [
+                'value' => $type,
+                'label' => Property::formatPropertyType($type),
+                'count' => $count
+            ];
+        })->filter(fn($t) => $t['count'] > 0);
+
+        // Get custom types (only from available properties)
+        $customTypes = Property::where('status', 'available')
+            ->whereJsonContains('types', 'other')
+            ->whereNotNull('custom_type_text')
+            ->select('custom_type_text')
+            ->distinct()
+            ->get()
+            ->map(function($item) {
+                $count = Property::where('status', 'available')
+                    ->where('custom_type_text', $item->custom_type_text)
+                    ->count();
+                return [
+                    'value' => 'custom:' . $item->custom_type_text,
+                    'label' => $item->custom_type_text,
+                    'count' => $count
+                ];
+            });
+
+        return $predefinedTypes->concat($customTypes)
+            ->sortBy('label')
+            ->values()
+            ->toArray();
+    }
+
+    /**
      * Display the home page with featured properties and stats
      */
     public function home()
@@ -85,8 +126,49 @@ class PublicController extends Controller
                       ->orWhere('description', 'like', "%{$search}%");
                 });
             })
-            ->when($request->type, function ($query, $type) {
-                $query->where('type', $type);
+            ->when($request->types, function ($query, $types) use ($request) {
+                $types = is_string($types) ? explode(',', $types) : $types;
+                
+                \Log::info('PUBLIC - Filtering by types:', [
+                    'types_input' => $request->types,
+                    'types_parsed' => $types,
+                ]);
+                
+                $query->where(function($q) use ($types) {
+                    foreach ($types as $type) {
+                        $type = trim($type); // Trim whitespace
+                        \Log::info('PUBLIC - Applying type filter: ' . $type);
+                        
+                        // Handle custom types (prefixed with "custom:")
+                        if (str_starts_with($type, 'custom:')) {
+                            $customType = substr($type, 7);
+                            $q->orWhere('custom_type_text', $customType);
+                        } else {
+                            // Handle predefined types
+                            $q->orWhereJsonContains('types', $type);
+                        }
+                    }
+                });
+            })
+            ->when(!$request->types && $request->type, function ($query, $type) {
+                // Backward compatibility: single type filter
+                \Log::info('Filtering by type: ' . $type);
+                
+                // Check if it's a custom type
+                if (str_starts_with($type, 'custom:')) {
+                    $customType = substr($type, 7);
+                    $query->where('custom_type_text', $customType);
+                } else {
+                    // Try multiple approaches to find the type
+                    $query->where(function($q) use ($type) {
+                        // Try JSON contains
+                        $q->whereJsonContains('types', $type)
+                          // Or try old type column
+                          ->orWhere('type', $type)
+                          // Or try JSON as string (in case it's stored as text)
+                          ->orWhereRaw("JSON_SEARCH(types, 'one', ?) IS NOT NULL", [$type]);
+                    });
+                }
             })
             ->when($request->municipality, function ($query, $municipality) {
                 $query->where('municipality', $municipality);
@@ -142,11 +224,11 @@ class PublicController extends Controller
         return Inertia::render('Public/Properties', [
             'properties' => $properties,
             'filters' => $request->only([
-                'search', 'type', 'municipality', 'min_price', 'max_price', 
+                'search', 'type', 'types', 'municipality', 'min_price', 'max_price', 
                 'min_area', 'max_area', 'utilities', 'virtual_tour', 'sort', 'featured',
                 'include_sold' // new toggle to show sold
             ]),
-            'types' => Property::TYPES,
+            'types' => $this->getAllPropertyTypes(),
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
         ]);
     }

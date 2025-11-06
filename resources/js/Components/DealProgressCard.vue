@@ -231,39 +231,28 @@ const stages = computed(() => {
         {
             id: 3,
             number: 3,
-            title: "Viewing Scheduled",
-            // Completed if scheduled_at exists OR if we have a transaction
-            status:
-                props.inquiry.scheduled_at || hasTransaction
-                    ? "completed"
-                    : "pending",
-            date: props.inquiry.scheduled_at || props.transaction?.viewing_date,
-        },
-        {
-            id: 4,
-            number: 4,
             title: "Offer Made",
             status: hasTransaction ? "completed" : "pending",
             date:
                 props.transaction?.offer_date || props.transaction?.created_at,
         },
         {
-            id: 5,
-            number: 5,
+            id: 4,
+            number: 4,
             title: "Negotiation",
             status: isNegotiationOrBeyond ? "completed" : "pending",
             date: isNegotiationOrBeyond ? props.transaction?.updated_at : null,
         },
         {
-            id: 6,
-            number: 6,
+            id: 5,
+            number: 5,
             title: "Contract Signed",
             status: isContractOrBeyond ? "completed" : "pending",
             date: props.transaction?.contract_date,
         },
         {
-            id: 7,
-            number: 7,
+            id: 6,
+            number: 6,
             title: "Finalized",
             status: isFinalized ? "completed" : "pending",
             date:
@@ -299,8 +288,6 @@ const nextAction = computed(() => {
     const actions = {
         "Initial Contact":
             "Reach out to the client to discuss their interest and answer questions.",
-        "Viewing Scheduled":
-            "Schedule a property viewing appointment with the client.",
         "Offer Made":
             "Mark the inquiry as won to create a transaction and move to the offer stage.",
         Negotiation: "Work with the client on price negotiations and terms.",

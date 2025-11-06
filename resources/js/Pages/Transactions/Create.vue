@@ -324,7 +324,12 @@ const formatDate = (date) => {
                                             :value="property.id"
                                         >
                                             {{ property.title }} -
-                                            {{ formatPrice(property.price) }}
+                                            {{
+                                                formatPrice(
+                                                    property.total_price ??
+                                                        property.price
+                                                )
+                                            }}
                                         </option>
                                     </select>
                                     <div
@@ -396,7 +401,7 @@ const formatDate = (date) => {
                                         v-model="form.offered_price"
                                         type="number"
                                         id="offered_price"
-                                        step="1000"
+                                        step="1"
                                         min="0"
                                         class="pl-8 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="0"

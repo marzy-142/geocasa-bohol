@@ -4,11 +4,11 @@
             <!-- Header -->
             <div class="mb-8">
                 <Link
-                    :href="route('client.seller-requests.index')"
+                    :href="route('client.dashboard')"
                     class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
                 >
                     <ChevronLeftIcon class="w-4 h-4 mr-1" />
-                    Back to My Requests
+                    Back to Dashboard
                 </Link>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
                     List Your Land for Sale
@@ -374,7 +374,7 @@
                         class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200"
                     >
                         <Link
-                            :href="route('client.seller-requests.index')"
+                            :href="route('client.dashboard')"
                             class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                         >
                             Cancel

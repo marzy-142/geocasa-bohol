@@ -32,9 +32,23 @@ const props = defineProps({
 // Loading state
 const isLoading = ref(false);
 
+// Helper to parse types filter from string to array
+function parseTypesFilter(types) {
+    if (!types) return [];
+    if (Array.isArray(types)) return types;
+    if (typeof types === "string") {
+        return types
+            .split(",")
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+    }
+    return [];
+}
+
 const form = reactive({
     search: props.filters.search || "",
-    type: props.filters.type || "",
+    type: props.filters.type || "", // Keep for backward compatibility
+    types: parseTypesFilter(props.filters.types), // New multi-type filter
     municipality: props.filters.municipality || "",
     min_price: props.filters.min_price || "",
     max_price: props.filters.max_price || "",
@@ -99,6 +113,16 @@ function search() {
     isLoading.value = true;
     const payload = { ...form };
 
+    // Convert types array to comma-separated string for URL
+    if (Array.isArray(payload.types) && payload.types.length > 0) {
+        payload.types = payload.types.join(",");
+    } else {
+        delete payload.types;
+    }
+
+    // Remove old single-type filter (we use types array now)
+    delete payload.type;
+
     // Drop falsey filters except 0 numbers
     Object.keys(payload).forEach((k) => {
         const v = payload[k];
@@ -106,6 +130,8 @@ function search() {
             delete payload[k];
         }
     });
+
+    console.log("Public search with filters:", payload);
 
     router.get(route("public.properties"), payload, {
         preserveScroll: true,
@@ -264,32 +290,25 @@ watch(
                             >
                                 <select
                                     v-model="form.type"
+                                    @change="
+                                        form.types = form.type
+                                            ? [form.type]
+                                            : []
+                                    "
                                     class="modern-select"
                                     id="property-type-filter"
                                     name="type"
                                 >
                                     <option value="">All Property Types</option>
                                     <option
-                                        v-for="t in types"
-                                        :key="
-                                            typeof t === 'string'
-                                                ? t
-                                                : t.value ?? t.key ?? String(t)
-                                        "
-                                        :value="
-                                            typeof t === 'string'
-                                                ? t
-                                                : t.value ?? t.key ?? ''
-                                        "
+                                        v-for="type in types"
+                                        :key="type.value"
+                                        :value="type.value"
                                     >
-                                        {{
-                                            typeof t === "string"
-                                                ? formatPropertyType(t)
-                                                : t.label ||
-                                                  formatPropertyType(
-                                                      t.value ?? t.key ?? ""
-                                                  )
-                                        }}
+                                        {{ type.label }}
+                                        <span v-if="type.count"
+                                            >({{ type.count }})</span
+                                        >
                                     </option>
                                 </select>
 
@@ -482,7 +501,12 @@ watch(
                                 <div
                                     class="bg-primary-600 text-white px-3 py-1 rounded-full text-xs font-medium"
                                 >
-                                    {{ formatPropertyType(property.type) }}
+                                    {{
+                                        property.type === "other" &&
+                                        property.custom_type_text
+                                            ? property.custom_type_text
+                                            : formatPropertyType(property.type)
+                                    }}
                                 </div>
                             </div>
                             <!-- Status Badge -->

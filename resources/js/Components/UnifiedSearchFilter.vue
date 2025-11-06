@@ -69,8 +69,18 @@
                     :key="filter.key"
                     :class="getFilterColumnClass(filter)"
                 >
+                    <MultiSelectFilter
+                        v-if="filter.type === 'multiselect'"
+                        :model-value="getFilterValue(filter.key)"
+                        :options="filter.options"
+                        :placeholder="
+                            filter.placeholder || `All ${filter.label}`
+                        "
+                        @change="$emit('filter-change', filter.key, $event)"
+                    />
+
                     <select
-                        v-if="filter.type === 'select'"
+                        v-else-if="filter.type === 'select'"
                         :value="getFilterValue(filter.key)"
                         @change="
                             $emit(
@@ -203,7 +213,11 @@
                 >
                     {{ tag.label }}: {{ tag.value }}
                     <button
-                        @click="$emit('filter-change', tag.key, '')"
+                        @click="
+                            tag.isSearch
+                                ? $emit('search-change', '')
+                                : $emit('filter-change', tag.key, '')
+                        "
                         class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 transition-colors"
                     >
                         <XMarkIcon class="w-3 h-3" />
@@ -223,6 +237,7 @@ import {
     ChevronDownIcon,
     AdjustmentsHorizontalIcon,
 } from "@heroicons/vue/24/outline";
+import MultiSelectFilter from "@/Components/MultiSelectFilter.vue";
 
 const props = defineProps({
     title: String,
@@ -257,9 +272,18 @@ const showSecondaryFilters = ref(false);
 
 const hasActiveFilters = computed(() => {
     if (props.search) return true;
-    return Object.values(props.filters || {}).some(
-        (value) => value !== "" && value !== null
-    );
+    return Object.values(props.filters || {}).some((value) => {
+        // Consider empty arrays as inactive
+        if (Array.isArray(value)) {
+            return value.length > 0;
+        }
+        // Consider false boolean as inactive, but other values as active
+        if (typeof value === "boolean") {
+            return value === true;
+        }
+        // Consider empty strings and null/undefined as inactive
+        return value !== "" && value !== null && value !== undefined;
+    });
 });
 
 const activeFilterTags = computed(() => {
@@ -270,6 +294,7 @@ const activeFilterTags = computed(() => {
             key: "search",
             label: "Search",
             value: props.search,
+            isSearch: true, // Flag to handle differently
         });
     }
 
@@ -277,12 +302,37 @@ const activeFilterTags = computed(() => {
 
     allFilters.forEach((filter) => {
         const value = getFilterValue(filter.key);
-        if (value) {
+
+        // Skip empty values, empty arrays, or false booleans
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+            return;
+        }
+
+        // Handle multiselect (array values)
+        if (Array.isArray(value)) {
+            const labels = value
+                .map((val) => {
+                    const option = filter.options?.find(
+                        (opt) => opt.value === val
+                    );
+                    return option?.label || val;
+                })
+                .join(", ");
+
+            tags.push({
+                key: filter.key,
+                label: filter.label,
+                value: labels,
+                isSearch: false,
+            });
+        } else {
+            // Handle single select
             const option = filter.options?.find((opt) => opt.value === value);
             tags.push({
                 key: filter.key,
                 label: filter.label,
                 value: option?.label || value,
+                isSearch: false,
             });
         }
     });
@@ -291,12 +341,33 @@ const activeFilterTags = computed(() => {
 });
 
 const getFilterValue = (key) => {
-    return props.filters?.[key] || "";
+    const value = props.filters?.[key];
+    // Return empty array for undefined/null array values, empty string for others
+    if (value === undefined || value === null) {
+        return "";
+    }
+    return value;
 };
 
 const getFilterColumnClass = (filter) => {
     const span = filter.span || 2;
-    return `md:col-span-${span}`;
+    // Map span values to complete Tailwind classes
+    // Tailwind requires complete class names for purging
+    const spanClasses = {
+        1: "md:col-span-1",
+        2: "md:col-span-2",
+        3: "md:col-span-3",
+        4: "md:col-span-4",
+        5: "md:col-span-5",
+        6: "md:col-span-6",
+        7: "md:col-span-7",
+        8: "md:col-span-8",
+        9: "md:col-span-9",
+        10: "md:col-span-10",
+        11: "md:col-span-11",
+        12: "md:col-span-12",
+    };
+    return spanClasses[span] || "md:col-span-2";
 };
 
 const clearFilters = () => {

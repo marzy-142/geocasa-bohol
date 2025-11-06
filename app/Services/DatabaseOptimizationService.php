@@ -152,14 +152,51 @@ class DatabaseOptimizationService
                 $query->where('broker_id', $brokerId);
             }
             
+            // Get brokers with their property types
+            $brokers = User::where('role', 'broker')
+                ->where('application_status', 'approved')
+                ->select('id', 'name')
+                ->withCount('properties')
+                ->with(['properties' => function($query) {
+                    $query->select('id', 'broker_id', 'types', 'custom_type_text');
+                }])
+                ->orderBy('name')
+                ->get()
+                ->map(function($broker) {
+                    // Collect all unique property types for this broker
+                    $propertyTypes = collect();
+                    
+                    foreach ($broker->properties as $property) {
+                        // Add types from the JSON array
+                        if ($property->types && is_array($property->types)) {
+                            $propertyTypes = $propertyTypes->merge($property->types);
+                        }
+                        
+                        // Add custom type if exists
+                        if (in_array('other', $property->types ?? []) && $property->custom_type_text) {
+                            $propertyTypes->push($property->custom_type_text);
+                        }
+                    }
+                    
+                    // Get unique types and format them
+                    $uniqueTypes = $propertyTypes->unique()->filter()->map(function($type) {
+                        return Property::formatPropertyType($type);
+                    })->sort()->values();
+                    
+                    return [
+                        'value' => $broker->id,
+                        'label' => $broker->name,
+                        'property_count' => $broker->properties_count,
+                        'property_types' => $uniqueTypes->take(3)->join(', '), // Show max 3 types
+                        'all_types' => $uniqueTypes->toArray(),
+                    ];
+                })
+                ->filter(fn($broker) => $broker['property_count'] > 0); // Only show brokers with properties
+            
             return [
                 'municipalities' => $query->distinct()->pluck('municipality')->filter()->sort()->values(),
                 'types' => $query->distinct()->pluck('type')->filter()->sort()->values(),
-                'brokers' => User::where('role', 'broker')
-                    ->where('application_status', 'approved')
-                    ->select('id', 'name')
-                    ->orderBy('name')
-                    ->get(),
+                'brokers' => $brokers,
                 'price_ranges' => [
                     'min' => $query->min('total_price'),
                     'max' => $query->max('total_price'),

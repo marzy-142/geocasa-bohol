@@ -248,7 +248,11 @@ class ReportsController extends Controller
     {
         return [
             'total_brokers' => User::where('role', 'broker')->count(),
-            'active_brokers' => User::where('role', 'broker')->where('is_approved', true)->where('application_status', 'approved')->count(),
+            'active_brokers' => User::where('role', 'broker')
+                ->where('is_approved', true)
+                ->where('application_status', 'approved')
+                ->whereNull('suspended_at')
+                ->count(),
             'pending_brokers' => User::where('role', 'broker')->where('is_approved', false)->whereIn('application_status', ['pending', 'under_review'])->count(),
             'avg_response_rate' => 85.5,
         ];

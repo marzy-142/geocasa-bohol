@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\AsArrayWithoutSlashes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -48,15 +49,19 @@ class Property extends Model
 
     // Add these fields to the fillable array and casts
     // Add these to the existing fillable array
+    // NOTE: 'type' is deprecated. Use 'types' (array) instead.
     protected $fillable = [
-        'title', 'slug', 'description', 'type', 'status', 'price_per_sqm', 'total_price',
+        'title', 'slug', 'description', 'type', // deprecated
+        'types', // new multi-type array
+        'custom_type_text', // for "other" custom types
+        'status', 'price_per_sqm', 'total_price',
         'address', 'municipality', 'barangay', 'lot_area_sqm', 'lot_area_hectares',
         'title_type', 'title_number', 'tax_declaration_number', 'coordinates_lat',
         'coordinates_lng', 'road_access', 'water_source', 'electricity_available',
         'internet_available', 'nearby_landmarks', 'zoning_classification',
         'images', 'documents', 'is_featured', 'broker_id', 'client_id',
-    // Panoramic view fields
-    'virtual_tour_images', 'has_virtual_tour', 'gis_data', 'tour_hotspots',
+        // Panoramic view fields
+        'virtual_tour_images', 'has_virtual_tour', 'gis_data', 'tour_hotspots',
         // Sale fields
         'pending_at', 'sold_at', 'archived_at', 'sold_price', 'sold_to_client_id', 'sold_via_transaction_id',
     ];
@@ -73,14 +78,15 @@ class Property extends Model
         'water_source' => 'boolean',
         'electricity_available' => 'boolean',
         'internet_available' => 'boolean',
-        'images' => 'array',
-        'documents' => 'array',
-        'nearby_landmarks' => 'array',
+        'images' => AsArrayWithoutSlashes::class,
+        'documents' => AsArrayWithoutSlashes::class,
+        'nearby_landmarks' => AsArrayWithoutSlashes::class,
         'is_featured' => 'boolean',
-        'gis_data' => 'array',
-        'virtual_tour_images' => 'array',
+        'gis_data' => AsArrayWithoutSlashes::class,
+        'virtual_tour_images' => AsArrayWithoutSlashes::class,
         'has_virtual_tour' => 'boolean',
-    'tour_hotspots' => 'array',
+        'tour_hotspots' => AsArrayWithoutSlashes::class,
+        'types' => AsArrayWithoutSlashes::class, // new multi-type array
         // Sale casts
         'pending_at' => 'datetime',
         'sold_at' => 'datetime',
@@ -116,6 +122,7 @@ class Property extends Model
         'full_address',
         // New computed flag to indicate if property is under an active transaction
         'is_under_transaction',
+        'formatted_types',
     ];
 
     // Relationships
@@ -197,9 +204,47 @@ class Property extends Model
         return $query->where('is_featured', true);
     }
 
+    /**
+     * Scope: Filter properties by one or more types (OR logic)
+     * Usage: Property::byTypes(['commercial_lot', 'residential_lot'])
+     */
+    public function scopeByTypes($query, $types)
+    {
+        if (is_string($types)) {
+            $types = [$types];
+        }
+        return $query->where(function ($q) use ($types) {
+            foreach ($types as $type) {
+                $q->orWhereJsonContains('types', $type);
+            }
+        });
+    }
+
+    /**
+     * Scope: Filter properties that match ALL specified types (AND logic)
+     * Usage: Property::withAllTypes(['commercial_lot', 'residential_lot'])
+     */
+    public function scopeWithAllTypes($query, $types)
+    {
+        if (is_string($types)) {
+            $types = [$types];
+        }
+        foreach ($types as $type) {
+            $query->whereJsonContains('types', $type);
+        }
+        return $query;
+    }
+
+    /**
+     * Deprecated: Single type filter (legacy)
+     */
     public function scopeByType($query, $type)
     {
-        return $query->where('type', $type);
+        // Legacy support: checks both old and new fields
+        return $query->where(function ($q) use ($type) {
+            $q->where('type', $type)
+              ->orWhereJsonContains('types', $type);
+        });
     }
 
     public function scopeByMunicipality($query, $municipality)
@@ -257,6 +302,44 @@ class Property extends Model
         return self::formatPropertyType($this->type);
     }
 
+    /**
+     * Get formatted types array with human-readable labels
+     */
+    public function getFormattedTypesAttribute()
+    {
+        $types = $this->types ?? ($this->type ? [$this->type] : []);
+        
+        if (empty($types)) {
+            return [];
+        }
+        
+        return collect($types)->map(function($type) {
+            // If type is "other" and custom_type_text exists, use custom text
+            if ($type === 'other' && $this->custom_type_text) {
+                return [
+                    'value' => 'custom:' . $this->custom_type_text,
+                    'label' => $this->custom_type_text
+                ];
+            }
+            return [
+                'value' => $type,
+                'label' => self::formatPropertyType($type)
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get comma-separated formatted type labels
+     */
+    public function getFormattedTypesStringAttribute()
+    {
+        $types = $this->types ?? ($this->type ? [$this->type] : []);
+        
+        return collect($types)
+            ->map(fn($type) => self::formatPropertyType($type))
+            ->join(', ');
+    }
+
     public static function formatPropertyType($type)
     {
         $labels = [
@@ -269,9 +352,83 @@ class Property extends Model
             'rice_field' => 'Rice Field',
             'coconut_plantation' => 'Coconut Plantation',
             'subdivision_lot' => 'Subdivision Lot',
+            'other' => 'Other',
         ];
         
         return $labels[$type] ?? ucwords(str_replace('_', ' ', $type));
+    }
+
+    /**
+     * Normalize incoming type input to canonical slug(s).
+     * - Accepts human labels like "Rice Field" and returns "rice_field".
+     * - Accepts slugs already ("rice_field").
+     * - Preserves custom types starting with "custom:".
+     * - For arrays, normalizes each value.
+     */
+    public static function normalizeTypeInput($input)
+    {
+        // Preserve custom values
+        $normalizeOne = function($value) {
+            if (!is_string($value)) {
+                return $value;
+            }
+
+            $value = trim($value);
+            if ($value === '') {
+                return '';
+            }
+
+            if (str_starts_with($value, 'custom:')) {
+                return $value; // handled separately in queries
+            }
+
+            // If already exact slug, keep
+            if (in_array($value, self::TYPES, true)) {
+                return $value;
+            }
+
+            // Build a case-insensitive map from label -> slug
+            $labelToSlug = [];
+            foreach (self::TYPES as $slug) {
+                $labelToSlug[strtolower(self::formatPropertyType($slug))] = $slug;
+            }
+
+            $candidate = strtolower(str_replace(['-', ' '], ['_', '_'], $value));
+
+            // Try direct slug-ish candidate
+            if (in_array($candidate, self::TYPES, true)) {
+                return $candidate;
+            }
+
+            // Try label map (e.g., "rice field" -> rice_field)
+            $labelKey = strtolower(str_replace(['-', '_'], [' ', ' '], $value));
+            $labelKey = preg_replace('/\s+/', ' ', $labelKey);
+            if (isset($labelToSlug[$labelKey])) {
+                return $labelToSlug[$labelKey];
+            }
+
+            // Fallback: return as-is (will likely not match any type)
+            return $value;
+        };
+
+        if (is_array($input)) {
+            return array_values(array_filter(array_map($normalizeOne, $input), function($v) {
+                return $v !== '' && $v !== null;
+            }));
+        }
+
+        return $normalizeOne($input);
+    }
+
+    /**
+     * Mutator: Normalize custom type text to prevent duplicates
+     */
+    public function setCustomTypeTextAttribute($value)
+    {
+        // Trim, lowercase, then title case for consistency
+        $this->attributes['custom_type_text'] = $value 
+            ? ucwords(strtolower(trim($value)))
+            : null;
     }
 
     public function getMainImageAttribute()

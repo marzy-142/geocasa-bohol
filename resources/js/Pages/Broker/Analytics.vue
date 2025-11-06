@@ -190,13 +190,16 @@
                     </div>
                 </div>
 
-                <!-- Monthly Chart with Enhanced Design -->
+                <!-- Monthly Chart with Enhanced Design (Chart.js) -->
                 <div class="p-6">
                     <div class="h-80 relative">
-                        <canvas
-                            ref="monthlyChart"
-                            class="w-full h-full"
-                        ></canvas>
+                        <AnalyticsChart
+                            v-if="chartData.labels.length"
+                            type="line"
+                            :data="chartData"
+                            :options="chartOptions"
+                            :height="320"
+                        />
 
                         <!-- Chart Overlay Info -->
                         <div
@@ -386,8 +389,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import AnalyticsChart from "@/Components/AnalyticsChart.vue";
 import {
     ChartBarIcon,
     ArrowTrendingUpIcon,
@@ -401,8 +405,97 @@ const props = defineProps({
     totalStats: Object,
 });
 
-const monthlyChart = ref(null);
-let chartInstance = null;
+// Chart.js data and options (computed from monthlyData)
+const chartData = computed(() => {
+    const labels = (props.monthlyData || []).map((m) => m.month);
+    const inquiries = (props.monthlyData || []).map((m) => m.inquiries || 0);
+    const transactions = (props.monthlyData || []).map(
+        (m) => m.transactions || 0
+    );
+
+    // Use scriptable backgroundColor to build gradient with Chart.js ctx
+    const blueFill = (ctx) => {
+        const { chart } = ctx;
+        const { ctx: c, chartArea } = chart || {};
+        if (!chartArea) return "rgba(59,130,246,0.15)"; // fallback before first layout
+        const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        g.addColorStop(0, "rgba(59,130,246,0.35)");
+        g.addColorStop(1, "rgba(59,130,246,0.05)");
+        return g;
+    };
+    const greenFill = (ctx) => {
+        const { chart } = ctx;
+        const { ctx: c, chartArea } = chart || {};
+        if (!chartArea) return "rgba(16,185,129,0.15)";
+        const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        g.addColorStop(0, "rgba(16,185,129,0.35)");
+        g.addColorStop(1, "rgba(16,185,129,0.05)");
+        return g;
+    };
+
+    return {
+        labels,
+        datasets: [
+            {
+                label: "Inquiries",
+                data: inquiries,
+                borderColor: "#3b82f6",
+                backgroundColor: blueFill,
+                pointBackgroundColor: "#3b82f6",
+                pointBorderWidth: 0,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.35,
+                fill: true,
+            },
+            {
+                label: "Completed Deals",
+                data: transactions,
+                borderColor: "#10b981",
+                backgroundColor: greenFill,
+                pointBackgroundColor: "#10b981",
+                pointBorderWidth: 0,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.35,
+                fill: true,
+            },
+        ],
+    };
+});
+
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+        legend: {
+            display: true,
+            position: "top",
+            labels: { color: "#374151", boxWidth: 12, usePointStyle: true },
+        },
+        tooltip: {
+            backgroundColor: "rgba(17,24,39,0.9)",
+            borderWidth: 0,
+            titleColor: "#fff",
+            bodyColor: "#e5e7eb",
+            callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue}`,
+            },
+        },
+    },
+    scales: {
+        x: {
+            grid: { color: "rgba(107,114,128,0.08)", drawBorder: false },
+            ticks: { color: "#6b7280" },
+        },
+        y: {
+            beginAtZero: true,
+            grid: { color: "rgba(107,114,128,0.08)", drawBorder: false },
+            ticks: { color: "#6b7280", precision: 0 },
+        },
+    },
+};
 
 const formatNumber = (number) => {
     if (!number) return "0";
@@ -492,147 +585,6 @@ const getConversionRateColor = (inquiries, transactions) => {
 };
 
 onMounted(() => {
-    if (props.monthlyData && props.monthlyData.length > 0) {
-        createMonthlyChart();
-    }
+    // Nothing needed; AnalyticsChart renders from computed props
 });
-
-const createMonthlyChart = () => {
-    if (!monthlyChart.value) return;
-
-    // Simple chart implementation without external libraries
-    const ctx = monthlyChart.value.getContext("2d");
-    const data = props.monthlyData;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, monthlyChart.value.width, monthlyChart.value.height);
-
-    // Set canvas size
-    monthlyChart.value.width = monthlyChart.value.offsetWidth;
-    monthlyChart.value.height = 200;
-
-    const width = monthlyChart.value.width;
-    const height = monthlyChart.value.height;
-    const padding = 40;
-
-    // Find max values for scaling
-    const maxInquiries = Math.max(0, ...data.map((d) => d.inquiries || 0));
-    const maxTransactions = Math.max(
-        0,
-        ...data.map((d) => d.transactions || 0)
-    );
-    let maxValue = Math.max(maxInquiries, maxTransactions);
-    if (!isFinite(maxValue) || maxValue === 0) {
-        maxValue = 1; // avoid division by zero
-    }
-
-    // Draw axes
-    ctx.strokeStyle = "#e5e7eb";
-    ctx.lineWidth = 1;
-
-    // X-axis
-    ctx.beginPath();
-    ctx.moveTo(padding, height - padding);
-    ctx.lineTo(width - padding, height - padding);
-    ctx.stroke();
-
-    // Y-axis
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, height - padding);
-    ctx.stroke();
-
-    // Draw data points and lines with enhanced visualization
-    const stepX = (width - 2 * padding) / (data.length - 1);
-
-    // Inquiries line (blue) with area fill
-    ctx.strokeStyle = "#3b82f6";
-    ctx.fillStyle = "rgba(59, 130, 246, 0.1)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(padding, height - padding);
-
-    data.forEach((point, index) => {
-        const x = padding + index * stepX;
-        const y =
-            height -
-            padding -
-            (point.inquiries / maxValue) * (height - 2 * padding);
-        ctx.lineTo(x, y);
-    });
-
-    ctx.lineTo(width - padding, height - padding);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Transactions line (green) with area fill
-    ctx.strokeStyle = "#10b981";
-    ctx.fillStyle = "rgba(16, 185, 129, 0.1)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(padding, height - padding);
-
-    data.forEach((point, index) => {
-        const x = padding + index * stepX;
-        const y =
-            height -
-            padding -
-            (point.transactions / maxValue) * (height - 2 * padding);
-        ctx.lineTo(x, y);
-    });
-
-    ctx.lineTo(width - padding, height - padding);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Draw data points
-    data.forEach((point, index) => {
-        const x = padding + index * stepX;
-
-        // Inquiries point
-        const inquiryY =
-            height -
-            padding -
-            (point.inquiries / maxValue) * (height - 2 * padding);
-        ctx.fillStyle = "#3b82f6";
-        ctx.beginPath();
-        ctx.arc(x, inquiryY, 4, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Transactions point
-        const transactionY =
-            height -
-            padding -
-            (point.transactions / maxValue) * (height - 2 * padding);
-        ctx.fillStyle = "#10b981";
-        ctx.beginPath();
-        ctx.arc(x, transactionY, 4, 0, 2 * Math.PI);
-        ctx.fill();
-    });
-
-    // Draw month labels with better styling
-    ctx.fillStyle = "#374151";
-    ctx.font = "bold 11px Inter, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-
-    data.forEach((point, index) => {
-        const x = padding + index * stepX;
-        ctx.fillText(point.month.substring(0, 3), x, height - padding + 8);
-    });
-
-    // Draw Y-axis labels
-    ctx.fillStyle = "#6b7280";
-    ctx.font = "10px Inter, sans-serif";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-
-    for (let i = 0; i <= 5; i++) {
-        const value = (maxValue / 5) * i;
-        const y = height - padding - (i / 5) * (height - 2 * padding);
-        ctx.fillText(Math.round(value).toString(), padding - 8, y);
-    }
-};
 </script>

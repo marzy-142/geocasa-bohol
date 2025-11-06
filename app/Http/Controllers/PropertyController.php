@@ -22,6 +22,91 @@ class PropertyController extends Controller
     }
 
     /**
+     * Get all property types (predefined + custom) for filtering
+     */
+    private function getAllPropertyTypes()
+    {
+        // Get predefined types with counts
+        $predefinedTypes = collect(Property::TYPES)->map(function($type) {
+            $count = Property::whereJsonContains('types', $type)->count();
+            return [
+                'value' => $type,
+                'label' => Property::formatPropertyType($type),
+                'count' => $count
+            ];
+        })->filter(fn($t) => $t['count'] > 0); // Only show if used
+
+        // Get custom types (from properties with "other" type)
+        $customTypes = Property::whereJsonContains('types', 'other')
+            ->whereNotNull('custom_type_text')
+            ->select('custom_type_text')
+            ->distinct()
+            ->get()
+            ->map(function($item) {
+                $count = Property::where('custom_type_text', $item->custom_type_text)->count();
+                return [
+                    'value' => 'custom:' . $item->custom_type_text,
+                    'label' => $item->custom_type_text,
+                    'count' => $count
+                ];
+            });
+
+        // Combine and sort
+        return $predefinedTypes->concat($customTypes)
+            ->sortBy('label')
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Get property types for a specific broker
+     */
+    private function getBrokerPropertyTypes($brokerId)
+    {
+        // Get predefined types with counts for this broker only
+        $predefinedTypes = collect(Property::TYPES)->map(function($type) use ($brokerId) {
+            $count = Property::where('broker_id', $brokerId)
+                ->where(function($q) use ($type) {
+                    $q->whereJsonContains('types', $type)
+                      ->orWhere('type', $type);
+                })
+                ->count();
+            return [
+                'value' => $type,
+                'label' => Property::formatPropertyType($type),
+                'count' => $count
+            ];
+        })->filter(fn($t) => $t['count'] > 0); // Only show types this broker has
+
+        // Get custom types for this broker
+        $customTypes = Property::where('broker_id', $brokerId)
+            ->where(function($q) {
+                $q->whereJsonContains('types', 'other')
+                  ->orWhere('type', 'other');
+            })
+            ->whereNotNull('custom_type_text')
+            ->select('custom_type_text')
+            ->distinct()
+            ->get()
+            ->map(function($item) use ($brokerId) {
+                $count = Property::where('broker_id', $brokerId)
+                    ->where('custom_type_text', $item->custom_type_text)
+                    ->count();
+                return [
+                    'value' => 'custom:' . $item->custom_type_text,
+                    'label' => $item->custom_type_text,
+                    'count' => $count
+                ];
+            });
+
+        // Combine and sort
+        return $predefinedTypes->concat($customTypes)
+            ->sortBy('label')
+            ->values()
+            ->toArray();
+    }
+
+    /**
      * Display a listing of properties for admin dashboard.
      */
     public function index(Request $request)
@@ -41,8 +126,35 @@ class PropertyController extends Controller
         $query = $query->when($request->search, function ($query, $search) {
                 $query->search($search);
             })
-            ->when($request->type, function ($query, $type) {
-                $query->where('type', $type);
+            ->when($request->types, function ($query, $types) {
+                // Support both array and comma-separated string
+                if (is_string($types)) {
+                    $types = explode(',', $types);
+                }
+                
+                // Normalize non-custom types to slugs
+                $normalized = array_map(function($t) {
+                    return \App\Models\Property::normalizeTypeInput($t);
+                }, $types);
+
+                $query->where(function($q) use ($normalized) {
+                    foreach ($normalized as $type) {
+                        // Handle custom types (prefixed with "custom:")
+                        if (str_starts_with($type, 'custom:')) {
+                            $customType = substr($type, 7); // Remove "custom:" prefix
+                            $q->orWhere('custom_type_text', $customType);
+                        } else {
+                            // Handle predefined types
+                            $q->orWhereJsonContains('types', $type)
+                              ->orWhere('type', $type);
+                        }
+                    }
+                });
+            })
+            // Backward compatibility: single type filter
+            ->when(!$request->types && $request->type, function ($query, $type) {
+                $type = \App\Models\Property::normalizeTypeInput($type);
+                $query->byType($type);
             })
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
@@ -69,20 +181,23 @@ class PropertyController extends Controller
     
     // Preserve query string consistently across Laravel versions
     $properties = $query->latest()->paginate(12)->appends($request->query());
-        
-        // Get cached filter options and statistics
-        $filterOptions = $this->optimizationService->getPropertyFilterOptions();
-        $stats = $this->optimizationService->getPropertyStats();
-        
-        $brokers = $filterOptions['brokers'];
-    
-        return Inertia::render($component, [
-            'clients' => $clients,
-            'types' => $types,
-            'statuses' => Property::STATUSES,
-            'municipalities' => Property::BOHOL_MUNICIPALITIES,
-            'google_maps_api_key' => config('services.google_maps.api_key'),
-        ]);
+
+    // Get cached filter options and statistics
+    $filterOptions = $this->optimizationService->getPropertyFilterOptions();
+    $stats = $this->optimizationService->getPropertyStats();
+
+    $brokers = $filterOptions['brokers'];
+
+    return Inertia::render('Properties/Index', [
+        'properties' => $properties,
+        'filters' => $request->only(['search', 'type', 'types', 'status', 'municipality', 'broker_id', 'min_price', 'max_price', 'min_area', 'max_area', 'utilities', 'featured']),
+        'types' => $this->getAllPropertyTypes(), // Dynamic types including custom
+        'statuses' => Property::STATUSES,
+        'municipalities' => Property::BOHOL_MUNICIPALITIES,
+        'brokers' => $brokers,
+        'stats' => $stats,
+        'isAdminView' => true
+    ]);
     }
 
     /**
@@ -104,8 +219,50 @@ class PropertyController extends Controller
         $query = $query->when($request->search, function ($query, $search) {
                 $query->search($search);
             })
-            ->when($request->type, function ($query, $type) {
-                $query->where('type', $type);
+            ->when($request->types, function ($query, $types) use ($request) {
+                // Support both array and comma-separated string
+                if (is_string($types)) {
+                    $types = explode(',', $types);
+                }
+                
+                // Debug logging
+                \Log::info('BROKER - Filtering by types:', [
+                    'broker_id' => auth()->id(),
+                    'types_input' => $request->types,
+                    'types_parsed' => $types,
+                    'is_array' => is_array($types),
+                    'count' => is_array($types) ? count($types) : 0
+                ]);
+                
+                // Normalize non-custom types to slugs
+                $normalized = array_map(function($t) {
+                    return \App\Models\Property::normalizeTypeInput($t);
+                }, $types);
+
+                $query->where(function($q) use ($normalized) {
+                    foreach ($normalized as $type) {
+                        $type = trim($type); // Trim whitespace
+
+                        // Handle custom types (prefixed with "custom:")
+                        if (str_starts_with($type, 'custom:')) {
+                            $customType = substr($type, 7); // Remove "custom:" prefix
+                            $q->orWhere('custom_type_text', $customType);
+                            \Log::info('BROKER - Custom type filter:', ['custom_type' => $customType]);
+                        } else {
+                            // Handle predefined types - check both new 'types' and legacy 'type' fields
+                            $q->orWhere(function($subQ) use ($type) {
+                                $subQ->whereJsonContains('types', $type)
+                                     ->orWhere('type', $type);
+                            });
+                            \Log::info('BROKER - Standard type filter:', ['type' => $type]);
+                        }
+                    }
+                });
+            })
+            // Backward compatibility: single type filter
+            ->when(!$request->types && $request->type, function ($query, $type) {
+                $type = \App\Models\Property::normalizeTypeInput($type);
+                $query->byType($type);
             })
             ->when($request->status, function ($query, $status) {
                 $query->where('status', $status);
@@ -129,8 +286,8 @@ class PropertyController extends Controller
         // Use the existing Properties/Index component instead of non-existent Broker/Properties/Index
         return Inertia::render('Properties/Index', [
             'properties' => $properties,
-            'filters' => $request->only(['search', 'type', 'status', 'municipality', 'min_price', 'max_price', 'min_area', 'max_area', 'utilities']),
-            'types' => Property::TYPES,
+            'filters' => $request->only(['search', 'type', 'types', 'status', 'municipality', 'min_price', 'max_price', 'min_area', 'max_area', 'utilities']),
+            'types' => $this->getBrokerPropertyTypes(auth()->id()), // Show only types this broker has
             'statuses' => Property::STATUSES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
             'stats' => [
@@ -172,29 +329,42 @@ class PropertyController extends Controller
     {
         $this->authorize('create', Property::class);
         
-        $clients = auth()->user()->role === 'broker' 
+        $clients = auth()->user()->role === 'broker'
             ? auth()->user()->clients()->get(['id', 'name', 'email'])
             : collect();
-    
-        // Build label/value pairs for types and include an 'Other (specify)' option
-        $types = collect(Property::TYPES)
-            ->map(function ($slug) {
-                $label = ucwords(str_replace('_', ' ', $slug));
-                return ['value' => $slug, 'label' => $label];
-            })
-            ->values()
-            ->toArray();
 
-        $types[] = ['value' => 'other', 'label' => 'Other (specify)'];
+        // Format types as objects with value and label
+        $types = collect(Property::TYPES)->map(function($type) {
+            return [
+                'value' => $type,
+                'label' => Property::formatPropertyType($type)
+            ];
+        })->toArray();
 
-        // Use simplified form for brokers, full form for admins
-        $component = auth()->user()->role === 'broker' ? 'Properties/CreateSimple' : 'Properties/Create';
+        // Add "Other" option at the end
+        $types[] = [
+            'value' => 'other',
+            'label' => '✏️ Other (specify)'
+        ];
 
-        return Inertia::render($component, [
+        return Inertia::render('Properties/CreateSimple', [
             'clients' => $clients,
             'types' => $types,
             'statuses' => Property::STATUSES,
             'municipalities' => Property::BOHOL_MUNICIPALITIES,
+            'googleMapsApiKey' => config('services.google_maps.api_key'),
+            'gisConfig' => [
+                'enabled' => true,
+                'defaultCenter' => [
+                    'lng' => 124.1436
+                ],
+                'zoom' => 10
+            ],
+            'virtualTourConfig' => [
+                'enabled' => true,
+                'maxFiles' => 20,
+                'allowedTypes' => ['jpg', 'jpeg', 'png']
+            ]
         ]);
     }
 
@@ -203,15 +373,6 @@ class PropertyController extends Controller
         $this->authorize('create', Property::class);
     
         $validated = $request->validated();
-        
-        // Preserve human-entered other type detail in notes; keep canonical type schema intact
-        if (($validated['type'] ?? null) === 'other' && !empty($validated['type_other'] ?? null)) {
-            $notePrefix = 'Type (other): ' . trim($validated['type_other']);
-            $validated['additional_notes'] = isset($validated['additional_notes']) && $validated['additional_notes']
-                ? ($notePrefix . "\n" . $validated['additional_notes'])
-                : $notePrefix;
-            unset($validated['type_other']);
-        }
     
         // Enforce 'available' for broker-created listings
         if (auth()->user()->role === 'broker') {
@@ -339,15 +500,6 @@ class PropertyController extends Controller
         // Update slug if title changed
         if ($validated['title'] !== $property->title) {
             $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(6);
-        }
-
-        // Preserve human-entered other type detail in notes on update as well
-        if (($validated['type'] ?? null) === 'other' && !empty($validated['type_other'] ?? null)) {
-            $notePrefix = 'Type (other): ' . trim($validated['type_other']);
-            $validated['additional_notes'] = isset($validated['additional_notes']) && $validated['additional_notes']
-                ? ($notePrefix . "\n" . $validated['additional_notes'])
-                : $notePrefix;
-            unset($validated['type_other']);
         }
     
         // Calculate hectares if lot_area_sqm is provided and hectares is not

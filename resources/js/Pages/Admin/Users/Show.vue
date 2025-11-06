@@ -533,10 +533,6 @@ const reactivateUser = () => {
     }
 };
 
-const refreshData = () => {
-    router.reload();
-};
-
 const getRoleBadgeClass = (role) => {
     const classes = {
         admin: "bg-purple-100 text-purple-800",

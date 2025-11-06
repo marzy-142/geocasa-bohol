@@ -30,12 +30,6 @@
                         >
                             Pending Approvals
                         </Link>
-                        <button
-                            @click="refreshData"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                        >
-                            Refresh
-                        </button>
                     </div>
                 </div>
             </div>
@@ -201,23 +195,13 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center mt-4">
+                <div class="mt-4">
                     <button
                         @click="clearFilters"
                         class="text-slate-600 hover:text-slate-900 font-medium"
                     >
                         Clear Filters
                     </button>
-
-                    <div class="flex gap-2">
-                        <button
-                            @click="showBulkActionsModal = true"
-                            :disabled="selectedBrokers.length === 0"
-                            class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                        >
-                            Bulk Actions ({{ selectedBrokers.length }})
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -229,14 +213,6 @@
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="px-6 py-3 text-left">
-                                    <input
-                                        type="checkbox"
-                                        :checked="allSelected"
-                                        @change="toggleSelectAll"
-                                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
                                 >
@@ -280,16 +256,6 @@
                                 :key="broker.id"
                                 class="hover:bg-slate-50"
                             >
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <input
-                                        type="checkbox"
-                                        :checked="
-                                            selectedBrokers.includes(broker.id)
-                                        "
-                                        @change="toggleSelection(broker.id)"
-                                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div
@@ -378,17 +344,6 @@
                                             class="text-blue-600 hover:text-blue-900"
                                         >
                                             View
-                                        </Link>
-                                        <Link
-                                            :href="
-                                                route(
-                                                    'admin.brokers.edit',
-                                                    broker.id
-                                                )
-                                            "
-                                            class="text-green-600 hover:text-green-900"
-                                        >
-                                            Edit
                                         </Link>
                                         <button
                                             @click="openStatusModal(broker)"
@@ -529,58 +484,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Bulk Actions Modal -->
-        <div
-            v-if="showBulkActionsModal"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        >
-            <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                <h3 class="text-lg font-semibold text-slate-900 mb-4">
-                    Bulk Actions
-                </h3>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-slate-700 mb-2"
-                        >Action</label
-                    >
-                    <select
-                        v-model="bulkActionsForm.action"
-                        class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                        <option value="">Select action...</option>
-                        <option value="approve">Approve</option>
-                        <option value="suspend">Suspend</option>
-                        <option value="activate">Activate</option>
-                        <option value="deactivate">Deactivate</option>
-                        <option value="send_message">Send Message</option>
-                    </select>
-                </div>
-
-                <div class="mb-4 p-3 bg-slate-50 rounded-lg">
-                    <p class="text-sm text-slate-600">
-                        This will apply the action to
-                        {{ selectedBrokers.length }} broker(s).
-                    </p>
-                </div>
-
-                <div class="flex justify-end gap-3">
-                    <button
-                        @click="showBulkActionsModal = false"
-                        class="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        @click="executeBulkActions"
-                        :disabled="!bulkActionsForm.action"
-                        class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                    >
-                        Execute
-                    </button>
-                </div>
-            </div>
-        </div>
     </ModernDashboardLayout>
 </template>
 
@@ -602,9 +505,7 @@ const props = defineProps({
 });
 
 // Reactive data
-const selectedBrokers = ref([]);
 const showStatusModal = ref(false);
-const showBulkActionsModal = ref(false);
 const selectedBroker = ref(null);
 
 const filters = reactive({ ...props.filters });
@@ -614,19 +515,6 @@ const statusForm = useForm({
     status: "approve",
     admin_notes: "",
     reason: "",
-});
-
-const bulkActionsForm = useForm({
-    action: "",
-    broker_ids: [],
-});
-
-// Computed
-const allSelected = computed(() => {
-    return (
-        props.brokers.data.length > 0 &&
-        selectedBrokers.value.length === props.brokers.data.length
-    );
 });
 
 // Methods
@@ -654,23 +542,6 @@ const getStatusBadgeClass = (broker) => {
     return "inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800";
 };
 
-const toggleSelectAll = () => {
-    if (allSelected.value) {
-        selectedBrokers.value = [];
-    } else {
-        selectedBrokers.value = props.brokers.data.map((broker) => broker.id);
-    }
-};
-
-const toggleSelection = (brokerId) => {
-    const index = selectedBrokers.value.indexOf(brokerId);
-    if (index > -1) {
-        selectedBrokers.value.splice(index, 1);
-    } else {
-        selectedBrokers.value.push(brokerId);
-    }
-};
-
 const applyFilters = () => {
     router.get(route("admin.brokers.index"), filters, {
         preserveState: true,
@@ -695,10 +566,6 @@ const clearFilters = () => {
     applyFilters();
 };
 
-const refreshData = () => {
-    router.reload({ only: ["brokers", "stats"] });
-};
-
 const openStatusModal = (broker) => {
     selectedBroker.value = broker;
     statusForm.reset();
@@ -716,16 +583,5 @@ const updateBrokerStatus = () => {
             },
         }
     );
-};
-
-const executeBulkActions = () => {
-    bulkActionsForm.broker_ids = selectedBrokers.value;
-    bulkActionsForm.post(route("admin.brokers.bulk-actions"), {
-        onSuccess: () => {
-            showBulkActionsModal.value = false;
-            selectedBrokers.value = [];
-            bulkActionsForm.reset();
-        },
-    });
 };
 </script>

@@ -494,13 +494,6 @@ const applyFilters = () => {
                     >
                         Select All
                     </ModernButton>
-                    <ModernButton
-                        variant="primary"
-                        :href="route('admin.brokers.applications.export')"
-                    >
-                        <ArrowDownTrayIcon class="w-5 h-5" />
-                        Export Data
-                    </ModernButton>
                 </div>
             </div>
         </div>
@@ -1451,7 +1444,10 @@ const applyFilters = () => {
                             </div>
 
                             <div
-                                v-if="selectedApplication.business_permit_file && selectedApplication.prc_id_file"
+                                v-if="
+                                    selectedApplication.business_permit_file &&
+                                    selectedApplication.prc_id_file
+                                "
                                 class="border border-gray-200 rounded-lg p-4"
                             >
                                 <div

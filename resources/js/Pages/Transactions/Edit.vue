@@ -138,7 +138,6 @@ const selectedInquiry = computed(() => {
     return props.inquiries?.find((i) => i.id == form.inquiry_id);
 });
 
-
 const getStatusColor = (status) => {
     const colors = {
         pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -323,7 +322,10 @@ const getStatusIcon = (status) => {
                                             >
                                                 {{ property.title }} -
                                                 {{
-                                                    formatPrice(property.price)
+                                                    formatPrice(
+                                                        property.total_price ??
+                                                            property.price
+                                                    )
                                                 }}
                                             </option>
                                         </select>
@@ -535,7 +537,8 @@ const getStatusIcon = (status) => {
                                                     v-model="form.offered_price"
                                                     type="number"
                                                     id="offered_price"
-                                                    step="0.01"
+                                                    step="1"
+                                                    min="0"
                                                     class="pl-7 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
                                                     placeholder="0.00"
                                                     required
@@ -573,7 +576,8 @@ const getStatusIcon = (status) => {
                                                     v-model="form.final_price"
                                                     type="number"
                                                     id="final_price"
-                                                    step="0.01"
+                                                    step="1"
+                                                    min="0"
                                                     class="pl-7 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
                                                     placeholder="0.00"
                                                 />
@@ -789,6 +793,9 @@ const getStatusIcon = (status) => {
                                             id="status"
                                             class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
                                         >
+                                            <option value="offer_made">
+                                                Offer Made
+                                            </option>
                                             <option value="pending">
                                                 Pending
                                             </option>

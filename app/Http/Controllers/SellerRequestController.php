@@ -205,23 +205,37 @@ class SellerRequestController extends Controller
 
             // Create seller request (aligned to simplified public form)
             $sellerRequest = SellerRequest::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'],
-                'address' => $validated['address'],
+                'name' => $validated['contact_name'],
+                'email' => $validated['contact_email'],
+                'phone' => $validated['contact_phone'],
+                'address' => $validated['address'] ?? null,
                 'property_title' => $validated['property_title'],
                 'property_description' => $validated['property_description'],
-                'property_type' => $validated['property_type'],
+                'property_type' => is_array($validated['property_type']) ? json_encode($validated['property_type']) : $validated['property_type'],
                 'asking_price' => $validated['asking_price'],
-                // Map municipality to city column; default province to Bohol
+                // Map municipality and barangay from form
+                'municipality' => $validated['municipality'] ?? null,
+                'barangay' => $validated['barangay'] ?? null,
                 'city' => $validated['municipality'] ?? null,
                 'province' => 'Bohol',
                 'postal_code' => $validated['postal_code'] ?? null,
-                'lot_area' => $validated['lot_area'] ?? null,
-                'features' => $validated['features'] ?? null,
-                'uploaded_images' => $storedFiles['uploaded_images'] ?? null,
-                'property_documents' => $storedFiles['property_documents'] ?? null,
-                'ownership_documents' => $storedFiles['ownership_documents'] ?? null,
+                'lot_area' => $validated['lot_area_sqm'] ?? null,
+                'features' => isset($validated['features']) ? (is_array($validated['features']) ? json_encode($validated['features'], JSON_UNESCAPED_SLASHES) : $validated['features']) : null,
+                'uploaded_images' => isset($storedFiles['property_images']) ? json_encode($storedFiles['property_images'], JSON_UNESCAPED_SLASHES) : (isset($storedFiles['uploaded_images']) ? json_encode($storedFiles['uploaded_images'], JSON_UNESCAPED_SLASHES) : null),
+                'property_documents' => isset($storedFiles['property_documents']) ? json_encode($storedFiles['property_documents'], JSON_UNESCAPED_SLASHES) : null,
+                'ownership_documents' => isset($storedFiles['ownership_documents']) ? json_encode($storedFiles['ownership_documents'], JSON_UNESCAPED_SLASHES) : null,
+                'title_type' => $validated['title_type'] ?? null,
+                'title_number' => $validated['title_number'] ?? null,
+                'zoning_classification' => $validated['zoning_classification'] ?? null,
+                'road_access' => $validated['road_access'] ?? false,
+                'water_source' => $validated['water_source'] ?? false,
+                'electricity_available' => $validated['electricity'] ?? false,
+                'internet_available' => $validated['internet'] ?? false,
+                'coordinates_lat' => $validated['coordinates_lat'] ?? null,
+                'coordinates_lng' => $validated['coordinates_lng'] ?? null,
+                'nearby_landmarks' => $validated['nearby_landmarks'] ?? null,
+                'price_expectation' => $validated['price_expectation'] ?? null,
+                'custom_property_type' => $validated['custom_property_type'] ?? null,
                 'availability' => $validated['availability'] ?? null,
                 // Urgency not collected in simplified form; default to 'medium'
                 'urgency' => $validated['urgency'] ?? 'medium',
@@ -327,8 +341,15 @@ class SellerRequestController extends Controller
     {
         $storedFiles = [];
         
-        // Handle uploaded images
-        if ($request->hasFile('uploaded_images')) {
+        // Handle property images (check both field names for compatibility)
+        if ($request->hasFile('property_images')) {
+            $images = $request->file('property_images');
+            foreach ($images as $image) {
+                $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('seller-requests/images', $filename, 'public');
+                $storedFiles['property_images'][] = $path;
+            }
+        } elseif ($request->hasFile('uploaded_images')) {
             $images = $request->file('uploaded_images');
             foreach ($images as $image) {
                 $filename = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
@@ -606,8 +627,12 @@ class SellerRequestController extends Controller
             ) {
                 // Compute lot area in sqm and price per sqm to satisfy properties table constraints
                 $lotAreaSqm = null;
-                if ($sellerRequest->property_area) {
-                    $areaVal = (float) $sellerRequest->property_area;
+                
+                // Try property_area first (old form field), then lot_area (new form field)
+                $areaValue = $sellerRequest->property_area ?? $sellerRequest->lot_area;
+                
+                if ($areaValue) {
+                    $areaVal = (float) $areaValue;
                     $unit = $sellerRequest->area_unit ?? 'sqm';
                     if (in_array($unit, ['sqm', 'sqm.'])) {
                         $lotAreaSqm = $areaVal;
@@ -628,11 +653,44 @@ class SellerRequestController extends Controller
                 }
 
                 // Create property listing
+                // Handle property_type which can be a JSON array or single value
+                $propertyType = $sellerRequest->property_type;
+                $propertyTypes = null;
+                $customTypeText = null;
+                
+                // If property_type is an array (new format)
+                if (is_array($propertyType)) {
+                    // Pass the array directly - the model's cast will handle JSON encoding
+                    $propertyTypes = $propertyType;
+                    // Use first type for the legacy 'type' column
+                    $singleType = $propertyType[0] ?? 'residential_lot';
+                    // If it includes 'other', get custom type
+                    if (in_array('other', $propertyType)) {
+                        $customTypeText = $sellerRequest->custom_property_type;
+                    }
+                } else {
+                    // Old single value format
+                    $singleType = $propertyType ?? 'residential_lot';
+                    if ($singleType === 'other') {
+                        $customTypeText = $sellerRequest->custom_property_type;
+                    }
+                }
+                
+                // Validate title_type for Property ENUM constraint
+                $validTitleTypes = ['titled', 'tax_declared', 'mother_title', 'cct'];
+                $titleType = $sellerRequest->title_type;
+                // If it's not a valid ENUM value, default to 'titled'
+                if (!in_array($titleType, $validTitleTypes)) {
+                    $titleType = 'titled';
+                }
+                
                 $property = Property::create([
                     'slug' => Str::slug($sellerRequest->property_title . '-' . time()),
                     'title' => $sellerRequest->property_title,
                     'description' => $sellerRequest->property_description,
-                    'type' => $sellerRequest->property_type ?? 'residential_lot',
+                    'type' => $singleType,
+                    'types' => $propertyTypes,
+                    'custom_type_text' => $customTypeText,
                     'status' => 'available',
                     'price_per_sqm' => $pricePerSqm ?? 0,
                     'total_price' => $totalPrice ?? 0,
@@ -641,7 +699,11 @@ class SellerRequestController extends Controller
                     'address' => $sellerRequest->address,
                     'municipality' => $sellerRequest->municipality,
                     'barangay' => $sellerRequest->barangay,
-                    'title_type' => $sellerRequest->title_type,
+                    'title_type' => $titleType,
+                    'title_number' => $sellerRequest->title_number,
+                    'coordinates_lat' => $sellerRequest->coordinates_lat,
+                    'coordinates_lng' => $sellerRequest->coordinates_lng,
+                    'nearby_landmarks' => $sellerRequest->nearby_landmarks,
                     'zoning_classification' => $sellerRequest->zoning_classification,
                     'road_access' => $sellerRequest->road_access ?? false,
                     'water_source' => $sellerRequest->water_source ?? false,
@@ -687,7 +749,13 @@ class SellerRequestController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Status update failed: ' . $e->getMessage());
+            Log::error('Status update failed', [
+                'seller_request_id' => $sellerRequest->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'status' => $validated['status'] ?? 'unknown',
+                'user_id' => $user->id
+            ]);
             return back()->withErrors(['error' => 'Failed to update status. Please try again.']);
         }
     }
@@ -699,12 +767,13 @@ class SellerRequestController extends Controller
     {
         $user = Auth::user();
         
-        if ($user->role !== 'admin') {
-            abort(403, 'Only administrators can convert requests to properties.');
+        if ($user->role !== 'admin' && $user->role !== 'broker') {
+            abort(403, 'Only administrators and brokers can convert requests to properties.');
         }
 
-        if ($sellerRequest->status !== 'approved') {
-            return back()->with('error', 'Only approved requests can be converted to property listings.');
+        // Brokers can only convert their own assigned requests
+        if ($user->role === 'broker' && $sellerRequest->broker_id !== $user->id) {
+            abort(403, 'You can only convert seller requests assigned to you.');
         }
 
         if ($sellerRequest->property_id) {
@@ -714,66 +783,183 @@ class SellerRequestController extends Controller
         try {
             DB::beginTransaction();
 
-            // Compute lot area in sqm and price per sqm for manual convert as well
-            $lotAreaSqm = null;
-            if ($sellerRequest->property_area) {
-                $areaVal = (float) $sellerRequest->property_area;
-                $unit = $sellerRequest->area_unit ?? 'sqm';
-                if (in_array($unit, ['sqm', 'sqm.'])) {
-                    $lotAreaSqm = $areaVal;
-                } elseif (in_array($unit, ['hectares', 'hectare', 'ha'])) {
-                    $lotAreaSqm = $areaVal * 10000;
-                } elseif (in_array($unit, ['acres', 'acre'])) {
-                    $lotAreaSqm = $areaVal * 4046.8564224;
+            $property = new Property();
+            
+            // Basic Information
+            $property->broker_id = $sellerRequest->broker_id ?? $user->id;
+            $property->title = $sellerRequest->property_title ?? $sellerRequest->address ?? 'Property from Seller Request';
+            $property->description = $sellerRequest->property_description ?? $sellerRequest->additional_notes ?? '';
+            $property->slug = Str::slug($property->title . '-' . time());
+            
+            // Property Types - Handle both array and string
+            $types = $sellerRequest->property_type;
+            if (is_string($types)) {
+                try {
+                    $decoded = json_decode($types, true);
+                    $property->types = is_array($decoded) ? $decoded : [$types];
+                } catch (\Exception $e) {
+                    $property->types = [$types];
+                }
+            } elseif (is_array($types)) {
+                $property->types = $types;
+            } else {
+                $property->types = ['residential_lot']; // default
+            }
+            
+            // Custom type if exists
+            if ($sellerRequest->custom_property_type) {
+                $property->custom_type_text = $sellerRequest->custom_property_type;
+            }
+
+            // Location - THIS IS THE FIX FOR MISSING LOCATION
+            $property->municipality = $sellerRequest->municipality ?? 'Bohol';
+            $property->barangay = $sellerRequest->barangay ?? '';
+            $property->address = $sellerRequest->address ?? '';
+            $property->zoning_classification = $sellerRequest->zoning_classification ?? null;
+            
+            // Nearby landmarks - handle both string and array
+            if ($sellerRequest->nearby_landmarks) {
+                if (is_string($sellerRequest->nearby_landmarks)) {
+                    $property->nearby_landmarks = array_map('trim', explode(',', $sellerRequest->nearby_landmarks));
                 } else {
-                    $lotAreaSqm = $areaVal;
+                    $property->nearby_landmarks = $sellerRequest->nearby_landmarks;
                 }
             }
 
-            $totalPrice = $sellerRequest->asking_price ?? null;
-            $pricePerSqm = null;
-            if ($totalPrice !== null && $lotAreaSqm > 0) {
-                $pricePerSqm = round($totalPrice / $lotAreaSqm, 2);
+            // Pricing & Area - THIS IS THE FIX FOR MISSING SQM AND PRICE PER SQM
+            $lotArea = $sellerRequest->lot_area_sqm ?? $sellerRequest->lot_area ?? $sellerRequest->property_area ?? 0;
+            
+            // Handle area unit conversion if needed
+            if ($sellerRequest->area_unit) {
+                $areaVal = (float) $lotArea;
+                $unit = $sellerRequest->area_unit;
+                if (in_array($unit, ['hectares', 'hectare', 'ha'])) {
+                    $lotArea = $areaVal * 10000;
+                } elseif (in_array($unit, ['acres', 'acre'])) {
+                    $lotArea = $areaVal * 4046.8564224;
+                }
+            }
+            
+            $totalPrice = $sellerRequest->asking_price ?? $sellerRequest->price_expectation ?? 0;
+            
+            $property->lot_area_sqm = $lotArea;
+            $property->lot_area_hectares = $lotArea > 0 ? round($lotArea / 10000, 4) : null;
+            $property->total_price = $totalPrice;
+            
+            // Calculate price per sqm
+            if ($lotArea > 0 && $totalPrice > 0) {
+                $property->price_per_sqm = round($totalPrice / $lotArea, 2);
+            } else {
+                $property->price_per_sqm = null;
             }
 
-            $property = Property::create([
-                'slug' => Str::slug($sellerRequest->property_title . '-' . time()),
-                'title' => $sellerRequest->property_title,
-                'description' => $sellerRequest->property_description,
-                'type' => $sellerRequest->property_type ?? 'residential_lot',
-                'status' => 'available',
-                'price_per_sqm' => $pricePerSqm ?? 0,
-                'total_price' => $totalPrice ?? 0,
-                'lot_area_sqm' => $lotAreaSqm ?? 0,
-                'lot_area_hectares' => $lotAreaSqm ? round($lotAreaSqm / 10000, 4) : 0,
-                'address' => $sellerRequest->address,
-                'municipality' => $sellerRequest->municipality,
-                'barangay' => $sellerRequest->barangay,
-                'title_type' => $sellerRequest->title_type,
-                'zoning_classification' => $sellerRequest->zoning_classification,
-                'road_access' => $sellerRequest->road_access ?? false,
-                'water_source' => $sellerRequest->water_source ?? false,
-                'electricity_available' => $sellerRequest->electricity_available ?? false,
-                'internet_available' => $sellerRequest->internet_available ?? false,
-                'images' => $sellerRequest->uploaded_images ?? $sellerRequest->images,
-                'broker_id' => $sellerRequest->assigned_broker_id ?? $user->id,
-                'is_featured' => false
-            ]);
+            // Title Information
+            $property->title_type = $sellerRequest->title_type ?? 'titled';
+            $property->title_number = $sellerRequest->title_number ?? null;
+            
+            // Features/Amenities - parse from seller request
+            $features = [];
+            if ($sellerRequest->features) {
+                if (is_string($sellerRequest->features)) {
+                    try {
+                        $features = json_decode($sellerRequest->features, true) ?? [];
+                    } catch (\Exception $e) {
+                        $features = [];
+                    }
+                } elseif (is_array($sellerRequest->features)) {
+                    $features = $sellerRequest->features;
+                }
+            }
+            
+            // Map features to property amenities
+            $property->road_access = in_array('road_access', $features) || $sellerRequest->road_access;
+            $property->electricity_available = in_array('electricity', $features) || $sellerRequest->electricity || $sellerRequest->electricity_available;
+            $property->water_source = in_array('water_source', $features) || $sellerRequest->water_source;
+            $property->internet_available = in_array('internet', $features) || $sellerRequest->internet || $sellerRequest->internet_available;
 
-            $sellerRequest->update([
-                'status' => 'listed',
-                'property_id' => $property->id,
-                'listed_at' => now()
-            ]);
+            // GIS/Coordinates
+            $property->coordinates_lat = $sellerRequest->coordinates_lat ?? null;
+            $property->coordinates_lng = $sellerRequest->coordinates_lng ?? null;
+
+            // Property Status
+            $property->status = 'draft'; // Start as draft for broker to review
+            $property->is_featured = false;
+            
+            $property->save();
+
+            // Transfer Images
+            $images = $sellerRequest->images ?? $sellerRequest->uploaded_images ?? [];
+            if ($images && is_array($images)) {
+                $transferredImages = [];
+                
+                foreach ($images as $sellerImage) {
+                    // Get the original image path
+                    $originalPath = str_replace('/storage/', '', $sellerImage);
+                    
+                    if (Storage::disk('public')->exists($originalPath)) {
+                        // Create new filename for property
+                        $extension = pathinfo($originalPath, PATHINFO_EXTENSION);
+                        $newFilename = 'properties/' . Str::uuid() . '.' . $extension;
+                        
+                        // Copy the image to property directory
+                        Storage::disk('public')->copy($originalPath, $newFilename);
+                        
+                        $transferredImages[] = $newFilename;
+                    }
+                }
+                
+                if (!empty($transferredImages)) {
+                    $property->images = $transferredImages;
+                    $property->save();
+                }
+            }
+
+            // Transfer Documents (property_documents)
+            if ($sellerRequest->property_documents && is_array($sellerRequest->property_documents)) {
+                $transferredDocs = [];
+                
+                foreach ($sellerRequest->property_documents as $doc) {
+                    $originalPath = str_replace('/storage/', '', $doc);
+                    
+                    if (Storage::disk('public')->exists($originalPath)) {
+                        $extension = pathinfo($originalPath, PATHINFO_EXTENSION);
+                        $newFilename = 'property-documents/' . Str::uuid() . '.' . $extension;
+                        
+                        Storage::disk('public')->copy($originalPath, $newFilename);
+                        $transferredDocs[] = $newFilename;
+                    }
+                }
+                
+                if (!empty($transferredDocs)) {
+                    $property->documents = $transferredDocs;
+                    $property->save();
+                }
+            }
+
+            // Link seller request to property
+            $sellerRequest->property_id = $property->id;
+            $sellerRequest->status = 'listed';
+            $sellerRequest->listed_at = now();
+            $sellerRequest->save();
 
             DB::commit();
 
-            return redirect()->route('broker.properties.show', $property)
-                ->with('message', 'Seller request has been successfully converted to a property listing.');
+            // Send notification to seller (if user exists)
+            if ($sellerRequest->user_id) {
+                $seller = User::find($sellerRequest->user_id);
+                if ($seller) {
+                    // $seller->notify(new \App\Notifications\SellerRequestConverted($sellerRequest, $property));
+                }
+            }
+
+            return redirect()
+                ->route('broker.properties.show', $property)
+                ->with('success', 'Seller request converted to property listing successfully! You can now review and publish it.');
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Property conversion failed: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
             return back()->withErrors(['error' => 'Failed to convert to property. Please try again.']);
         }
     }

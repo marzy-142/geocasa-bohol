@@ -20,11 +20,22 @@
                 </div>
 
                 <!-- Error Message -->
-                <div v-if="error" class="mb-8 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div
+                    v-if="error"
+                    class="mb-8 bg-red-50 border border-red-200 rounded-lg p-4"
+                >
                     <div class="flex">
                         <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            <svg
+                                class="h-5 w-5 text-red-400"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                    clip-rule="evenodd"
+                                />
                             </svg>
                         </div>
                         <div class="ml-3">
@@ -41,11 +52,29 @@
                 <!-- Loading State -->
                 <div v-if="loading && !error" class="mb-8 text-center py-12">
                     <div class="inline-flex items-center">
-                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                            class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                            ></circle>
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
                         </svg>
-                        <span class="text-gray-600">Loading analytics data...</span>
+                        <span class="text-gray-600"
+                            >Loading analytics data...</span
+                        >
                     </div>
                 </div>
 
@@ -411,9 +440,7 @@
                                         {{ broker.formatted_sales_value }}
                                     </div>
                                     <div class="text-xs text-gray-500">
-                                        {{
-                                            broker.completed_transactions
-                                        }}
+                                        {{ broker.completed_transactions }}
                                         transactions
                                     </div>
                                 </div>
@@ -579,27 +606,25 @@ const fetchBrokerAnalytics = async () => {
     error.value = null;
     try {
         const response = await fetch(route("admin.broker-analytics"));
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (data.success) {
             brokerAnalytics.value = data.data;
         } else {
-            throw new Error(data.message || 'Failed to fetch broker analytics');
+            throw new Error(data.message || "Failed to fetch broker analytics");
         }
     } catch (error) {
         console.error("Error fetching broker analytics:", error);
-        error.value = error.message || 'An unexpected error occurred while loading analytics data';
+        error.value =
+            error.message ||
+            "An unexpected error occurred while loading analytics data";
     } finally {
         loading.value = false;
     }
-};
-
-const refreshData = () => {
-    fetchBrokerAnalytics();
 };
 
 // Initialize

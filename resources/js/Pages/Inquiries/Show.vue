@@ -33,7 +33,7 @@
                         {{ formatDate(inquiry.created_at) }}
                     </p>
                 </div>
-                <!-- Show transaction status if exists, otherwise show inquiry status -->
+                <!-- Right-side: status and actions -->
                 <div class="flex flex-col items-end gap-2">
                     <span
                         v-if="inquiry.transaction"
@@ -64,6 +64,19 @@
                     >
                         {{ inquiry.transaction.transaction_number }}
                     </span>
+
+                    <!-- Convert to Transaction action (visible only if no transaction yet) -->
+                    <Link
+                        v-if="!inquiry.transaction"
+                        :href="
+                            route('transactions.create', {
+                                inquiry_id: inquiry.id,
+                            })
+                        "
+                        class="mt-2 inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                        Convert to Transaction
+                    </Link>
                 </div>
             </div>
         </div>

@@ -11,22 +11,6 @@
                         Performance analytics and broker insights
                     </p>
                 </div>
-                <div class="flex space-x-3">
-                    <button
-                        @click="exportReport"
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        <ArrowDownTrayIcon class="w-4 h-4 mr-2" />
-                        Export Report
-                    </button>
-                    <button
-                        @click="refreshData"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        <ArrowPathIcon class="w-4 h-4 mr-2" />
-                        Refresh
-                    </button>
-                </div>
             </div>
 
             <!-- Broker Statistics -->
@@ -387,14 +371,6 @@ const props = defineProps({
 const performanceFilter = ref("all");
 
 // Methods
-const exportReport = () => {
-    alert("Export functionality would be implemented here");
-};
-
-const refreshData = () => {
-    router.reload();
-};
-
 const filterBrokers = () => {
     // Implementation for filtering brokers by time period
     console.log("Filtering brokers by:", performanceFilter.value);

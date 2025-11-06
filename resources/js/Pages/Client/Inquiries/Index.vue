@@ -39,7 +39,6 @@ const form = reactive({
 
 const showFilters = ref(false);
 const showHelp = ref(false);
-const selectedInquiries = ref([]);
 const isLoading = ref(false);
 const error = ref(null);
 const isConnected = ref(false);
@@ -137,14 +136,7 @@ const getPriorityColor = (inquiry) => {
     return "text-green-600";
 };
 
-const toggleInquirySelection = (inquiryId) => {
-    const index = selectedInquiries.value.indexOf(inquiryId);
-    if (index > -1) {
-        selectedInquiries.value.splice(index, 1);
-    } else {
-        selectedInquiries.value.push(inquiryId);
-    }
-};
+// Removed bulk selection handler as bulk archive is not available in client UI
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat("en-PH", {
@@ -482,19 +474,7 @@ onUnmounted(() => {
                         <h2 class="text-xl font-bold text-neutral-900">
                             {{ inquiries.data.length }} Inquiries Found
                         </h2>
-                        <div
-                            v-if="selectedInquiries.length > 0"
-                            class="flex items-center gap-2"
-                        >
-                            <span class="text-sm text-neutral-600"
-                                >{{ selectedInquiries.length }} selected</span
-                            >
-                            <button
-                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Archive Selected
-                            </button>
-                        </div>
+                        <!-- Bulk archive removed for clients -->
                     </div>
                 </div>
 
@@ -508,17 +488,6 @@ onUnmounted(() => {
                         class="p-6 hover:bg-neutral-50 transition-colors"
                     >
                         <div class="flex items-start gap-4">
-                            <!-- Selection Checkbox -->
-                            <div class="flex items-center pt-1">
-                                <input
-                                    :id="`inquiry-${inquiry.id}`"
-                                    type="checkbox"
-                                    :value="inquiry.id"
-                                    @change="toggleInquirySelection(inquiry.id)"
-                                    class="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
-                                />
-                            </div>
-
                             <!-- Property Image -->
                             <div
                                 class="w-20 h-20 bg-neutral-200 rounded-xl overflow-hidden flex-shrink-0"

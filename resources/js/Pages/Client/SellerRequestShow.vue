@@ -4,11 +4,11 @@
             <!-- Header -->
             <div class="mb-8">
                 <Link
-                    :href="route('client.seller-requests.index')"
+                    :href="route('client.dashboard')"
                     class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
                 >
                     <ChevronLeftIcon class="w-4 h-4 mr-1" />
-                    Back to My Requests
+                    Back to Dashboard
                 </Link>
                 <div class="flex items-center justify-between">
                     <div>

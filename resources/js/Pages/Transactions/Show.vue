@@ -89,10 +89,12 @@ const submitAdminOversightNote = () => {
 };
 
 const formatPrice = (price) => {
+    const n = Number(price);
+    if (Number.isNaN(n) || n === null) return "—";
     return new Intl.NumberFormat("en-PH", {
         style: "currency",
         currency: "PHP",
-    }).format(price);
+    }).format(n);
 };
 
 const formatDate = (date) => {
@@ -478,182 +480,6 @@ onUnmounted(() => {
 
                 <!-- Main Content Grid -->
                 <div class="space-y-8">
-                    <!-- Key Information Row -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Financial Summary -->
-                        <div
-                            class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-6"
-                        >
-                            <div class="flex items-center justify-between mb-4">
-                                <h3
-                                    class="text-lg font-semibold text-green-900"
-                                >
-                                    Financial Summary
-                                </h3>
-                                <CurrencyDollarIcon
-                                    class="w-6 h-6 text-green-600"
-                                />
-                            </div>
-                            <div class="space-y-4">
-                                <div>
-                                    <p class="text-sm text-green-700">
-                                        Offered Price
-                                    </p>
-                                    <p class="text-xl font-bold text-green-900">
-                                        {{
-                                            formatPrice(
-                                                currentTransaction.offered_price
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div
-                                    v-if="currentTransaction.final_price"
-                                    class="pt-4 border-t border-green-200"
-                                >
-                                    <p class="text-sm text-green-700">
-                                        Final Price
-                                    </p>
-                                    <p class="text-xl font-bold text-green-900">
-                                        {{
-                                            formatPrice(
-                                                currentTransaction.final_price
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Transaction Status -->
-                        <div
-                            class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6"
-                        >
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-blue-900">
-                                    Current Status
-                                </h3>
-                                <component
-                                    :is="statusIcon"
-                                    class="w-6 h-6 text-blue-600"
-                                />
-                            </div>
-                            <div class="space-y-4">
-                                <div>
-                                    <span
-                                        :class="
-                                            getStatusColor(
-                                                currentTransaction.status
-                                            )
-                                        "
-                                        class="inline-flex px-3 py-1 text-sm font-semibold rounded-full"
-                                    >
-                                        {{
-                                            currentTransaction.status.replace(
-                                                "_",
-                                                " "
-                                            )
-                                        }}
-                                    </span>
-                                </div>
-                                <p class="text-sm text-blue-700">
-                                    {{ statusDescription }}
-                                </p>
-                                <div class="pt-2">
-                                    <div
-                                        class="flex items-center justify-between text-xs text-blue-600 mb-1"
-                                    >
-                                        <span>Progress</span>
-                                        <span
-                                            >{{
-                                                Math.round(progressPercentage)
-                                            }}%</span
-                                        >
-                                    </div>
-                                    <div
-                                        class="w-full bg-blue-200 rounded-full h-2"
-                                    >
-                                        <div
-                                            class="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                                            :style="{
-                                                width: progressPercentage + '%',
-                                            }"
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Timeline Summary -->
-                        <div
-                            class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-6"
-                        >
-                            <div class="flex items-center justify-between mb-4">
-                                <h3
-                                    class="text-lg font-semibold text-purple-900"
-                                >
-                                    Timeline
-                                </h3>
-                                <ClockIcon class="w-6 h-6 text-purple-600" />
-                            </div>
-                            <div class="space-y-3">
-                                <div>
-                                    <p
-                                        class="text-xs text-purple-700 uppercase tracking-wide"
-                                    >
-                                        Started
-                                    </p>
-                                    <p
-                                        class="text-sm font-semibold text-purple-900"
-                                    >
-                                        {{
-                                            formatDate(
-                                                currentTransaction.created_at
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div v-if="currentTransaction.contract_date">
-                                    <p
-                                        class="text-xs text-purple-700 uppercase tracking-wide"
-                                    >
-                                        Contract Signed
-                                    </p>
-                                    <p
-                                        class="text-sm font-semibold text-purple-900"
-                                    >
-                                        {{
-                                            formatDate(
-                                                currentTransaction.contract_date
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div v-if="currentTransaction.closing_date">
-                                    <p
-                                        class="text-xs text-purple-700 uppercase tracking-wide"
-                                    >
-                                        Closed
-                                    </p>
-                                    <p
-                                        class="text-sm font-semibold text-purple-900"
-                                    >
-                                        {{
-                                            formatDate(
-                                                currentTransaction.closing_date
-                                            )
-                                        }}
-                                    </p>
-                                </div>
-                                <div class="pt-2 border-t border-purple-200">
-                                    <p class="text-xs text-purple-700">
-                                        {{ daysInProgress }} days in progress
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Main Content Row -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <!-- Left Column - Property & People -->
@@ -730,7 +556,8 @@ onUnmounted(() => {
                                                     {{
                                                         formatPrice(
                                                             currentTransaction
-                                                                .property.price
+                                                                .property
+                                                                .total_price
                                                         )
                                                     }}
                                                 </p>
@@ -893,7 +720,7 @@ onUnmounted(() => {
                                         <ClockIcon
                                             class="w-5 h-5 mr-2 text-indigo-600"
                                         />
-                                        Detailed Timeline
+                                        Key Dates
                                     </h3>
                                 </div>
                                 <div class="p-6">
@@ -1025,8 +852,125 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <!-- Right Column - Documents & Additional Info -->
+                        <!-- Right Column - Financials, Status, Documents -->
                         <div class="space-y-6">
+                            <!-- Financial Summary -->
+                            <div
+                                class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-6"
+                            >
+                                <div
+                                    class="flex items-center justify-between mb-4"
+                                >
+                                    <h3
+                                        class="text-lg font-semibold text-green-900"
+                                    >
+                                        Financial Summary
+                                    </h3>
+                                    <CurrencyDollarIcon
+                                        class="w-6 h-6 text-green-600"
+                                    />
+                                </div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-sm text-green-700">
+                                            Offered Price
+                                        </p>
+                                        <p
+                                            class="text-xl font-bold text-green-900"
+                                        >
+                                            {{
+                                                formatPrice(
+                                                    currentTransaction.offered_price
+                                                )
+                                            }}
+                                        </p>
+                                    </div>
+                                    <div
+                                        v-if="currentTransaction.final_price"
+                                        class="pt-4 border-t border-green-200"
+                                    >
+                                        <p class="text-sm text-green-700">
+                                            Final Price
+                                        </p>
+                                        <p
+                                            class="text-xl font-bold text-green-900"
+                                        >
+                                            {{
+                                                formatPrice(
+                                                    currentTransaction.final_price
+                                                )
+                                            }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transaction Status -->
+                            <div
+                                class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6"
+                            >
+                                <div
+                                    class="flex items-center justify-between mb-4"
+                                >
+                                    <h3
+                                        class="text-lg font-semibold text-blue-900"
+                                    >
+                                        Current Status
+                                    </h3>
+                                    <component
+                                        :is="statusIcon"
+                                        class="w-6 h-6 text-blue-600"
+                                    />
+                                </div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <span
+                                            :class="
+                                                getStatusColor(
+                                                    currentTransaction.status
+                                                )
+                                            "
+                                            class="inline-flex px-3 py-1 text-sm font-semibold rounded-full"
+                                        >
+                                            {{
+                                                currentTransaction.status.replace(
+                                                    "_",
+                                                    " "
+                                                )
+                                            }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-blue-700">
+                                        {{ statusDescription }}
+                                    </p>
+                                    <div class="pt-2">
+                                        <div
+                                            class="flex items-center justify-between text-xs text-blue-600 mb-1"
+                                        >
+                                            <span>Progress</span>
+                                            <span
+                                                >{{
+                                                    Math.round(
+                                                        progressPercentage
+                                                    )
+                                                }}%</span
+                                            >
+                                        </div>
+                                        <div
+                                            class="w-full bg-blue-200 rounded-full h-2"
+                                        >
+                                            <div
+                                                class="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                                                :style="{
+                                                    width:
+                                                        progressPercentage +
+                                                        '%',
+                                                }"
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Documents -->
                             <div
                                 v-if="
