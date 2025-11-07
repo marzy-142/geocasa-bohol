@@ -101,7 +101,7 @@
                             help-text="Select all applicable types. Mixed-use properties (e.g., commercial + residential) can have multiple types."
                             required
                         />
-                        
+
                         <!-- Custom Type Input (shown if "other" is selected) -->
                         <transition
                             enter-active-class="transition ease-out duration-200"
@@ -111,7 +111,10 @@
                             leave-from-class="opacity-100 transform translate-y-0"
                             leave-to-class="opacity-0 transform -translate-y-2"
                         >
-                            <div v-show="form.types.includes('other')" class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+                            <div
+                                v-show="form.types.includes('other')"
+                                class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg"
+                            >
                                 <label
                                     for="custom_type_text"
                                     class="block text-sm font-semibold text-gray-900 mb-2"
@@ -124,13 +127,17 @@
                                     type="text"
                                     class="w-full border-2 border-blue-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                                     :class="{
-                                        'border-red-500 ring-red-500': errors.custom_type_text,
+                                        'border-red-500 ring-red-500':
+                                            errors.custom_type_text,
                                     }"
                                     placeholder="e.g., Resort Land, Heritage Site, Eco Farm"
                                     :required="form.types.includes('other')"
                                 />
-                                <p class="text-xs text-blue-700 mt-2 font-medium">
-                                    💡 This type will be automatically available for all users to filter
+                                <p
+                                    class="text-xs text-blue-700 mt-2 font-medium"
+                                >
+                                    💡 This type will be automatically available
+                                    for all users to filter
                                 </p>
                                 <div
                                     v-if="errors.custom_type_text"
@@ -426,8 +433,6 @@
                     </div>
                 </div>
             </div>
-
-            
 
             <!-- Images -->
             <div
@@ -3318,7 +3323,7 @@ const submit = () => {
     }
 
     // Validate custom type if "other" is selected
-    if (form.types.includes('other') && !form.custom_type_text) {
+    if (form.types.includes("other") && !form.custom_type_text) {
         console.error("Please specify the custom property type");
         return;
     }

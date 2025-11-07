@@ -587,7 +587,6 @@
                     </svg>
                     Legal Documents
                 </h3>
-                
 
                 <div class="mt-6">
                     <label

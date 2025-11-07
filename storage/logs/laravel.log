@@ -50027,3 +50027,10 @@ All are flat terrain and ideal for residential and farming
 [2025-11-07 00:05:01] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties","status":200,"duration_ms":279.18,"memory_usage":"34 MB","user_id":null} 
 [2025-11-07 00:05:13] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/commercial-lot-tagbilaran-city-center","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","user_id":null} 
 [2025-11-07 00:05:13] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/browse-properties/commercial-lot-tagbilaran-city-center","status":200,"duration_ms":295.91,"memory_usage":"32 MB","user_id":null} 
+[2025-11-07 00:12:42] local.INFO: Incoming Request {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","user_id":12,"input":{"socket_id":"203131212.898359728","channel_name":"private-App.Models.User.12"}} 
+[2025-11-07 00:12:42] local.INFO: Broadcast auth request {"user_id":12,"channel_name":"private-App.Models.User.12","socket_id":"203131212.898359728","path":"broadcasting/auth"} 
+[2025-11-07 00:12:42] local.INFO: User channel auth attempt {"user_id":12,"requested_id":"12"} 
+[2025-11-07 00:12:42] local.INFO: Broadcast auth response {"status":200} 
+[2025-11-07 00:12:42] local.INFO: Request Completed {"method":"POST","url":"http://127.0.0.1:8000/broadcasting/auth","status":200,"duration_ms":24.55,"memory_usage":"28 MB","user_id":12} 
+[2025-11-07 00:12:42] local.INFO: Incoming Request {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","ip":"127.0.0.1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36","user_id":12} 
+[2025-11-07 00:12:42] local.INFO: Request Completed {"method":"GET","url":"http://127.0.0.1:8000/notifications/settings","status":200,"duration_ms":19.19,"memory_usage":"28 MB","user_id":12} 
