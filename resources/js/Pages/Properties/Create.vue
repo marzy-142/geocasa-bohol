@@ -133,7 +133,8 @@
                                 :required="form.type === 'other'"
                             />
                             <p class="text-xs text-gray-500 mt-1">
-                                💡 This type will be automatically available for all users to filter
+                                💡 This type will be automatically available for
+                                all users to filter
                             </p>
                             <div
                                 v-if="errors.custom_type_text"
@@ -586,63 +587,7 @@
                     </svg>
                     Legal Documents
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label
-                            for="title_type"
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                            Title Type (optional)
-                        </label>
-                        <select
-                            id="title_type"
-                            v-model="form.title_type"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                            :class="{
-                                'border-red-500 ring-red-500':
-                                    errors.title_type,
-                            }"
-                        >
-                            <option value="">Select Title Type</option>
-                            <option value="titled">Titled</option>
-                            <option value="tax_declared">Tax Declared</option>
-                            <option value="cct">CCT</option>
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">You can add or update the title details later during verification.</p>
-                        <div
-                            v-if="errors.title_type"
-                            class="text-red-500 text-sm mt-1"
-                        >
-                            {{ errors.title_type }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label
-                            for="title_number"
-                            class="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                            Title Number
-                        </label>
-                        <input
-                            id="title_number"
-                            v-model="form.title_number"
-                            type="text"
-                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                            :class="{
-                                'border-red-500 ring-red-500':
-                                    errors.title_number,
-                            }"
-                            placeholder="e.g., TCT-12345"
-                        />
-                        <div
-                            v-if="errors.title_number"
-                            class="text-red-500 text-sm mt-1"
-                        >
-                            {{ errors.title_number }}
-                        </div>
-                    </div>
-                </div>
+                
 
                 <div class="mt-6">
                     <label
