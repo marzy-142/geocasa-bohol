@@ -71,12 +71,22 @@ class PublicController extends Controller
     public function home()
     {
         // Get featured properties (limit to 6)
+        // Use publicly visible statuses (available, pending, reserved, under_negotiation)
         $featuredProperties = Property::with(['broker'])
-            ->where('status', 'available')
+            ->publiclyVisible()
             ->where('is_featured', true)
             ->latest()
             ->limit(6)
             ->get();
+
+        // Fallback: if no featured properties, show latest publicly visible listings
+        if ($featuredProperties->isEmpty()) {
+            $featuredProperties = Property::with(['broker'])
+                ->publiclyVisible()
+                ->latest()
+                ->limit(6)
+                ->get();
+        }
 
         // Get platform statistics
         $stats = [
@@ -198,6 +208,12 @@ class PublicController extends Controller
             })
             ->when($request->sort, function ($query, $sort) {
                 switch ($sort) {
+                    case 'newest':
+                        $query->latest();
+                        break;
+                    case 'oldest':
+                        $query->oldest();
+                        break;
                     case 'price_low':
                         $query->orderBy('total_price', 'asc');
                         break;

@@ -155,9 +155,28 @@ class PropertyController extends Controller
             $query->where('has_virtual_tour', true);
         }
 
-        // Apply sorting - same as public properties
-        $query->when($request->sort, function ($query, $sort) {
+        // Apply sorting - include relevance
+        $query->when($request->sort, function ($query, $sort) use ($request) {
             switch ($sort) {
+                case 'relevance':
+                    // If a search term is present, rank by field matches
+                    if ($request->filled('search')) {
+                        $term = $request->get('search');
+                        // Weighted relevance: title (3), municipality/address (2), description (1)
+                        $query->orderByRaw(
+                            "((CASE WHEN title LIKE ? THEN 3 ELSE 0 END)
+                             + (CASE WHEN municipality LIKE ? THEN 2 ELSE 0 END)
+                             + (CASE WHEN address LIKE ? THEN 2 ELSE 0 END)
+                             + (CASE WHEN description LIKE ? THEN 1 ELSE 0 END)) DESC",
+                            ["%{$term}%", "%{$term}%", "%{$term}%", "%{$term}%"]
+                        );
+                        // Secondary sort: featured first, then newest
+                        $query->orderBy('is_featured', 'desc')->latest();
+                    } else {
+                        // No search term: fall back to featured + newest
+                        $query->orderBy('is_featured', 'desc')->latest();
+                    }
+                    break;
                 case 'price_low':
                     $query->orderBy('total_price', 'asc');
                     break;

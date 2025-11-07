@@ -56,6 +56,7 @@ const form = reactive({
     featured: props.filters.featured || false,
     virtual_tour: props.filters.virtual_tour || false,
     include_sold: props.filters.include_sold || false,
+    sort: props.filters.sort || "newest",
 });
 
 const getImageUrl = (image, isVirtualTour = false) => {
@@ -342,6 +343,27 @@ watch(
                                         class="flex-1"
                                     />
                                 </div>
+                                <select
+                                    id="sort"
+                                    name="sort"
+                                    v-model="form.sort"
+                                    class="modern-select"
+                                >
+                                    <option value="newest">Newest</option>
+                                    <option value="price_low">
+                                        Price: Low to High
+                                    </option>
+                                    <option value="price_high">
+                                        Price: High to Low
+                                    </option>
+                                    <option value="area_small">
+                                        Area: Small to Large
+                                    </option>
+                                    <option value="area_large">
+                                        Area: Large to Small
+                                    </option>
+                                    <option value="oldest">Oldest</option>
+                                </select>
                             </div>
 
                             <!-- Filter Checkboxes -->

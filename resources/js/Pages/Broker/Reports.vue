@@ -274,8 +274,21 @@ const formatPrice = (price) => {
 };
 
 const formatDate = (date) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-PH", {
+    if (!date) return "—";
+    const tryParse = (v) => {
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? null : d;
+    };
+    let parsed = date instanceof Date ? date : null;
+    if (!parsed) parsed = tryParse(date);
+    if (!parsed && typeof date === "string")
+        parsed = tryParse(date.replace(" ", "T"));
+    if (!parsed && typeof date === "string")
+        parsed = tryParse(
+            (date.includes("T") ? date : date.replace(" ", "T")) + "Z"
+        );
+    if (!parsed) return "—";
+    return parsed.toLocaleDateString("en-PH", {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -289,13 +302,6 @@ const formatStatus = (status) => {
 
 const getStatusColor = (status) => {
     const colors = {
-        inquiry: "bg-gray-100 text-gray-800",
-        initial_contact: "bg-blue-100 text-blue-800",
-        property_viewing: "bg-purple-100 text-purple-800",
-        offer_made: "bg-yellow-100 text-yellow-800",
-        negotiation: "bg-orange-100 text-orange-800",
-        offer_accepted: "bg-green-100 text-green-800",
-        contract_signed: "bg-indigo-100 text-indigo-800",
         due_diligence: "bg-pink-100 text-pink-800",
         financing: "bg-cyan-100 text-cyan-800",
         closing_preparation: "bg-violet-100 text-violet-800",

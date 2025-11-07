@@ -87,7 +87,10 @@ class DashboardController extends Controller
         $stats = $currentStats;
 
         // Get recent inquiries - check both client_id and user_id
-        $recentInquiries = Inquiry::with(['property'])
+        // Include soft-deleted properties so titles are still available
+        $recentInquiries = Inquiry::with(['property' => function ($q) {
+                $q->withTrashed();
+            }])
             ->where(function($query) use ($client, $user) {
                 $query->where('client_id', $client->id)
                       ->orWhere('user_id', $user->id);
@@ -113,16 +116,20 @@ class DashboardController extends Controller
         // Add recent inquiries
         $recentInquiriesActivity = Inquiry::where('client_id', $client->id)
             ->orWhere('user_id', $user->id)
-            ->with('property')
+            // Include soft-deleted properties
+            ->with(['property' => function ($q) {
+                $q->withTrashed();
+            }])
             ->latest()
             ->limit(3)
             ->get()
             ->map(function($inquiry) {
+                $propertyTitle = $inquiry->property?->title ?? 'a property';
                 return [
                     'id' => $inquiry->id,
                     'type' => 'inquiry',
                     'title' => 'Inquiry Status Updated',
-                    'description' => "Your inquiry about {$inquiry->property->title} has been {$inquiry->status}",
+                    'description' => "Your inquiry about {$propertyTitle} has been {$inquiry->status}",
                     'date' => $inquiry->updated_at->diffForHumans(),
                     'status' => $inquiry->status
                 ];

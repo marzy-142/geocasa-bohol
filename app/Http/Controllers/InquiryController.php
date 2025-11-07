@@ -163,7 +163,11 @@ class InquiryController extends Controller
         }
         
         $inquiry->load([
-            'property:id,title,slug,address,municipality,type,total_price,broker_id,status,pending_at,sold_at,images',
+            // Include soft-deleted properties so the inquiry can still be viewed
+            'property' => function ($q) {
+                $q->withTrashed()
+                  ->select('id','title','slug','address','municipality','type','total_price','broker_id','status','pending_at','sold_at','images');
+            },
             'property.broker:id,name,email',
             'client:id,name,email,phone',
             'transaction:id,inquiry_id,status,transaction_number,created_at,updated_at,inquiry_date,first_contact_date,viewing_date,offer_date,acceptance_date,contract_date,closing_date,finalized_date,offered_price,final_price',
@@ -174,7 +178,7 @@ class InquiryController extends Controller
             'inquiry' => $inquiry,
             'can' => [
                 'respond' => $user->role === 'admin' || $user->role === 'broker',
-                'edit' => $user->role === 'admin' || ($user->role === 'broker' && $inquiry->property->broker_id === $user->id),
+                'edit' => $user->role === 'admin' || ($user->role === 'broker' && ($inquiry->property?->broker_id === $user->id)),
                 'delete' => $user->role === 'admin',
                 'update_property_status' => $user->role === 'admin' || $user->role === 'broker',
             ]

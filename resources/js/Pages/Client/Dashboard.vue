@@ -194,32 +194,7 @@ const getStatusColor = (status) => {
                 </Link>
             </div>
 
-            <!-- Broker Card -->
-            <div
-                v-if="broker"
-                class="bg-gray-900 text-white rounded-xl p-6 hover:shadow-md transition-all duration-300 flex flex-col h-full"
-            >
-                <div class="flex items-center gap-3 mb-5">
-                    <div
-                        class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center"
-                    >
-                        <UserGroupIcon class="w-6 h-6" />
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-400">Your Broker</p>
-                        <p class="font-bold">{{ broker.name }}</p>
-                    </div>
-                </div>
-                <Link
-                    :href="route('client.broker')"
-                    class="inline-flex items-center gap-2 text-sm text-white hover:text-gray-300 font-medium group mt-auto"
-                >
-                    Contact broker
-                    <ArrowRightIcon
-                        class="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                    />
-                </Link>
-            </div>
+            <!-- Broker Card removed per request -->
         </div>
 
         <!-- Two Column Layout -->

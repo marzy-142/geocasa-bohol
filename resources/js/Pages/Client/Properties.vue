@@ -80,7 +80,7 @@ const toast = useToast();
 // UI state
 const showFilters = ref(false);
 const viewMode = ref("grid"); // 'grid' or 'list'
-const sortBy = ref("relevance");
+const sortBy = ref(props.filters?.sort || "relevance");
 const showMap = ref(false);
 const selectedProperties = ref([]);
 const isLoading = ref(false);
@@ -198,6 +198,11 @@ const search = () => {
 
     // Remove old single-type filter (we use types array now)
     delete payload.type;
+
+    // Include sort parameter
+    if (sortBy.value) {
+        payload.sort = sortBy.value;
+    }
 
     // Remove empty filters
     Object.keys(payload).forEach((key) => {
@@ -352,6 +357,15 @@ watch(
     },
     { deep: true }
 );
+
+// Re-run search when sort changes
+watch(
+    sortBy,
+    () => {
+        search();
+    },
+    { immediate: false }
+);
 </script>
 
 <template>
@@ -381,7 +395,11 @@ watch(
                     <p class="text-neutral-500 text-sm mt-1">
                         {{
                             isSavedView
-                                ? `${properties.length || 0} saved properties`
+                                ? `${
+                                      properties.total ||
+                                      savedProperties.length ||
+                                      0
+                                  } saved properties`
                                 : `${
                                       properties.total || 0
                                   } properties available`

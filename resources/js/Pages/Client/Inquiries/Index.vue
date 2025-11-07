@@ -399,9 +399,8 @@ onUnmounted(() => {
                     </h2>
                     <button
                         @click="clearFilters"
-                        class="text-neutral-500 hover:text-neutral-700 text-sm font-medium flex items-center gap-1"
+                        class="text-neutral-500 hover:text-neutral-700 text-sm font-medium"
                     >
-                        <XMarkIcon class="w-4 h-4" />
                         Clear All
                     </button>
                 </div>
@@ -540,7 +539,9 @@ onUnmounted(() => {
                                         >
                                             {{ getStatusLabel(inquiry.status) }}
                                         </span>
+                                        <!-- Remove non-functional X icon next to Closed status -->
                                         <component
+                                            v-if="inquiry.status !== 'closed'"
                                             :is="getStatusIcon(inquiry.status)"
                                             class="w-5 h-5 text-neutral-400"
                                         />
@@ -603,15 +604,6 @@ onUnmounted(() => {
                                         >
                                             <EyeIcon class="w-4 h-4" />
                                             View Details
-                                        </Link>
-                                        <Link
-                                            :href="route('client.broker')"
-                                            class="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
-                                        >
-                                            <ChatBubbleLeftRightIcon
-                                                class="w-4 h-4"
-                                            />
-                                            Message Broker
                                         </Link>
                                     </div>
                                 </div>

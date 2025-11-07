@@ -401,6 +401,10 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
+import { Link, router, usePage } from "@inertiajs/vue3";
+import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 const props = defineProps({
     client: {
         type: Object,
@@ -436,7 +440,36 @@ const formatCurrency = (amount) => {
 };
 
 const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    // Gracefully handle null/undefined or non-ISO strings from backend
+    if (!date) return "—";
+
+    const tryParse = (value) => {
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? null : d;
+    };
+
+    // Already a Date
+    let parsed = date instanceof Date ? date : null;
+
+    // Common Laravel formats: "YYYY-MM-DDTHH:mm:ss.ssssssZ" (ISO) or "YYYY-MM-DD HH:mm:ss"
+    if (!parsed) {
+        // Try raw
+        parsed = tryParse(date);
+    }
+    if (!parsed && typeof date === "string") {
+        // Try converting space to 'T' (no timezone)
+        parsed = tryParse(date.replace(" ", "T"));
+    }
+    if (!parsed && typeof date === "string") {
+        // Try forcing UTC 'Z' if missing timezone
+        parsed = tryParse(
+            (date.includes("T") ? date : date.replace(" ", "T")) + "Z"
+        );
+    }
+
+    if (!parsed) return "—";
+
+    return parsed.toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",

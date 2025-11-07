@@ -162,7 +162,7 @@ const getImageUrl = (image, isVirtualTour = false) => {
 
         <!-- Hero: simplified -->
         <section
-            class="relative min-h-[70vh] flex items-center overflow-hidden"
+            class="relative min-h-[75vh] md:min-h-[85vh] flex items-center overflow-hidden"
         >
             <div class="absolute inset-0">
                 <img

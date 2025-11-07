@@ -401,7 +401,25 @@ const formatCurrency = (amount) => {
 };
 
 const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    // Robust parsing to avoid "Invalid Date" for nulls or non-ISO strings
+    if (!date) return "—";
+
+    const tryParse = (value) => {
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? null : d;
+    };
+
+    let parsed = date instanceof Date ? date : null;
+    if (!parsed) parsed = tryParse(date);
+    if (!parsed && typeof date === "string")
+        parsed = tryParse(date.replace(" ", "T"));
+    if (!parsed && typeof date === "string")
+        parsed = tryParse(
+            (date.includes("T") ? date : date.replace(" ", "T")) + "Z"
+        );
+    if (!parsed) return "—";
+
+    return parsed.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
