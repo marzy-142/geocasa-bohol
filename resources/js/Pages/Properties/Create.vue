@@ -592,7 +592,7 @@
                             for="title_type"
                             class="block text-sm font-medium text-gray-700 mb-2"
                         >
-                            Title Type *
+                            Title Type (optional)
                         </label>
                         <select
                             id="title_type"
@@ -602,13 +602,13 @@
                                 'border-red-500 ring-red-500':
                                     errors.title_type,
                             }"
-                            required
                         >
                             <option value="">Select Title Type</option>
                             <option value="titled">Titled</option>
                             <option value="tax_declared">Tax Declared</option>
                             <option value="cct">CCT</option>
                         </select>
+                        <p class="text-xs text-gray-500 mt-1">You can add or update the title details later during verification.</p>
                         <div
                             v-if="errors.title_type"
                             class="text-red-500 text-sm mt-1"

@@ -162,7 +162,7 @@ class SellerRequestController extends Controller
             
             // Consent
             $sellerRequest->marketing_consent = $request->marketing_consent ?? false;
-            $sellerRequest->newsletter_consent = $request->newsletter_consent ?? false;
+            // Newsletter consent deprecated; ignore any incoming value for backward compatibility
             
             // Broker
             $sellerRequest->broker_selection_method = $request->broker_selection_method ?? 'manual';

@@ -51,7 +51,7 @@ class SellerRequestUploadRequest extends SecureFileUploadRequest
             // Additional information with validation
             'additional_notes' => 'nullable|string|max:1000',
             'marketing_consent' => 'boolean',
-            'newsletter_consent' => 'boolean',
+            // 'newsletter_consent' => 'boolean', // deprecated
             
             // Property ownership verification with enhanced validation
             'ownership_documents' => 'nullable|array|max:5',
@@ -212,7 +212,7 @@ class SellerRequestUploadRequest extends SecureFileUploadRequest
             'parking_spaces' => 'parking spaces',
             'additional_notes' => 'additional notes',
             'marketing_consent' => 'marketing consent',
-            'newsletter_consent' => 'newsletter consent',
+            // 'newsletter_consent' => 'newsletter consent', // deprecated
             'terms_accepted' => 'terms and conditions',
             'property_documents' => 'property documents',
             'ownership_documents' => 'ownership documents',
@@ -239,7 +239,7 @@ class SellerRequestUploadRequest extends SecureFileUploadRequest
         // Set default consent values if not provided
         $this->merge([
             'marketing_consent' => $this->boolean('marketing_consent'),
-            'newsletter_consent' => $this->boolean('newsletter_consent'),
+            // 'newsletter_consent' => $this->boolean('newsletter_consent'), // deprecated
         ]);
     }
 

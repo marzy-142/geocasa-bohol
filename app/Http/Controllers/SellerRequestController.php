@@ -241,7 +241,6 @@ class SellerRequestController extends Controller
                 'urgency' => $validated['urgency'] ?? 'medium',
                 'additional_notes' => $validated['additional_notes'] ?? null,
                 'marketing_consent' => $validated['marketing_consent'] ?? false,
-                'newsletter_consent' => $validated['newsletter_consent'] ?? false,
                 'terms_accepted' => $validated['terms_accepted'],
                 'status' => $status,
                 'assigned_broker_id' => $assignedBrokerId,
@@ -581,7 +580,10 @@ class SellerRequestController extends Controller
             DB::beginTransaction();
 
             $oldBrokerId = $sellerRequest->assigned_broker_id;
-            $newBrokerId = $validated['assigned_broker_id'] ?? $sellerRequest->assigned_broker_id;
+            // If no broker explicitly provided and none assigned yet, auto-attach current broker user
+            $newBrokerId = $validated['assigned_broker_id']
+                ?? $sellerRequest->assigned_broker_id
+                ?? ($user->role === 'broker' ? $user->id : null);
 
             // Prepare update payload but only include columns that exist
             $updateData = [
@@ -652,30 +654,84 @@ class SellerRequestController extends Controller
                     $pricePerSqm = round($totalPrice / $lotAreaSqm, 2);
                 }
 
-                // Create property listing
+                // Create property listing (robust against legacy schema without multi-type columns)
                 // Handle property_type which can be a JSON array or single value
-                $propertyType = $sellerRequest->property_type;
-                $propertyTypes = null;
-                $customTypeText = null;
-                
-                // If property_type is an array (new format)
-                if (is_array($propertyType)) {
-                    // Pass the array directly - the model's cast will handle JSON encoding
-                    $propertyTypes = $propertyType;
-                    // Use first type for the legacy 'type' column
-                    $singleType = $propertyType[0] ?? 'residential_lot';
-                    // If it includes 'other', get custom type
-                    if (in_array('other', $propertyType)) {
-                        $customTypeText = $sellerRequest->custom_property_type;
-                    }
-                } else {
-                    // Old single value format
-                    $singleType = $propertyType ?? 'residential_lot';
-                    if ($singleType === 'other') {
-                        $customTypeText = $sellerRequest->custom_property_type;
+                $rawPropertyType = $sellerRequest->property_type;
+                $propertyTypes = null; // optional multi-types if column exists
+                $customTypeText = null; // optional custom type text if column exists
+
+                // Normalize to array if JSON string
+                if (is_string($rawPropertyType)) {
+                    $decoded = null;
+                    try {
+                        $decoded = json_decode($rawPropertyType, true);
+                    } catch (\Throwable $e) { $decoded = null; }
+                    if (is_array($decoded)) {
+                        $rawPropertyType = $decoded;
                     }
                 }
-                
+
+                // Normalize memorial synonyms
+                $normalizeSlug = function($val) {
+                    if (!is_string($val)) return $val;
+                    $slug = strtolower(trim($val));
+                    $slug = str_replace([' ', '-'], '_', $slug);
+                    if (in_array($slug, ['memorial', 'memorial_lot', 'memorial_park'])) {
+                        return 'memorial_lot';
+                    }
+                    return $slug;
+                };
+
+                $hadOther = false;
+                if (is_array($rawPropertyType)) {
+                    // Capture list (will only be persisted if column exists)
+                    $propertyTypes = array_values(array_filter(array_map($normalizeSlug, $rawPropertyType)));
+                    // Detect if seller selected 'other' (case-insensitive in raw input)
+                    foreach ($rawPropertyType as $v) {
+                        if (is_string($v) && strtolower(trim($v)) === 'other') {
+                            $hadOther = true;
+                            break;
+                        }
+                    }
+                    $singleType = $propertyTypes[0] ?? 'residential_lot';
+                } else {
+                    $singleType = $normalizeSlug($rawPropertyType ?: 'residential_lot');
+                    if ($singleType === 'other') {
+                        $hadOther = true;
+                    }
+                }
+
+                // If seller explicitly used a custom type (Other + custom text), prefer storing as 'other' with custom text
+                if ($hadOther && $sellerRequest->custom_property_type) {
+                    $propertyTypes = ['other'];
+                    $customTypeText = $sellerRequest->custom_property_type;
+                    // Ensure singleType is a safe enum fallback
+                    $singleType = 'residential_lot';
+                }
+
+                // Enforce enum compatibility for legacy 'type' column
+                $validSingleTypes = [
+                    'residential_lot','agricultural_land','commercial_lot','industrial_lot',
+                    'beachfront','mountain_view','rice_field','coconut_plantation','subdivision_lot',
+                    // legacy/extended enums present in migration
+                    'titled_land','tax_declared','memorial_lot'
+                ];
+                if (!in_array($singleType, $validSingleTypes, true)) {
+                    // Fallback to a safe default to avoid SQL enum exception
+                    $singleType = 'residential_lot';
+                }
+
+                // Remove unsupported placeholders from multi-type list but allow 'other' for custom types
+                if (is_array($propertyTypes)) {
+                    $allowedMulti = array_merge($validSingleTypes, ['other']);
+                    $propertyTypes = array_values(array_filter($propertyTypes, function($t) use ($allowedMulti) {
+                        return in_array($t, $allowedMulti, true);
+                    }));
+                    if (empty($propertyTypes)) {
+                        $propertyTypes = null; // avoid persisting empty array
+                    }
+                }
+
                 // Validate title_type for Property ENUM constraint
                 $validTitleTypes = ['titled', 'tax_declared', 'mother_title', 'cct'];
                 $titleType = $sellerRequest->title_type;
@@ -683,36 +739,75 @@ class SellerRequestController extends Controller
                 if (!in_array($titleType, $validTitleTypes)) {
                     $titleType = 'titled';
                 }
-                
-                $property = Property::create([
+                // Build property payload, conditionally including new columns only if they exist
+                // Determine broker ownership: prefer assigned broker; if approving as broker, use that broker; do not force admin as broker
+                $brokerIdForProperty = $sellerRequest->assigned_broker_id ?? ($user->role === 'broker' ? $user->id : null);
+
+                $propertyData = [
                     'slug' => Str::slug($sellerRequest->property_title . '-' . time()),
                     'title' => $sellerRequest->property_title,
-                    'description' => $sellerRequest->property_description,
+                    'description' => $sellerRequest->property_description ?? '',
                     'type' => $singleType,
-                    'types' => $propertyTypes,
-                    'custom_type_text' => $customTypeText,
                     'status' => 'available',
                     'price_per_sqm' => $pricePerSqm ?? 0,
                     'total_price' => $totalPrice ?? 0,
                     'lot_area_sqm' => $lotAreaSqm ?? 0,
                     'lot_area_hectares' => $lotAreaSqm ? round($lotAreaSqm / 10000, 4) : 0,
-                    'address' => $sellerRequest->address,
-                    'municipality' => $sellerRequest->municipality,
-                    'barangay' => $sellerRequest->barangay,
+                    'address' => $sellerRequest->address ?? '',
+                    'municipality' => $sellerRequest->municipality ?? ($sellerRequest->city ?: 'Bohol'),
+                    'barangay' => $sellerRequest->barangay ?? '',
                     'title_type' => $titleType,
                     'title_number' => $sellerRequest->title_number,
                     'coordinates_lat' => $sellerRequest->coordinates_lat,
                     'coordinates_lng' => $sellerRequest->coordinates_lng,
                     'nearby_landmarks' => $sellerRequest->nearby_landmarks,
                     'zoning_classification' => $sellerRequest->zoning_classification,
-                    'road_access' => $sellerRequest->road_access ?? false,
-                    'water_source' => $sellerRequest->water_source ?? false,
-                    'electricity_available' => $sellerRequest->electricity_available ?? false,
-                    'internet_available' => $sellerRequest->internet_available ?? false,
-                    'images' => $sellerRequest->uploaded_images ?? $sellerRequest->images,
-                    'broker_id' => $sellerRequest->assigned_broker_id ?? $user->id,
-                    'is_featured' => false
-                ]);
+                    'road_access' => (bool)($sellerRequest->road_access ?? false),
+                    'water_source' => (bool)($sellerRequest->water_source ?? false),
+                    'electricity_available' => (bool)($sellerRequest->electricity_available ?? false),
+                    'internet_available' => (bool)($sellerRequest->internet_available ?? false),
+                    // images populated below after robust parse; avoid storing raw mixed types
+                    'is_featured' => false,
+                ];
+
+                if ($brokerIdForProperty) {
+                    $propertyData['broker_id'] = $brokerIdForProperty;
+                }
+
+                // Conditionally include multi-type / custom type columns only if schema supports them
+                if (Schema::hasColumn('properties', 'types') && $propertyTypes) {
+                    $propertyData['types'] = $propertyTypes;
+                }
+                if (Schema::hasColumn('properties', 'custom_type_text') && $customTypeText) {
+                    $propertyData['custom_type_text'] = $customTypeText;
+                }
+
+                // Ensure images is an array (avoid double-encoded JSON bug)
+                $parseArray = function($val) {
+                    if (!$val) return [];
+                    if (is_array($val)) return array_values(array_filter($val));
+                    if (is_string($val)) {
+                        $t = trim($val);
+                        try {
+                            $first = json_decode($t, true);
+                            if (is_array($first)) return array_values(array_filter($first));
+                            if (is_string($first) && str_starts_with($first, '[')) {
+                                $second = json_decode($first, true);
+                                if (is_array($second)) return array_values(array_filter($second));
+                            }
+                        } catch (\Throwable $e) { /* ignore */ }
+                        return $t ? [$t] : [];
+                    }
+                    if (is_object($val)) return array_values(array_filter((array) $val));
+                    return [];
+                };
+
+                $imagesArray = $parseArray($sellerRequest->uploaded_images) ?: $parseArray($sellerRequest->images);
+                if (!empty($imagesArray)) {
+                    $propertyData['images'] = $imagesArray;
+                }
+
+                $property = Property::create($propertyData);
                 $sellerRequest->update([
                     'status' => 'listed',
                     'property_id' => $property->id,

@@ -75,14 +75,14 @@
             </div>
 
             <!-- Current Images Display (if any) -->
-            <div v-if="existingImages.length > 0" class="space-y-3">
+            <div v-if="localExistingImages.length > 0" class="space-y-3">
                 <h4 class="font-semibold text-gray-900 flex items-center">
                     <span class="text-green-500 mr-2">✓</span>
-                    Your Virtual Tour Photos ({{ existingImages.length }})
+                    Your Virtual Tour Photos ({{ localExistingImages.length }})
                 </h4>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                     <div
-                        v-for="(image, index) in existingImages"
+                        v-for="(image, index) in localExistingImages"
                         :key="`existing-${index}`"
                         class="relative group"
                     >
@@ -99,7 +99,7 @@
                         <button
                             type="button"
                             @click="removeExisting(index)"
-                            class="absolute top-2 right-2 bg-red-500 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold hover:bg-red-600"
+                            class="absolute top-2 right-2 bg-red-500 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold hover:bg-red-600 z-10 focus:outline-none focus:ring-2 focus:ring-red-300"
                             title="Remove this photo"
                         >
                             ×
@@ -436,6 +436,9 @@ const showHelp = ref(false);
 const successMessage = ref("");
 const errorMessage = ref("");
 const fileInput = ref(null);
+const localExistingImages = ref(
+    Array.isArray(props.existingImages) ? [...props.existingImages] : []
+);
 
 // Watch for external changes
 watch(
@@ -443,6 +446,15 @@ watch(
     (newVal) => {
         isEnabled.value = newVal;
     }
+);
+
+// Keep local copy of existing images for optimistic UI updates
+watch(
+    () => props.existingImages,
+    (arr) => {
+        localExistingImages.value = Array.isArray(arr) ? [...arr] : [];
+    },
+    { immediate: true }
 );
 
 const toggleVirtualTour = () => {
@@ -543,16 +555,70 @@ const removeNew = (index) => {
 };
 
 const removeExisting = (index) => {
+    // Optimistic UI: remove from local list immediately
+    const removed = localExistingImages.value[index];
+    localExistingImages.value.splice(index, 1);
+    // Emit index so parent can mark actual path for backend removal
     emit("existing-removed", index);
+    successMessage.value =
+        "Marked for removal. It will be deleted after you save.";
+    setTimeout(() => (successMessage.value = ""), 2500);
 };
 
-const getImageUrl = (path) => {
-    if (!path) return "";
-    if (path.startsWith("http://") || path.startsWith("https://")) {
-        return path;
+const getImageUrl = (input) => {
+    if (!input) return "";
+
+    // Handle File/Blob (should use previews elsewhere, but guard anyway)
+    if (typeof File !== "undefined" && input instanceof File) {
+        try {
+            return URL.createObjectURL(input);
+        } catch {
+            return "";
+        }
     }
-    if (path.startsWith("/storage/")) {
-        return path;
+
+    // If it's an array, try first valid child
+    if (Array.isArray(input)) {
+        for (const item of input.flat()) {
+            const u = getImageUrl(item);
+            if (u) return u;
+        }
+        return "";
+    }
+
+    // If it's an object, look for common keys
+    if (typeof input === "object") {
+        const keys = [
+            "url",
+            "full_url",
+            "src",
+            "path",
+            "storage_path",
+            "filename",
+            "name",
+        ];
+        for (const k of keys) {
+            const v = input[k];
+            if (typeof v === "string" && v.trim()) {
+                return getImageUrl(v.trim());
+            }
+        }
+        return "";
+    }
+
+    // Expect string below
+    if (typeof input !== "string") return "";
+    let path = input.trim();
+    if (!path) return "";
+
+    if (path.startsWith("data:") || path.startsWith("blob:")) return path;
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    if (path.startsWith("/storage/")) return path;
+    if (path.startsWith("storage/")) return `/${path}`;
+    // Common subdirs from backend
+    if (path.startsWith("properties/") || path.startsWith("public/")) {
+        path = path.replace(/^public\//, "");
+        return `/storage/${path}`;
     }
     return `/storage/${path}`;
 };

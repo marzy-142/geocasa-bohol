@@ -49,29 +49,64 @@
 
             <!-- Photos -->
             <div
-                v-if="property.images && property.images.length > 0"
+                v-if="safeImages.length > 0"
                 class="bg-white p-4 md:p-6 rounded-xl shadow-sm mb-6 border border-gray-200"
             >
-                <h2 class="font-semibold text-gray-900 mb-4">Photos</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-semibold text-gray-900">Photos</h2>
+                    <span class="text-xs text-gray-500"
+                        >{{ mainImageIndex + 1 }} /
+                        {{ safeImages.length }}</span
+                    >
+                </div>
                 <div class="space-y-3">
                     <div
-                        class="relative w-full aspect-[16/9] bg-gray-100 rounded-lg overflow-hidden"
+                        class="relative w-full aspect-[16/9] bg-gray-100 rounded-lg overflow-hidden group"
                     >
                         <img
-                            :src="getImageUrl(property.images[mainImageIndex])"
-                            class="w-full h-full object-cover"
+                            :src="getImageUrl(safeImages[mainImageIndex])"
+                            class="w-full h-full object-cover cursor-zoom-in"
                             :alt="`Photo ${mainImageIndex + 1}`"
+                            loading="lazy"
+                            decoding="async"
                             @error="
                                 handleImageError(
                                     $event,
-                                    property.images[mainImageIndex]
+                                    safeImages[mainImageIndex]
                                 )
                             "
+                            @click="openViewer(mainImageIndex)"
                         />
+                        <!-- Inline nav controls on hover -->
+                        <button
+                            type="button"
+                            class="absolute left-2 top-1/2 -translate-y-1/2 hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-black/40 text-white group-hover:flex focus:outline-none focus:ring-2 focus:ring-white/70"
+                            @click.stop="prevViewer"
+                            aria-label="Previous photo"
+                        >
+                            ‹
+                        </button>
+                        <button
+                            type="button"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-black/40 text-white group-hover:flex focus:outline-none focus:ring-2 focus:ring-white/70"
+                            @click.stop="nextViewer"
+                            aria-label="Next photo"
+                        >
+                            ›
+                        </button>
+                        <!-- Expand button -->
+                        <button
+                            type="button"
+                            class="absolute top-2 right-2 px-2.5 py-1.5 rounded-md bg-black/40 text-white text-xs backdrop-blur hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/70"
+                            @click.stop="openViewer(mainImageIndex)"
+                            aria-label="Open lightbox"
+                        >
+                            Expand
+                        </button>
                     </div>
                     <div class="flex gap-2 overflow-x-auto no-scrollbar">
                         <button
-                            v-for="(image, index) in property.images"
+                            v-for="(image, index) in safeImages"
                             :key="`thumb-${index}`"
                             @click="mainImageIndex = index"
                             :aria-label="`Show photo ${index + 1}`"
@@ -79,14 +114,17 @@
                             :class="
                                 index === mainImageIndex
                                     ? 'border-blue-500 ring-blue-200'
-                                    : 'border-gray-200 ring-transparent'
+                                    : 'border-gray-200 ring-transparent hover:border-gray-300'
                             "
                         >
                             <img
                                 :src="getImageUrl(image)"
                                 class="w-full h-full object-cover"
                                 :alt="`Thumbnail ${index + 1}`"
+                                loading="lazy"
+                                decoding="async"
                                 @error="handleImageError($event, image)"
+                                @click.stop="openViewer(index)"
                             />
                         </button>
                     </div>
@@ -135,13 +173,7 @@
                                     Types
                                 </p>
                                 <p class="text-sm font-semibold text-gray-900">
-                                    {{
-                                        property.formatted_types?.length
-                                            ? property.formatted_types.join(
-                                                  ", "
-                                              )
-                                            : property.type || "—"
-                                    }}
+                                    {{ formattedTypesString }}
                                 </p>
                             </div>
                             <div
@@ -259,17 +291,6 @@
                         </div>
 
                         <div class="space-y-2">
-                            <Link
-                                :href="
-                                    route(
-                                        'public.properties.show',
-                                        property.slug
-                                    )
-                                "
-                                class="block w-full py-2 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700"
-                            >
-                                Inquire on Public Page
-                            </Link>
                             <a
                                 v-if="property.google_maps_link"
                                 :href="property.google_maps_link"
@@ -285,17 +306,6 @@
                             v-if="canEditProperty"
                             class="mt-4 pt-4 border-t space-y-2"
                         >
-                            <Link
-                                :href="
-                                    route(
-                                        'broker.properties.edit',
-                                        property.slug
-                                    )
-                                "
-                                class="block w-full py-2 bg-yellow-500 text-white text-center rounded-lg hover:bg-yellow-600"
-                            >
-                                ✏️ Edit Property
-                            </Link>
                             <button
                                 @click="toggleFeatured"
                                 :class="
@@ -310,12 +320,6 @@
                                         ? "⭐ Remove Featured"
                                         : "⭐ Make Featured"
                                 }}
-                            </button>
-                            <button
-                                @click="deleteProperty"
-                                class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                            >
-                                🗑️ Delete Property
                             </button>
                             <Link
                                 :href="
@@ -333,11 +337,41 @@
                 </div>
             </div>
         </div>
+        <!-- Lightbox Modal -->
+        <div v-if="showViewer" class="viewer-overlay" @click.self="closeViewer">
+            <button
+                class="absolute top-4 right-4 px-3 py-2 rounded-lg viewer-btn"
+                @click="closeViewer"
+                aria-label="Close"
+            >
+                ✕
+            </button>
+            <button
+                class="absolute left-4 px-3 py-2 rounded-full viewer-btn"
+                @click="prevViewer"
+                aria-label="Previous"
+            >
+                ‹
+            </button>
+            <img
+                :src="getImageUrl(safeImages[mainImageIndex])"
+                class="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-lg"
+                :alt="`Image ${mainImageIndex + 1}`"
+                loading="eager"
+            />
+            <button
+                class="absolute right-4 px-3 py-2 rounded-full viewer-btn"
+                @click="nextViewer"
+                aria-label="Next"
+            >
+                ›
+            </button>
+        </div>
     </ModernDashboardLayout>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
 import { ArrowLeftIcon } from "@heroicons/vue/24/outline";
@@ -364,6 +398,94 @@ const map = ref(null);
 const page = usePage();
 const mainImageIndex = ref(0);
 
+// Normalize images for robust rendering (supports strings, objects, JSON, CSV)
+const extractImageSrc = (item) => {
+    if (!item) return null;
+    if (typeof item === "string") return item.trim();
+    if (typeof item === "object") {
+        // Common keys we may receive from backend
+        const keys = [
+            "url",
+            "full_url",
+            "src",
+            "path",
+            "image_path",
+            "storage_path",
+            "filename",
+            "name",
+        ];
+        for (const k of keys) {
+            const v = item[k];
+            if (typeof v === "string" && v.trim()) return v.trim();
+        }
+    }
+    return null;
+};
+
+const normalizeImages = (imagesInput) => {
+    let list = [];
+
+    if (Array.isArray(imagesInput)) {
+        list = imagesInput;
+    } else if (typeof imagesInput === "string") {
+        const s = imagesInput.trim();
+        try {
+            const parsed = JSON.parse(s);
+            if (Array.isArray(parsed)) list = parsed;
+        } catch {
+            // Fallback: comma-separated
+            if (s.includes(",")) list = s.split(",");
+            else if (s) list = [s];
+        }
+    }
+
+    // Map to strings and filter
+    const mapped = list
+        .map(extractImageSrc)
+        .filter((x) => typeof x === "string" && x.length > 0);
+
+    // De-duplicate while preserving order
+    const seen = new Set();
+    const deduped = [];
+    for (const v of mapped) {
+        const key = v.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            deduped.push(v);
+        }
+    }
+    return deduped;
+};
+
+const safeImages = computed(() => {
+    const primary = extractImageSrc(
+        props.property?.primary_image || props.property?.main_image
+    );
+    const imgs = normalizeImages(props.property?.images);
+    // Put primary image at front if present and not already first
+    const list = primary ? [primary, ...imgs] : imgs.slice();
+    // Guard against non-image placeholder strings like 'null'
+    return list.filter(
+        (s) => typeof s === "string" && s !== "null" && s !== "undefined"
+    );
+});
+
+const formattedTypesString = computed(() => {
+    const ft = props.property?.formatted_types || [];
+    if (Array.isArray(ft) && ft.length) {
+        return ft
+            .map((t) => (typeof t === "string" ? t : t.label || t.value))
+            .join(", ");
+    }
+    if (
+        (props.property?.types || []).includes?.("other") ||
+        props.property?.type === "other"
+    ) {
+        return props.property?.custom_type_text || "Other";
+    }
+    return props.property?.type || "—";
+});
+
 const canEditProperty = computed(() => {
     const user = page.props.auth.user;
     return (
@@ -384,25 +506,24 @@ const hasUtilities = computed(() => {
 });
 
 const getImageUrl = (image) => {
-    // Debug: log the image value
-    console.log("Image path:", image);
-
-    // Try different path formats
-    if (image.startsWith("http")) {
-        return image;
-    } else if (image.startsWith("properties/")) {
-        return `/storage/${image}`;
-    } else if (image.startsWith("/storage/")) {
-        return image;
-    } else {
-        return `/storage/properties/images/${image}`;
-    }
+    // Accept strings or objects
+    const src = extractImageSrc(image);
+    if (!src) return PLACEHOLDER_DATA_URI;
+    const val = src.trim();
+    if (val.startsWith("http") || val.startsWith("data:")) return val;
+    if (val.startsWith("/storage/")) return val;
+    if (val.startsWith("storage/")) return `/${val}`;
+    if (val.startsWith("properties/")) return `/storage/${val}`;
+    // Common absolute paths without leading slash
+    return `/storage/properties/images/${val}`;
 };
 
+const PLACEHOLDER_DATA_URI =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-family='Arial' font-size='20'%3ENo image%3C/text%3E%3C/svg%3E";
+
 const handleImageError = (event, image) => {
-    console.error("Image failed to load:", image);
-    console.error("Attempted URL:", event.target.src);
-    event.target.src = "/images/placeholder.jpg";
+    console.warn("Image failed to load:", image, "URL:", event?.target?.src);
+    if (event?.target) event.target.src = PLACEHOLDER_DATA_URI;
 };
 
 const getStatusColor = (status) => {
@@ -429,11 +550,7 @@ const formatTitleType = (titleType) => {
     return types[titleType] || titleType;
 };
 
-const deleteProperty = () => {
-    if (confirm("Are you sure you want to delete this property?")) {
-        router.delete(route("broker.properties.destroy", props.property.slug));
-    }
-};
+// Removed delete button per request
 
 const toggleFeatured = () => {
     router.post(
@@ -464,15 +581,15 @@ const initMap = () => {
 };
 
 onMounted(() => {
-    console.log("Property data:", props.property);
-    console.log("Images array:", props.property.images);
     initMap();
+    window.addEventListener("keydown", onKey);
 });
 
 onUnmounted(() => {
     if (map.value) {
         map.value.remove();
     }
+    window.removeEventListener("keydown", onKey);
 });
 
 // Navigation: back with sensible fallback by role
@@ -490,4 +607,66 @@ const goBack = () => {
         router.visit(route("client.properties"));
     }
 };
+
+// Lightweight Lightbox Viewer
+const showViewer = ref(false);
+const openViewer = (idx = 0) => {
+    if (!safeImages.value.length) return;
+    mainImageIndex.value = Math.min(
+        Math.max(idx, 0),
+        safeImages.value.length - 1
+    );
+    showViewer.value = true;
+};
+const closeViewer = () => (showViewer.value = false);
+const nextViewer = () => {
+    if (!safeImages.value.length) return;
+    mainImageIndex.value = (mainImageIndex.value + 1) % safeImages.value.length;
+};
+const prevViewer = () => {
+    if (!safeImages.value.length) return;
+    mainImageIndex.value =
+        (mainImageIndex.value - 1 + safeImages.value.length) %
+        safeImages.value.length;
+};
+const onKey = (e) => {
+    if (!showViewer.value) return;
+    if (e.key === "Escape") closeViewer();
+    else if (e.key === "ArrowRight") nextViewer();
+    else if (e.key === "ArrowLeft") prevViewer();
+};
+
+// Keep index in bounds and lock body scroll when viewer is open
+watch(
+    () => safeImages.value.length,
+    (len) => {
+        if (len === 0) mainImageIndex.value = 0;
+        else if (mainImageIndex.value > len - 1) mainImageIndex.value = 0;
+    }
+);
+
+watch(showViewer, (open) => {
+    try {
+        const body = document.querySelector("body");
+        if (!body) return;
+        if (open) body.classList.add("overflow-hidden");
+        else body.classList.remove("overflow-hidden");
+    } catch {}
+});
 </script>
+
+<style scoped>
+.viewer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+}
+.viewer-btn {
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+}
+</style>

@@ -1522,7 +1522,7 @@ const form = useForm({
     new_images: [], // New images to upload
     remove_images: [], // Existing images to remove (indices)
     has_virtual_tour: props.property.has_virtual_tour || false,
-    virtual_tour_images: [],
+    new_virtual_tour_images: [],
     remove_virtual_tour_images: [], // Track removed virtual tour images
     coordinates_lat: props.property.coordinates_lat,
     coordinates_lng: props.property.coordinates_lng,
@@ -1589,15 +1589,20 @@ const handleDocumentUpload = (event) => {
 };
 
 const handleVirtualTourImagesChanged = (images) => {
-    form.virtual_tour_images = images;
+    // images are File objects for new uploads
+    form.new_virtual_tour_images = images;
 };
 
 const removeVirtualTourImage = (index) => {
-    // Handle removal of existing virtual tour images
-    if (!form.remove_virtual_tour_images.includes(index)) {
-        form.remove_virtual_tour_images.push(index);
+    // Remove by passing the actual path string as backend expects
+    const existing = Array.isArray(props.property.virtual_tour_images)
+        ? props.property.virtual_tour_images
+        : [];
+    const toRemove = existing[index];
+    if (toRemove && !form.remove_virtual_tour_images.includes(toRemove)) {
+        form.remove_virtual_tour_images.push(toRemove);
+        console.log("Marked virtual tour image for removal:", toRemove);
     }
-    console.log("Marked virtual tour image for removal:", index);
 };
 
 const onLocationSelected = (location) => {
@@ -1628,7 +1633,7 @@ const handleVirtualTourUpload = (event) => {
         return;
     }
     virtualTourPreview.value = [];
-    form.virtual_tour_images = [];
+    form.new_virtual_tour_images = [];
     files.forEach((file, index) => {
         if (file.size > 5 * 1024 * 1024) {
             alert(`${file.name} is too large. Maximum file size is 5MB.`);
@@ -1643,7 +1648,7 @@ const handleVirtualTourUpload = (event) => {
             alert(`${file.name} must be a JPG, JPEG, or PNG file.`);
             return;
         }
-        form.virtual_tour_images.push(file);
+        form.new_virtual_tour_images.push(file);
         const reader = new FileReader();
         reader.onload = (e) => {
             virtualTourPreview.value.push(e.target.result);

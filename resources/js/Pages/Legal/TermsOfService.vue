@@ -281,28 +281,33 @@
                                 6. Transactions and Payments
                             </h2>
                             <p class="text-neutral-700 mb-4">
-                                GeoCasa Bohol facilitates connections between
-                                parties but is not directly involved in property
-                                transactions. Users acknowledge that:
+                                GeoCasa Bohol provides tools for sellers to list
+                                properties and connect directly with licensed
+                                brokers they choose. We are not a party to, nor
+                                do we control, property transactions. Users
+                                acknowledge that:
                             </p>
                             <ul
                                 class="list-disc list-inside text-neutral-700 space-y-2 mb-4"
                             >
                                 <li>
-                                    All transactions are between buyers,
-                                    sellers, and their chosen brokers
+                                    All transactions are solely between buyers,
+                                    sellers, and the broker the seller selected
+                                    (or explicitly engaged)
                                 </li>
                                 <li>
                                     We do not guarantee the completion of any
                                     transaction
                                 </li>
                                 <li>
-                                    Payment processing and escrow services are
-                                    handled by third parties
+                                    Any payment processing or escrow services
+                                    are handled by independent third parties,
+                                    subject to their terms
                                 </li>
                                 <li>
-                                    Users are responsible for conducting due
-                                    diligence
+                                    Users are solely responsible for all due
+                                    diligence, verification, and regulatory
+                                    compliance
                                 </li>
                                 <li>
                                     Legal documentation should be reviewed by

@@ -77,7 +77,7 @@ class SimpleSellerRequestRequest extends FormRequest
             
             // Consent & Terms
             'marketing_consent' => 'nullable|boolean',
-            'newsletter_consent' => 'nullable|boolean',
+            // 'newsletter_consent' => 'nullable|boolean', // deprecated
             'terms_accepted' => 'required|accepted',
             
             // Broker Selection
@@ -174,7 +174,7 @@ class SimpleSellerRequestRequest extends FormRequest
         // Ensure boolean values are properly set
         $this->merge([
             'marketing_consent' => $this->boolean('marketing_consent'),
-            'newsletter_consent' => $this->boolean('newsletter_consent'),
+            // 'newsletter_consent' => $this->boolean('newsletter_consent'), // deprecated
             'road_access' => $this->boolean('road_access'),
             'water_source' => $this->boolean('water_source'),
             'electricity' => $this->boolean('electricity'),

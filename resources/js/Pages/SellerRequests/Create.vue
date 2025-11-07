@@ -379,7 +379,7 @@ const {
 
         // Consent
         marketing_consent: false,
-        newsletter_consent: false,
+        // Removed newsletter_consent field (no longer used)
         terms_accepted: false,
 
         // Broker Selection
@@ -407,6 +407,31 @@ const totalSteps = 5; // 5 steps: Contact, Property, Location, Images, Broker Se
 const isSubmitting = ref(false);
 const submissionStatus = ref(null); // 'success', 'error', or null
 const submissionMessage = ref("");
+// Legal modals
+const showTermsModal = ref(false);
+const showPrivacyModal = ref(false);
+
+// Lightweight embedded snippets (kept ultra concise)
+const termsSnippet = `Summary`;
+const privacySnippet = `Summary`;
+
+// Bullet summaries for a friendlier, skimmable modal
+const termsSummary = [
+    "Service scope: GeoCasa provides a platform to list and facilitate real estate transactions; we are not your agent unless separately agreed.",
+    "Seller control: You select the broker you wish to engage; no broker is automatically assigned.",
+    "Information accuracy: You warrant all property details and disclosures are complete, current, and lawful.",
+    "Proper use: You agree not to misuse the platform, attempt unauthorized access, or upload unlawful/infringing materials.",
+    "Liability: Services are provided 'as is'; indirect or consequential damages are disclaimed to the fullest extent permitted by law.",
+    "Acceptance: Submitting a seller request signifies acceptance; consult the full Terms of Service for comprehensive provisions.",
+];
+const privacySummary = [
+    "Data collected: account details, property information, communications, and usage metrics for service delivery and improvement.",
+    "Purpose of use: Supports preparation of listings, broker matching you initiate, messaging, security, analytics, and compliance.",
+    "Broker sharing: Disclosed only to the broker(s) you explicitly select and necessary service providers under confidentiality obligations.",
+    "Retention & control: Maintained only as needed for operational, legal, or audit purposes; you may request correction or deletion where permitted.",
+    "Security: Reasonable administrative, technical, and physical safeguards applied; no method guarantees absolute security.",
+    "Commitment: Submission acknowledges this summary; review the full Privacy Policy for complete details.",
+];
 
 // Enhanced step validation with detailed error tracking
 const getStepValidationErrors = (step) => {
@@ -1897,7 +1922,7 @@ const formatFieldName = (field) => {
         terms_accepted: "Terms Accepted",
         additional_notes: "Additional Notes",
         marketing_consent: "Marketing Consent",
-        newsletter_consent: "Newsletter Consent",
+        // Removed newsletter_consent label (newsletter feature deprecated)
     };
     return (
         fieldMap[field] ||
@@ -3438,19 +3463,7 @@ const handleFieldQuickAction = (fieldName, action) => {
                                             listing and related services.
                                         </span>
                                     </label>
-                                    <label class="flex items-start gap-3">
-                                        <input
-                                            type="checkbox"
-                                            v-model="
-                                                validationForm.newsletter_consent
-                                            "
-                                            class="mt-1 rounded text-primary-600 focus:ring-primary-500"
-                                        />
-                                        <span class="text-neutral-700">
-                                            Subscribe me to the GeoCasa
-                                            newsletter.
-                                        </span>
-                                    </label>
+                                    <!-- Newsletter consent removed -->
                                     <label class="flex items-start gap-3">
                                         <input
                                             type="checkbox"
@@ -3464,18 +3477,20 @@ const handleFieldQuickAction = (fieldName, action) => {
                                                 >*</strong
                                             >
                                             I have read and agree to the
-                                            <a
-                                                href="/terms"
-                                                target="_blank"
+                                            <button
+                                                type="button"
+                                                @click="showTermsModal = true"
                                                 class="text-primary-600 hover:underline font-medium"
-                                                >Terms and Conditions</a
                                             >
+                                                Terms and Conditions
+                                            </button>
                                             and
-                                            <a
-                                                href="/privacy"
-                                                target="_blank"
+                                            <button
+                                                type="button"
+                                                @click="showPrivacyModal = true"
                                                 class="text-primary-600 hover:underline font-medium"
-                                                >Privacy Policy</a
+                                            >
+                                                Privacy Policy</button
                                             >.
                                         </span>
                                     </label>
@@ -3483,6 +3498,118 @@ const handleFieldQuickAction = (fieldName, action) => {
                                         v-if="errors.terms_accepted"
                                         :message="errors.terms_accepted"
                                     />
+
+                                    <!-- Terms Modal -->
+                                    <div
+                                        v-if="showTermsModal"
+                                        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                                        role="dialog"
+                                        aria-modal="true"
+                                        aria-labelledby="terms-modal-title"
+                                        @click.self="showTermsModal = false"
+                                    >
+                                        <div
+                                            class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden"
+                                        >
+                                            <div
+                                                class="flex items-center justify-between px-6 py-4 border-b bg-neutral-50"
+                                            >
+                                                <h4
+                                                    id="terms-modal-title"
+                                                    class="text-lg font-semibold text-neutral-900"
+                                                >
+                                                    Terms and Conditions (Quick
+                                                    Summary)
+                                                </h4>
+                                                <div
+                                                    class="flex items-center gap-3"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        @click="
+                                                            showTermsModal = false
+                                                        "
+                                                        class="p-2 rounded hover:bg-neutral-100"
+                                                        aria-label="Close"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="p-6 max-h-[70vh] overflow-y-auto"
+                                            >
+                                                <ul
+                                                    class="list-disc list-inside space-y-2 text-neutral-700"
+                                                >
+                                                    <li
+                                                        v-for="(
+                                                            item, idx
+                                                        ) in termsSummary"
+                                                        :key="idx"
+                                                    >
+                                                        {{ item }}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Privacy Modal -->
+                                    <div
+                                        v-if="showPrivacyModal"
+                                        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                                        role="dialog"
+                                        aria-modal="true"
+                                        aria-labelledby="privacy-modal-title"
+                                        @click.self="showPrivacyModal = false"
+                                    >
+                                        <div
+                                            class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden"
+                                        >
+                                            <div
+                                                class="flex items-center justify-between px-6 py-4 border-b bg-neutral-50"
+                                            >
+                                                <h4
+                                                    id="privacy-modal-title"
+                                                    class="text-lg font-semibold text-neutral-900"
+                                                >
+                                                    Privacy Policy (Quick
+                                                    Summary)
+                                                </h4>
+                                                <div
+                                                    class="flex items-center gap-3"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        @click="
+                                                            showPrivacyModal = false
+                                                        "
+                                                        class="p-2 rounded hover:bg-neutral-100"
+                                                        aria-label="Close"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="p-6 max-h-[70vh] overflow-y-auto"
+                                            >
+                                                <ul
+                                                    class="list-disc list-inside space-y-2 text-neutral-700"
+                                                >
+                                                    <li
+                                                        v-for="(
+                                                            item, idx
+                                                        ) in privacySummary"
+                                                        :key="idx"
+                                                    >
+                                                        {{ item }}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

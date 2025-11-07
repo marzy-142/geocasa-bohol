@@ -93,6 +93,9 @@ class ConversationController extends Controller
             abort(403, 'You are not authorized to send messages in this conversation.');
         }
 
+        // Ensure dynamic participants (e.g., client registered after inquiry) are present before dispatch
+        $conversation->ensureDynamicParticipants();
+
         $validated = $request->validated();
 
         $attachments = [];

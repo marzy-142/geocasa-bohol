@@ -16,7 +16,9 @@
                     </h1>
                     <p class="text-xl text-neutral-600 max-w-2xl mx-auto">
                         Your privacy is important to us. This policy explains
-                        how we collect, use, and protect your information.
+                        how we collect, use, and protect your information when
+                        you submit property details and interact with brokers
+                        you choose on the platform.
                     </p>
                     <div class="mt-6 text-sm text-neutral-500">
                         Last updated: {{ lastUpdated }}
@@ -136,7 +138,9 @@
                             </h3>
                             <p class="text-neutral-700 mb-4">
                                 We collect information you provide directly to
-                                us, including:
+                                us when you create an account, submit a seller
+                                request, or communicate with a broker you
+                                selected. This includes:
                             </p>
                             <ul
                                 class="list-disc list-inside text-neutral-700 space-y-2 mb-6"
@@ -185,20 +189,20 @@
                                 <li>Provide and maintain our services</li>
                                 <li>Verify broker licenses and credentials</li>
                                 <li>
-                                    Facilitate property transactions and
-                                    communications
+                                    Enable your communication with the broker
+                                    you chose
                                 </li>
                                 <li>
                                     Send important notifications and updates
                                 </li>
                                 <li>
-                                    Improve our platform and user experience
+                                    Provide customer support and respond to
+                                    requests
                                 </li>
                                 <li>
                                     Prevent fraud and ensure platform security
                                 </li>
                                 <li>Comply with legal obligations</li>
-                                <li>Provide customer support</li>
                             </ul>
                         </section>
 
@@ -216,31 +220,37 @@
                                 class="list-disc list-inside text-neutral-700 space-y-2 mb-4"
                             >
                                 <li>
-                                    <strong>With Other Users:</strong> Property
-                                    listings and broker profiles are publicly
-                                    visible
+                                    <strong>Broker You Selected:</strong> Your
+                                    submitted property and contact details are
+                                    shared only with the broker you explicitly
+                                    choose or authorize.
                                 </li>
                                 <li>
-                                    <strong>Service Providers:</strong>
-                                    Third-party vendors who assist in platform
-                                    operations
+                                    <strong>Service Providers:</strong> Secure
+                                    vendors (hosting, storage, email, analytics)
+                                    under confidentiality agreements.
                                 </li>
                                 <li>
-                                    <strong>Legal Requirements:</strong> When
-                                    required by law or to protect our rights
+                                    <strong>Legal Requirements:</strong> If
+                                    required by law, regulation, or valid legal
+                                    process.
                                 </li>
                                 <li>
-                                    <strong>Business Transfers:</strong> In
-                                    connection with mergers or acquisitions
+                                    <strong
+                                        >Security & Abuse Prevention:</strong
+                                    >
+                                    To investigate fraud, abuse, or platform
+                                    misuse.
                                 </li>
                                 <li>
-                                    <strong>Consent:</strong> When you
-                                    explicitly consent to sharing
+                                    <strong>Consent:</strong> Additional sharing
+                                    only occurs with your explicit consent.
                                 </li>
                             </ul>
                             <p class="text-neutral-700">
-                                We do not sell your personal information to
-                                third parties for marketing purposes.
+                                We do <strong>not</strong> sell your personal
+                                information. Property listings become public
+                                only after broker review and publication.
                             </p>
                         </section>
 
@@ -391,9 +401,10 @@
                                 Our services are not intended for individuals
                                 under 18 years of age. We do not knowingly
                                 collect personal information from children. If
-                                we become aware that we have collected
-                                information from a child, we will take steps to
-                                delete it promptly.
+                                we become aware of such collection we will
+                                delete the data promptly. Sellers and brokers
+                                must be of legal age and properly authorized to
+                                conduct real estate transactions.
                             </p>
                         </section>
 

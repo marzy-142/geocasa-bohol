@@ -110,14 +110,23 @@ class Conversation extends Model
      */
     public function addParticipant(int $userId): void
     {
+        // Verify the user exists to satisfy FK constraints
+        if (!User::whereKey($userId)->exists()) {
+            \Log::warning('Attempted to add non-existent user as conversation participant', [
+                'conversation_id' => $this->id,
+                'user_id' => $userId,
+            ]);
+            return;
+        }
+
         $participants = $this->participants ?? [];
         if (!in_array($userId, $participants)) {
             $participants[] = $userId;
             $this->update(['participants' => $participants]);
-            
-            // Also add to pivot table
-            $this->participantUsers()->syncWithoutDetaching([$userId]);
         }
+
+        // Also add to pivot table (idempotent)
+        $this->participantUsers()->syncWithoutDetaching([$userId]);
     }
 
     /**
@@ -218,13 +227,14 @@ class Conversation extends Model
             }
         }
 
-        // Remove duplicates/nulls
+        // Remove duplicates/nulls and keep only existing users
         $userParticipants = array_values(array_unique(array_filter($userParticipants)));
+        $validUserIds = User::whereIn('id', $userParticipants)->pluck('id')->toArray();
 
         // Log participants for debugging
         \Log::info('Creating conversation for inquiry with participants', [
             'inquiry_id' => $inquiry->id,
-            'participants' => $userParticipants,
+            'participants' => $validUserIds,
             'inquiry_email' => $inquiry->email,
             'client_email' => $inquiry->client?->email
         ]);
@@ -233,12 +243,12 @@ class Conversation extends Model
             'title' => "Inquiry: {$inquiry->property->title}",
             'type' => 'inquiry',
             'inquiry_id' => $inquiry->id,
-            'participants' => $userParticipants,
+            'participants' => $validUserIds,
         ]);
 
         // Sync only valid user IDs to pivot table
-        if (!empty($userParticipants)) {
-            $conversation->participantUsers()->attach($userParticipants);
+        if (!empty($validUserIds)) {
+            $conversation->participantUsers()->attach($validUserIds);
         }
 
         return $conversation;
@@ -251,17 +261,18 @@ class Conversation extends Model
     {
         $participants = [$transaction->client_id, $transaction->broker_id];
         $participants = array_filter($participants); // Remove null values
+        $validUserIds = User::whereIn('id', $participants)->pluck('id')->toArray();
 
         $conversation = self::create([
             'title' => "Transaction: {$transaction->property->title}",
             'type' => 'transaction',
             'transaction_id' => $transaction->id,
-            'participants' => array_values($participants),
+            'participants' => array_values($validUserIds),
         ]);
 
         // Sync participants to pivot table
-        if (!empty($participants)) {
-            $conversation->participantUsers()->attach($participants);
+        if (!empty($validUserIds)) {
+            $conversation->participantUsers()->attach($validUserIds);
         }
 
         return $conversation;
@@ -386,5 +397,57 @@ class Conversation extends Model
         }
         
         return $this->inquiry;
+    }
+
+    /**
+     * Ensure the inquiry's client user (if now registered) is a participant.
+     * Handles the scenario where an inquiry was created before the client registered
+     * (thus lacking a user_id during initial conversation creation), causing later
+     * messages from the broker to omit notifications to the newly registered user.
+     */
+    public function syncInquiryClientParticipant(): void
+    {
+        if (!$this->inquiry) return;
+        $client = $this->inquiry->client;
+        if ($client && $client->user_id) {
+            if (!$this->hasParticipant($client->user_id)) {
+                $this->addParticipant($client->user_id);
+                \Log::info('Synced missing inquiry client user to conversation', [
+                    'conversation_id' => $this->id,
+                    'inquiry_id' => $this->inquiry->id,
+                    'client_id' => $client->id,
+                    'client_user_id' => $client->user_id,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Ensure transaction broker and client are participants (resilience if linking changed).
+     */
+    public function syncTransactionParticipants(): void
+    {
+        if (!$this->transaction) return;
+        $t = $this->transaction;
+        $ids = array_filter([$t->broker_id, $t->client_id]);
+        foreach ($ids as $id) {
+            if (!$this->hasParticipant($id)) {
+                $this->addParticipant($id);
+                \Log::info('Synced missing transaction participant to conversation', [
+                    'conversation_id' => $this->id,
+                    'transaction_id' => $t->id,
+                    'user_id' => $id,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * General helper to ensure dynamic participants are present.
+     */
+    public function ensureDynamicParticipants(): void
+    {
+        $this->syncInquiryClientParticipant();
+        $this->syncTransactionParticipants();
     }
 }

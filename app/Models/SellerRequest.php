@@ -52,7 +52,7 @@ class SellerRequest extends Model
         'urgency',
         'additional_notes',
         'marketing_consent',
-        'newsletter_consent',
+        // 'newsletter_consent',
         'terms_accepted',
         'status',
         'admin_notes',
@@ -89,7 +89,7 @@ class SellerRequest extends Model
         'documents' => \App\Casts\AsArrayWithoutSlashes::class,
         'ownership_documents' => \App\Casts\AsArrayWithoutSlashes::class,
         'marketing_consent' => 'boolean',
-        'newsletter_consent' => 'boolean',
+    // 'newsletter_consent' => 'boolean', // deprecated
         'terms_accepted' => 'boolean',
         'road_access' => 'boolean',
         'water_source' => 'boolean',
@@ -169,6 +169,65 @@ class SellerRequest extends Model
         $area = $this->property_area !== null ? (float) $this->property_area : 0.0;
         $unit = $this->area_unit ?? 'sqm';
         return number_format($area, 1) . ' ' . $unit;
+    }
+
+    /**
+     * Normalized contact accessors bridging legacy (name/email/phone) and new (contact_*) fields.
+     */
+    public function getContactNameAttribute()
+    {
+        return $this->attributes['contact_name']
+            ?? $this->attributes['name']
+            ?? null;
+    }
+
+    public function getContactEmailAttribute()
+    {
+        return $this->attributes['contact_email']
+            ?? $this->attributes['email']
+            ?? null;
+    }
+
+    public function getContactPhoneAttribute()
+    {
+        return $this->attributes['contact_phone']
+            ?? $this->attributes['phone']
+            ?? null;
+    }
+
+    /**
+     * Normalized lot area accessor (prefers lot_area_sqm virtual, then lot_area, then property_area).
+     */
+    public function getLotAreaSqmAttribute()
+    {
+        if (array_key_exists('lot_area_sqm', $this->attributes)) {
+            return $this->attributes['lot_area_sqm'];
+        }
+        if (isset($this->attributes['lot_area'])) {
+            return $this->attributes['lot_area'];
+        }
+        if (isset($this->attributes['property_area'])) {
+            return $this->attributes['property_area'];
+        }
+        return null;
+    }
+
+    /**
+     * Backward compatibility: expose primary fields consistently (so front-end can just use name/email/phone if desired)
+     */
+    public function getNameAttribute($value)
+    {
+        return $value ?? ($this->attributes['contact_name'] ?? null);
+    }
+
+    public function getEmailAttribute($value)
+    {
+        return $value ?? ($this->attributes['contact_email'] ?? null);
+    }
+
+    public function getPhoneAttribute($value)
+    {
+        return $value ?? ($this->attributes['contact_phone'] ?? null);
     }
 
     public function getStatusLabelAttribute()

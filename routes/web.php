@@ -63,6 +63,14 @@ Route::post('/store-inquiry-session', [PublicController::class, 'storeInquirySes
     ->name('public.store-inquiry-session')
     ->middleware('throttle:10,1'); // 10 requests per minute for session storage
 
+// Legal pages (public)
+Route::get('/terms', function () {
+    return Inertia::render('Legal/TermsOfService');
+})->name('legal.terms');
+Route::get('/privacy', function () {
+    return Inertia::render('Legal/PrivacyPolicy');
+})->name('legal.privacy');
+
 // Broker Directory routes (public)
 Route::get('/brokers', [App\Http\Controllers\BrokerDirectoryController::class, 'index'])->name('brokers.index');
 Route::get('/brokers/{id}', [App\Http\Controllers\BrokerDirectoryController::class, 'show'])->name('brokers.show');

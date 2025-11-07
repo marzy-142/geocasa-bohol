@@ -21,7 +21,8 @@ class PropertyFileUploadRequest extends SecureFileUploadRequest
             'types.*' => 'string|in:' . implode(',', \App\Models\Property::TYPES) . ',other',
             'custom_type_text' => 'nullable|required_if:types.*,other|string|max:100',
             'municipality' => 'required|in:' . implode(',', \App\Models\Property::BOHOL_MUNICIPALITIES),
-            'title_type' => 'required|in:titled,tax_declared,mother_title,cct',
+            // Make title type optional at creation; can be provided/verified later
+            'title_type' => 'nullable|in:titled,tax_declared,mother_title,cct',
             
             // Pricing and area - REQUIRED
             'lot_area_sqm' => 'required|numeric|min:0',

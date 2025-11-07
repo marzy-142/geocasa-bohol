@@ -18,6 +18,12 @@ class Kernel extends ConsoleKernel
             ->command('reconcile:transactions')
             ->everyFifteenMinutes()
             ->withoutOverlapping();
+
+        // Periodically ensure conversations have correct dynamic participants
+        $schedule
+            ->command('conversation:sync-participants')
+            ->hourly()
+            ->withoutOverlapping();
     }
 
     /**

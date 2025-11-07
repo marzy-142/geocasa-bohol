@@ -132,7 +132,7 @@
                     </div>
                     <!-- Media Viewer Tabs (Gallery + Panorama) -->
                     <div
-                        v-if="property.has_virtual_tour && hasVirtualTourData"
+                        v-if="property.has_virtual_tour || hasVirtualTourData"
                         class="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden"
                     >
                         <!-- Tab Navigation -->
@@ -677,21 +677,13 @@
                         </div>
 
                         <!-- Key Details -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                             <div class="text-center p-4 bg-gray-50 rounded-lg">
                                 <div class="text-2xl font-bold text-gray-900">
                                     {{ property.formatted_area }}
                                 </div>
                                 <div class="text-sm text-gray-600">
                                     Total Area
-                                </div>
-                            </div>
-                            <div class="text-center p-4 bg-gray-50 rounded-lg">
-                                <div class="text-2xl font-bold text-gray-900">
-                                    {{ property.title_type || "N/A" }}
-                                </div>
-                                <div class="text-sm text-gray-600">
-                                    Title Type
                                 </div>
                             </div>
                             <div class="text-center p-4 bg-gray-50 rounded-lg">
@@ -1777,53 +1769,70 @@ const currentImage = computed(() => {
     return getImageUrl(props.property.main_image);
 });
 
-// Panoramic View computed properties (robust against strings/objects)
+// Panoramic View computed properties (robust against strings/objects and alt keys)
 const parsedVirtualTourArray = computed(() => {
-    const value = props.property?.virtual_tour_images;
+    // Prefer canonical field; fall back to common alternates if missing
+    let value =
+        props.property?.virtual_tour_images ||
+        props.property?.panoramic_images ||
+        props.property?.panorama_images ||
+        props.property?.panorama ||
+        props.property?.virtual_tour ||
+        props.property?.panoramic_image ||
+        null;
+
     if (!value) return [];
 
     let images = value;
 
-    // If it's a JSON string, try to parse
+    // JSON string -> parse
     if (typeof images === "string") {
+        const s = images.trim();
+        if (!s) return [];
         try {
-            const parsed = JSON.parse(images);
+            const parsed = JSON.parse(s);
             images = parsed;
         } catch (e) {
-            // Not JSON, treat as single image string
-            return [images];
+            // Not JSON; might be comma-separated or a single path
+            if (s.includes(",")) images = s.split(",");
+            else return [s];
         }
     }
 
-    // If it's an object (not array), convert to array of values
+    // Object map -> values
     if (!Array.isArray(images) && typeof images === "object") {
         images = Object.values(images);
     }
 
-    // If it's now an array, flatten any nesting and normalize to strings
+    // Normalize array -> strings
     if (Array.isArray(images)) {
         const flat = images.flat(2);
-        // Items can be strings or objects with various keys
+        const keys = [
+            "url",
+            "full_url",
+            "path",
+            "src",
+            "image",
+            "filename",
+            "storage_path",
+            "name",
+        ];
         return flat
             .map((item) => {
                 if (!item) return null;
                 if (typeof item === "string") return item;
                 if (typeof item === "object") {
-                    return (
-                        item.url ||
-                        item.path ||
-                        item.src ||
-                        item.image ||
-                        item.filename ||
-                        null
-                    );
+                    for (const k of keys) {
+                        const v = item[k];
+                        if (typeof v === "string" && v.trim()) return v;
+                    }
                 }
                 return null;
             })
             .filter((s) => typeof s === "string" && s.trim() !== "");
     }
 
-    // Fallback: if it's a single string at this point
+    // Fallback
     return typeof images === "string" ? [images] : [];
 });
 
