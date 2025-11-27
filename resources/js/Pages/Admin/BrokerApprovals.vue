@@ -118,6 +118,26 @@ const formatDate = (date) => {
         day: "numeric",
     });
 };
+
+// Safely parse additional documents which may come as JSON array string,
+// already-an-array, comma-separated string, or invalid content
+const parseJsonArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value !== "string" || value.trim() === "") return [];
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        // Fallback: treat as comma-separated list
+        if (value.includes(",")) {
+            return value
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+        }
+        return [];
+    }
+};
 </script>
 
 <template>
@@ -428,11 +448,9 @@ const formatDate = (date) => {
                                         class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
                                     >
                                         {{
-                                            broker.additional_documents
-                                                ? JSON.parse(
-                                                      broker.additional_documents
-                                                  ).length
-                                                : 0
+                                            parseJsonArray(
+                                                broker.additional_documents
+                                            ).length
                                         }}
                                     </span>
                                 </div>
@@ -444,7 +462,7 @@ const formatDate = (date) => {
                                     class="mt-2"
                                 >
                                     <div
-                                        v-for="(doc, index) in JSON.parse(
+                                        v-for="(doc, index) in parseJsonArray(
                                             broker.additional_documents
                                         )"
                                         :key="index"

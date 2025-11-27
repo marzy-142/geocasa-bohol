@@ -102,7 +102,7 @@ class ReminderService
     {
         $query = Inquiry::where('status', 'pending')
             ->where('created_at', '<', now()->subDays(2)) // Consider overdue after 2 days
-            ->with(['property:id,title,price,broker_id', 'client:id,name,email'])
+            ->with(['property' => function($q){ $q->withTrashed()->select('id','title','price','broker_id'); }, 'client:id,name,email'])
             ->orderBy('created_at', 'asc');
             
         if ($brokerId) {
@@ -116,16 +116,17 @@ class ReminderService
         return $query->get()
             ->map(function ($inquiry) {
                 $daysOld = $inquiry->created_at->diffInDays(now());
+                $propertyTitle = $inquiry->property?->title ?? 'Unknown Property';
                 return [
                     'id' => $inquiry->id,
                     'type' => 'overdue_inquiry',
-                    'title' => "Inquiry: {$inquiry->property->title}",
+                    'title' => "Inquiry: {$propertyTitle}",
                     'description' => "Client: {$inquiry->client->name}",
                     'status' => $inquiry->status,
                     'priority' => $this->calculatePriority($daysOld, 'overdue_inquiry'),
                     'days_old' => $daysOld,
                     'created_at' => $inquiry->created_at,
-                    'property_price' => '₱' . number_format($inquiry->property->price),
+                    'property_price' => $inquiry->property?->price ? ('₱' . number_format($inquiry->property->price)) : null,
                     'client_contact' => [
                         'name' => $inquiry->client->name,
                         'email' => $inquiry->client->email,

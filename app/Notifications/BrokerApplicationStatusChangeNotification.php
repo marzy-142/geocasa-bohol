@@ -63,6 +63,7 @@ class BrokerApplicationStatusChangeNotification extends Notification implements 
             'old_status' => $this->oldStatus,
             'new_status' => $this->newStatus,
             'updated_at' => now(),
+            'message' => 'Broker application status changed: ' . ucfirst($this->oldStatus) . ' → ' . ucfirst($this->newStatus),
             'priority' => $this->newStatus === 'approved' || $this->newStatus === 'rejected' ? 'high' : 'medium',
             'action_url' => '/admin/broker-applications/' . ($this->applicationData['id'] ?? 'unknown')
         ];
@@ -77,6 +78,7 @@ class BrokerApplicationStatusChangeNotification extends Notification implements 
             'old_status' => $this->oldStatus,
             'new_status' => $this->newStatus,
             'updated_at' => now(),
+            'message' => 'Broker application status changed: ' . ucfirst($this->oldStatus) . ' → ' . ucfirst($this->newStatus),
             'priority' => $this->newStatus === 'approved' || $this->newStatus === 'rejected' ? 'high' : 'medium'
         ];
     }

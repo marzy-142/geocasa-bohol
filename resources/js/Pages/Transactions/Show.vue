@@ -25,8 +25,6 @@ import {
     ArrowPathIcon,
     PlusIcon,
     TrashIcon,
-    ShareIcon,
-    PrinterIcon,
     ArrowDownTrayIcon,
 } from "@heroicons/vue/24/outline";
 
@@ -425,20 +423,7 @@ onUnmounted(() => {
                                 <div
                                     class="mt-6 lg:mt-0 lg:ml-8 flex flex-wrap gap-3"
                                 >
-                                    <!-- Edit Button - Only for brokers -->
-                                    <Link
-                                        v-if="canEdit"
-                                        :href="
-                                            route(
-                                                'transactions.edit',
-                                                currentTransaction.id
-                                            )
-                                        "
-                                        class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-colors backdrop-blur-sm"
-                                    >
-                                        <PencilIcon class="w-4 h-4 mr-2" />
-                                        Edit
-                                    </Link>
+                                    <!-- Edit Button removed per request -->
 
                                     <!-- Update Status Button - Only for brokers -->
                                     <button
@@ -458,19 +443,6 @@ onUnmounted(() => {
                                     >
                                         <PencilIcon class="w-4 h-4 mr-2" />
                                         Add Oversight Note
-                                    </button>
-
-                                    <button
-                                        class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-colors backdrop-blur-sm"
-                                    >
-                                        <ShareIcon class="w-4 h-4 mr-2" />
-                                        Share
-                                    </button>
-                                    <button
-                                        class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-colors backdrop-blur-sm"
-                                    >
-                                        <PrinterIcon class="w-4 h-4 mr-2" />
-                                        Print
                                     </button>
                                 </div>
                             </div>
@@ -1138,22 +1110,7 @@ onUnmounted(() => {
                             </select>
                         </div>
 
-                        <!-- Status Notes -->
-                        <div>
-                            <label
-                                for="status_notes"
-                                class="block text-sm font-medium text-gray-700 mb-2"
-                            >
-                                Status Update Notes
-                            </label>
-                            <textarea
-                                v-model="statusForm.notes"
-                                id="status_notes"
-                                rows="4"
-                                class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                placeholder="Add notes about this status change..."
-                            ></textarea>
-                        </div>
+                        <!-- Status Notes removed per request -->
 
                         <!-- Action Buttons -->
                         <div

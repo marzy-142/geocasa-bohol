@@ -593,11 +593,17 @@ onMounted(() => {
                                     class="w-4 h-4 mr-3 text-gray-400"
                                 />
                                 <div class="flex-1">
-                                    <span class="font-medium">{{
-                                        transaction.property.title
-                                    }}</span>
+                                    <span class="font-medium">
+                                        {{
+                                            transaction.property?.title ||
+                                            "Untitled Property"
+                                        }}
+                                    </span>
                                     <p class="text-xs text-gray-500">
-                                        {{ transaction.property.municipality }}
+                                        {{
+                                            transaction.property
+                                                ?.municipality || "—"
+                                        }}
                                     </p>
                                 </div>
                             </div>

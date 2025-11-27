@@ -42,12 +42,13 @@ class ClientApprovalRequiredNotification extends Notification implements ShouldQ
     {
         $approvalType = $this->getApprovalTypeLabel($this->approval['type']);
         $deadline = \Carbon\Carbon::parse($this->approval['deadline'])->format('M j, Y g:i A');
+        $propertyTitle = $this->transaction->property?->title ?? 'Unknown Property';
         
         return (new MailMessage)
-            ->subject("Action Required: {$approvalType} - {$this->transaction->property->title}")
+            ->subject("Action Required: {$approvalType} - {$propertyTitle}")
             ->greeting("Hello {$notifiable->name},")
             ->line("Your broker needs your approval for: **{$approvalType}**")
-            ->line("**Property:** {$this->transaction->property->title}")
+            ->line("**Property:** {$propertyTitle}")
             ->line("**Transaction:** {$this->transaction->transaction_number}")
             ->line("**Response Deadline:** {$deadline}")
             ->line($this->getApprovalDescription($this->approval['type']))
@@ -62,6 +63,7 @@ class ClientApprovalRequiredNotification extends Notification implements ShouldQ
      */
     public function toDatabase(object $notifiable): array
     {
+        $propertyTitle = $this->transaction->property?->title ?? 'Unknown Property';
         return [
             'title' => 'Approval Required',
             'message' => "Your approval is needed for {$this->getApprovalTypeLabel($this->approval['type'])}",
@@ -74,7 +76,7 @@ class ClientApprovalRequiredNotification extends Notification implements ShouldQ
                 'transaction' => [
                     'id' => $this->transaction->id,
                     'number' => $this->transaction->transaction_number,
-                    'property_title' => $this->transaction->property->title,
+                    'property_title' => $propertyTitle,
                 ],
             ],
         ];

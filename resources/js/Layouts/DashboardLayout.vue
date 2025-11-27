@@ -46,9 +46,34 @@ const navigation = [
     },
 ];
 
+// Persist sidebar state (legacy layout) per user for consistency
+const getSidebarStateKey = () =>
+    `gc_sidebar_open_${page.props.auth?.user?.id ?? "guest"}`;
+
+const restoreSidebarState = () => {
+    try {
+        const saved = localStorage.getItem(getSidebarStateKey());
+        if (saved !== null) {
+            sidebarOpen.value = saved === "1" || saved === "true";
+        }
+    } catch (e) {}
+};
+
+const persistSidebarState = () => {
+    try {
+        localStorage.setItem(
+            getSidebarStateKey(),
+            sidebarOpen.value ? "1" : "0"
+        );
+    } catch (e) {}
+};
+
 const toggleSidebar = () => {
     sidebarOpen.value = !sidebarOpen.value;
+    persistSidebarState();
 };
+
+restoreSidebarState();
 
 const toggleMobileMenu = () => {
     mobileMenuOpen.value = !mobileMenuOpen.value;

@@ -177,10 +177,11 @@
                             <span
                                 v-if="
                                     message.sender_id !==
-                                    $page.props.auth.user.id
+                                        $page.props.auth.user.id &&
+                                    getSenderLabel(message)
                                 "
                             >
-                                {{ message.sender?.name || "Unknown" }} •
+                                {{ getSenderLabel(message) }} •
                             </span>
                             <span class="ml-1">
                                 {{ formatTime(message.created_at) }}
@@ -421,6 +422,20 @@ const scrollToBottom = (smooth = true) => {
             });
         }
     });
+};
+
+// Derive a human-readable sender label, avoiding ambiguous "Unknown"
+const getSenderLabel = (message) => {
+    if (!message) return null;
+    // System messages have no sender_id; show explicit label
+    if (message.type === "system" || message.sender_id === null) {
+        return "System";
+    }
+    // If sender relation exists use its name
+    if (message.sender?.name) return message.sender.name;
+    // If sender_id exists but relation missing, likely user deleted or not eager loaded
+    if (message.sender_id) return "(user unavailable)";
+    return null; // Hide completely rather than show confusing placeholder
 };
 
 // Only sync props to messages when props actually change (new message sent)

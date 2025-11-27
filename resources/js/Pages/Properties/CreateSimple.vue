@@ -1528,7 +1528,7 @@ const initializeLeafletMap = async () => {
     try {
         // Create Leaflet map
         leafletMap.value = L.map(mapContainer.value, {
-            center: [9.634, 123.853], // Tagbilaran center
+            center: [9.634, 123.853], // initial center (used if bounds not applied)
             zoom: mapZoomLevel.value,
             zoomControl: false, // We'll add custom controls
         });
@@ -1580,10 +1580,16 @@ const initializeLeafletMap = async () => {
 
         mapInitialized.value = true;
 
-        // If coordinates already exist, show them on map
+        // Wider province coverage by default when no coordinates yet
+        const boholBounds = L.latLngBounds([9.45, 123.5], [10.25, 124.7]);
         if (form.coordinates_lat && form.coordinates_lng) {
             addLeafletMarker(form.coordinates_lat, form.coordinates_lng);
-            centerMapOnLocation(form.coordinates_lat, form.coordinates_lng);
+            leafletMap.value.setView(
+                [form.coordinates_lat, form.coordinates_lng],
+                13 // slightly wider than close zoom
+            );
+        } else {
+            leafletMap.value.fitBounds(boholBounds, { padding: [30, 30] });
         }
     } catch (error) {
         console.error("Error initializing Leaflet map:", error);
@@ -1849,7 +1855,40 @@ const searchAddress = async () => {
     searchResults.value = [];
 
     try {
-        // Comprehensive Bohol locations database including municipalities, barangays, sitios, and areas
+        // 1) Try online geocoding first (broader coverage)
+        try {
+            const q = addressSearch.value.trim();
+            const regionHint = "Bohol Philippines";
+            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=8&q=${encodeURIComponent(
+                q + " " + regionHint
+            )}`;
+            const response = await fetch(url, {
+                headers: { "User-Agent": "GeoCasaBohol/1.0" },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const mapped = data.map((r) => ({
+                    id: `osm-${r.place_id}`,
+                    name:
+                        (r.display_name || "")
+                            .split(",")
+                            .slice(0, 2)
+                            .join(", ")
+                            .trim() || r.display_name,
+                    description: r.display_name,
+                    lat: parseFloat(r.lat),
+                    lng: parseFloat(r.lon),
+                }));
+                if (mapped.length > 0) {
+                    searchResults.value = mapped.slice(0, 8);
+                    return; // success via Nominatim; skip local fallback
+                }
+            }
+        } catch (e) {
+            // Ignore and fallback to local dataset
+        }
+
+        // 2) Fallback: Comprehensive Bohol locations database including municipalities, barangays, sitios, and areas
         const bohoLocations = [
             // TAGBILARAN CITY - Barangays and Areas
             {
@@ -3308,8 +3347,43 @@ const formatCoordinate = (coord) => {
 // Price calculation - simple auto-calculation when area or price per sqm changes
 const calculateTotalPrice = () => {
     if (form.lot_area_sqm && form.price_per_sqm) {
-        form.total_price = form.lot_area_sqm * form.price_per_sqm;
+        const area = Number(form.lot_area_sqm);
+        const price = Number(form.price_per_sqm);
+        if (!isNaN(area) && !isNaN(price)) {
+            form.total_price = area * price;
+        }
     }
+};
+
+// Back-compute price per sqm when total price is edited directly
+const calculatePricePerSqm = () => {
+    const area = Number(form.lot_area_sqm) || 0;
+    const total = Number(form.total_price) || 0;
+    if (area > 0 && total >= 0) {
+        form.price_per_sqm = total / area;
+    }
+};
+
+// Missing handler referenced by the lot area input (@input="handleLotAreaChange")
+// Without this, changing lot area relied only on the watcher to eventually recalc.
+// We call both forward (total price) and reverse (price per sqm) logic depending on which fields are filled.
+const handleLotAreaChange = () => {
+    const area = Number(form.lot_area_sqm) || 0;
+    const pricePerSqm = Number(form.price_per_sqm) || 0;
+    const total = Number(form.total_price) || 0;
+
+    // If user has entered price per sqm, prefer forward calculation of total price.
+    if (area > 0 && pricePerSqm > 0) {
+        form.total_price = area * pricePerSqm;
+        return;
+    }
+
+    // If user has entered a total price but not price per sqm, back-calculate price per sqm.
+    if (area > 0 && pricePerSqm === 0 && total > 0) {
+        form.price_per_sqm = total / area;
+        return;
+    }
+    // Otherwise leave values as-is until user fills more fields.
 };
 
 // Form submission

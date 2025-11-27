@@ -195,7 +195,7 @@ class SearchController extends Controller
                 'id' => $transaction->id,
                 'type' => 'transaction',
                 'title' => 'Transaction #' . $transaction->transaction_id,
-                'subtitle' => ($transaction->property->title ?? 'Property') . ' • ' . ($transaction->client->name ?? 'Client'),
+                'subtitle' => (($transaction->property?->title) ?? 'Property') . ' • ' . ($transaction->client->name ?? 'Client'),
                 'relevance' => $relevance,
                 'meta' => [
                     'amount' => $transaction->amount,
@@ -292,7 +292,7 @@ class SearchController extends Controller
         }
         
         // Property title match
-        if ($transaction->property && stripos($transaction->property->title, $query) !== false) {
+            if ($transaction->property && stripos(($transaction->property->title ?? ''), $query) !== false) {
             $score += 8;
         }
         

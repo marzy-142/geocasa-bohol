@@ -332,8 +332,8 @@ const handlePrimaryAction = (inquiry) => {
             return openQuickResponse(inquiry);
         case "contacted":
         case "scheduled":
-            // Navigate to conversation for this inquiry
-            return router.visit(route("inquiries.show", inquiry.id));
+            // Start or open the conversation for this inquiry and redirect to messages
+            return startChat(inquiry);
         default:
             return;
     }
@@ -551,6 +551,27 @@ const sendQuickResponse = () => {
 
 const scheduleViewing = (inquiry) => {
     router.visit(route("inquiries.edit", inquiry.id));
+};
+
+// Start or open a conversation for an inquiry, then redirect to its messages page
+const startChat = async (inquiry) => {
+    try {
+        await router.post(
+            route("conversations.create-inquiry", inquiry.id),
+            {},
+            {
+                preserveScroll: true,
+            }
+        );
+        // The server redirects to conversations.show if it exists/gets created.
+        // Inertia will follow the redirect automatically.
+    } catch (e) {
+        console.error(
+            "Failed to start conversation for inquiry",
+            inquiry.id,
+            e
+        );
+    }
 };
 
 const togglePriority = (inquiry) => {

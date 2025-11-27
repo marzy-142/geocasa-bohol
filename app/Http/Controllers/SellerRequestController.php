@@ -128,12 +128,12 @@ class SellerRequestController extends Controller
      */
     public function create()
     {
-        // Get available features for the form
+        // Land-focused available features (public form). Reduce to attributes relevant to land.
+        // Set to [] to hide the section entirely on the front-end.
         $availableFeatures = [
-            'Swimming Pool', 'Garden', 'Parking', 'Security', 'Furnished',
-            'Air Conditioning', 'Balcony', 'Terrace', 'Fireplace', 'Storage',
-            'Laundry Room', 'Gym', 'Playground', 'Near Beach', 'Mountain View',
-            'City View', 'Gated Community', 'Pet Friendly', 'Solar Panels'
+            'Road Access', 'Water Source', 'Electricity Available', 'Internet Available',
+            'Near Beach', 'Mountain View', 'City View', 'Corner Lot', 'Agricultural Potential',
+            'Solar Potential', 'Flat Terrain', 'Hillside Terrain'
         ];
 
         // Get available verified brokers for selection

@@ -239,8 +239,9 @@ class Conversation extends Model
             'client_email' => $inquiry->client?->email
         ]);
 
-        $conversation = self::create([
-            'title' => "Inquiry: {$inquiry->property->title}",
+    $propertyTitle = ($inquiry->property?->title) ?? 'Unknown Property';
+    $conversation = self::create([
+            'title' => "Inquiry: {$propertyTitle}",
             'type' => 'inquiry',
             'inquiry_id' => $inquiry->id,
             'participants' => $validUserIds,
@@ -263,8 +264,9 @@ class Conversation extends Model
         $participants = array_filter($participants); // Remove null values
         $validUserIds = User::whereIn('id', $participants)->pluck('id')->toArray();
 
-        $conversation = self::create([
-            'title' => "Transaction: {$transaction->property->title}",
+    $propertyTitle = ($transaction->property?->title) ?? 'Unknown Property';
+    $conversation = self::create([
+            'title' => "Transaction: {$propertyTitle}",
             'type' => 'transaction',
             'transaction_id' => $transaction->id,
             'participants' => array_values($validUserIds),
@@ -313,10 +315,11 @@ class Conversation extends Model
      */
     public function transitionToTransaction(Transaction $transaction): void
     {
+    $propertyTitle = ($transaction->property?->title) ?? 'Unknown Property';
         $this->update([
             'type' => 'transaction',
             'transaction_id' => $transaction->id,
-            'title' => "Transaction: {$transaction->property->title}",
+            'title' => "Transaction: {$propertyTitle}",
             'lifecycle_stage' => 'transaction',
             'transitioned_at' => now(),
             'metadata' => array_merge($this->metadata ?? [], [

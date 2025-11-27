@@ -445,7 +445,7 @@ class ClientController extends Controller
             $activities->push([
                 'type' => 'inquiry',
                 'title' => 'Property Inquiry',
-                'description' => 'Inquired about ' . $inquiry->property->title,
+                'description' => 'Inquired about ' . (($inquiry->property?->title) ?? 'Unknown Property'),
                 'date' => $inquiry->created_at,
                 'status' => $inquiry->status,
             ]);
@@ -456,7 +456,7 @@ class ClientController extends Controller
             $activities->push([
                 'type' => 'transaction',
                 'title' => 'Transaction',
-                'description' => 'Transaction for ' . $transaction->property->title,
+                'description' => 'Transaction for ' . (($transaction->property?->title) ?? 'Unknown Property'),
                 'date' => $transaction->created_at,
                 'status' => $transaction->status,
             ]);

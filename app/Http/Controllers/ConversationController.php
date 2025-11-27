@@ -178,9 +178,10 @@ class ConversationController extends Controller
         $conversation = Conversation::createForInquiry($inquiry);
         
         // Create initial system message
+    $propertyTitle = ($property->title) ?? 'Unknown Property';
         Message::createSystemMessage(
             $conversation->id,
-            "Conversation started for inquiry about {$property->title}",
+            "Conversation started for inquiry about {$propertyTitle}",
             ['inquiry_id' => $inquiry->id]
         );
 
@@ -212,9 +213,10 @@ class ConversationController extends Controller
         $conversation = Conversation::createForTransaction($transaction);
         
         // Create initial system message
+    $propertyTitle = ($transaction->property?->title) ?? 'Unknown Property';
         Message::createSystemMessage(
             $conversation->id,
-            "Conversation started for transaction: {$transaction->property->title}",
+            "Conversation started for transaction: {$propertyTitle}",
             ['transaction_id' => $transaction->id]
         );
 

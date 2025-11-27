@@ -5,11 +5,13 @@ Dear {{ $inquiry->name }},
 Thank you for your interest in our property. We've received your inquiry and {{ $brokerName }} has responded to your request.
 
 PROPERTY DETAILS:
-{{ $inquiry->property->title }}
-Type: {{ ucfirst($inquiry->property->type) }}
-Location: {{ $inquiry->property->municipality }}, {{ $inquiry->property->province }}
-@if($inquiry->property->total_price)
-Price: ₱{{ number_format((float)$inquiry->property->total_price) }}
+{{ $inquiry->property?->title ?? 'Property' }}
+@if($inquiry->property)
+Type: {{ ucfirst($inquiry->property?->type ?? 'N/A') }}
+Location: {{ $inquiry->property?->municipality ?? 'N/A' }}, {{ $inquiry->property?->province ?? '' }}
+	@if($inquiry->property?->total_price)
+Price: ₱{{ number_format((float)($inquiry->property?->total_price ?? 0)) }}
+	@endif
 @endif
 
 MESSAGE FROM {{ strtoupper($brokerName) }}:
@@ -34,8 +36,8 @@ Your Message: "{{ $inquiry->message }}"
 Continue Conversation: {{ route('conversations.show', $inquiry->conversation->id) }}
 @endif
 
-@if($inquiry->property->slug)
-@php($slug = $inquiry->property->slug)
+@if($inquiry->property?->slug)
+@php($slug = $inquiry->property?->slug)
 @if(\Illuminate\Support\Facades\Route::has('public.properties.show'))
 View Property Online: {{ route('public.properties.show', $slug) }}
 @else

@@ -24,11 +24,11 @@ class SendTransactionNotification implements ShouldQueue
             'user_id' => $transaction->client->user_id,
             'type' => 'transaction_created',
             'title' => 'New Transaction Created',
-            'message' => "A new transaction has been created for property: {$transaction->property->title}",
+            'message' => "A new transaction has been created for property: " . ($transaction->property?->title ?? 'Unknown Property'),
             'data' => [
                 'transaction_id' => $transaction->id,
                 'transaction_number' => $transaction->transaction_number,
-                'property_title' => $transaction->property->title,
+                'property_title' => $transaction->property?->title ?? 'Unknown Property',
                 'amount' => $transaction->formatted_amount,
                 'broker_name' => $transaction->broker->name,
             ],
@@ -44,7 +44,7 @@ class SendTransactionNotification implements ShouldQueue
             'data' => [
                 'transaction_id' => $transaction->id,
                 'transaction_number' => $transaction->transaction_number,
-                'property_title' => $transaction->property->title,
+                'property_title' => $transaction->property?->title ?? 'Unknown Property',
                 'amount' => $transaction->formatted_amount,
                 'client_name' => $transaction->client->name,
             ],
@@ -68,7 +68,7 @@ class SendTransactionNotification implements ShouldQueue
             'data' => [
                 'transaction_id' => $transaction->id,
                 'transaction_number' => $transaction->transaction_number,
-                'property_title' => $transaction->property->title,
+                'property_title' => $transaction->property?->title ?? 'Unknown Property',
                 'previous_status' => $event->previousStatus,
                 'new_status' => $event->newStatus,
                 'broker_name' => $transaction->broker->name,
@@ -85,7 +85,7 @@ class SendTransactionNotification implements ShouldQueue
             'data' => [
                 'transaction_id' => $transaction->id,
                 'transaction_number' => $transaction->transaction_number,
-                'property_title' => $transaction->property->title,
+                'property_title' => $transaction->property?->title ?? 'Unknown Property',
                 'previous_status' => $event->previousStatus,
                 'new_status' => $event->newStatus,
                 'client_name' => $transaction->client->name,

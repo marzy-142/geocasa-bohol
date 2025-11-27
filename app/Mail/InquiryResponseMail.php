@@ -32,8 +32,9 @@ class InquiryResponseMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $propertyTitle = $this->inquiry->property?->title ?? 'the property';
         return new Envelope(
-            subject: 'Response to Your Property Inquiry - ' . $this->inquiry->property->title,
+            subject: 'Response to Your Property Inquiry - ' . $propertyTitle,
         );
     }
 

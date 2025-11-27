@@ -35,27 +35,22 @@ class SellerRequestController extends Controller
             ]);
         }
         
-        // Get available features (same as public form for consistency)
+        // Land-focused available features (trimmed down from general residential list)
+        // Keeping only attributes meaningful for raw land; UI will hide the section if empty.
+        // If you want to remove the section entirely, set this to an empty array.
         $availableFeatures = [
-            'Swimming Pool',
-            'Garden',
-            'Parking',
-            'Security',
-            'Furnished',
-            'Air Conditioning',
-            'Balcony',
-            'Terrace',
-            'Fireplace',
-            'Storage',
-            'Laundry Room',
-            'Gym',
-            'Playground',
+            'Road Access',
+            'Water Source',
+            'Electricity Available',
+            'Internet Available',
             'Near Beach',
             'Mountain View',
             'City View',
-            'Gated Community',
-            'Pet Friendly',
-            'Solar Panels',
+            'Corner Lot',
+            'Agricultural Potential',
+            'Solar Potential',
+            'Flat Terrain',
+            'Hillside Terrain',
         ];
         
         // Get available verified brokers for selection (same as public form)

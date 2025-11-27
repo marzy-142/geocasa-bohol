@@ -50,6 +50,7 @@ class BrokerApplicationDailySummaryNotification extends Notification implements 
             'approved_applications' => $this->summary['approved_applications'],
             'rejected_applications' => $this->summary['rejected_applications'],
             'sent_at' => now(),
+            'message' => 'Daily broker application summary: ' . $this->summary['new_applications'] . ' new, ' . $this->summary['pending_applications'] . ' pending.',
             'priority' => 'medium',
             'action_url' => '/admin/broker-applications'
         ];
@@ -65,6 +66,7 @@ class BrokerApplicationDailySummaryNotification extends Notification implements 
             'approved_applications' => $this->summary['approved_applications'],
             'rejected_applications' => $this->summary['rejected_applications'],
             'sent_at' => now(),
+            'message' => 'Daily broker application summary: ' . $this->summary['new_applications'] . ' new, ' . $this->summary['pending_applications'] . ' pending.',
             'priority' => 'medium'
         ];
     }

@@ -3681,12 +3681,6 @@ const handleFieldQuickAction = (fieldName, action) => {
                                             <div
                                                 class="text-sm text-neutral-600 mt-1 space-y-1"
                                             >
-                                                <div v-if="broker.firm">
-                                                    <span class="font-medium"
-                                                        >Firm:</span
-                                                    >
-                                                    {{ broker.firm }}
-                                                </div>
                                                 <div v-if="broker.location">
                                                     <span class="font-medium"
                                                         >Location:</span
@@ -3699,29 +3693,6 @@ const handleFieldQuickAction = (fieldName, action) => {
                                                     >
                                                     {{ broker.experience }}
                                                     years
-                                                </div>
-                                                <div
-                                                    class="flex items-center gap-4 mt-2"
-                                                >
-                                                    <span
-                                                        class="text-xs px-2 py-1 rounded-full"
-                                                        :class="
-                                                            broker.availability ===
-                                                            'Available'
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : 'bg-yellow-100 text-yellow-700'
-                                                        "
-                                                    >
-                                                        {{
-                                                            broker.availability
-                                                        }}
-                                                    </span>
-                                                    <span
-                                                        class="text-xs text-neutral-500"
-                                                    >
-                                                        {{ broker.workload }}
-                                                        pending requests
-                                                    </span>
                                                 </div>
                                             </div>
                                         </div>

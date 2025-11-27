@@ -129,11 +129,13 @@
         </div>
 
         <div class="property-info">
-            <h3>{{ $inquiry->property->title }}</h3>
-            <p><strong>Type:</strong> {{ ucfirst($inquiry->property->type) }}</p>
-            <p><strong>Location:</strong> {{ $inquiry->property->municipality }}, {{ $inquiry->property->province }}</p>
-            @if($inquiry->property->total_price)
-                <p><strong>Price:</strong> ₱{{ number_format((float)$inquiry->property->total_price) }}</p>
+            <h3>{{ $inquiry->property?->title ?? 'Property' }}</h3>
+            @if($inquiry->property)
+                <p><strong>Type:</strong> {{ ucfirst($inquiry->property?->type ?? 'N/A') }}</p>
+                <p><strong>Location:</strong> {{ $inquiry->property?->municipality ?? 'N/A' }}, {{ $inquiry->property?->province ?? '' }}</p>
+                @if($inquiry->property?->total_price)
+                    <p><strong>Price:</strong> ₱{{ number_format((float)($inquiry->property?->total_price ?? 0)) }}</p>
+                @endif
             @endif
         </div>
 
@@ -161,14 +163,14 @@
             @endif
         </div>
 
-        @if($inquiry->property->slug && \Illuminate\Support\Facades\Route::has('public.properties.show'))
+        @if(($inquiry->property?->slug) && \Illuminate\Support\Facades\Route::has('public.properties.show'))
             <div style="text-align: center;">
                 @if($inquiry->conversation)
                     <a href="{{ route('conversations.show', $inquiry->conversation->id) }}" class="button" style="margin-right: 10px;">
                         Continue Conversation
                     </a>
                 @endif
-                <a href="{{ route('public.properties.show', $inquiry->property->slug) }}" class="button">
+                <a href="{{ route('public.properties.show', $inquiry->property?->slug) }}" class="button">
                     View Property Details
                 </a>
             </div>

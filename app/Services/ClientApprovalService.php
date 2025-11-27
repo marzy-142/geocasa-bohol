@@ -142,13 +142,14 @@ class ClientApprovalService
             ->with(['property:id,title', 'broker:id,name'])
             ->get()
             ->map(function ($transaction) {
+                $propertyTitle = $transaction->property?->title ?? 'Unknown Property';
                 $approvals = $transaction->client_approvals ?? [];
                 $pendingApprovals = array_filter($approvals, fn($approval) => $approval['status'] === 'pending');
                 
                 return [
                     'transaction_id' => $transaction->id,
                     'transaction_number' => $transaction->transaction_number,
-                    'property_title' => $transaction->property->title,
+                    'property_title' => $propertyTitle,
                     'broker_name' => $transaction->broker->name,
                     'approvals' => array_values($pendingApprovals),
                     'deadline' => $transaction->client_action_deadline,

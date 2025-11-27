@@ -148,16 +148,17 @@ class TransactionController extends Controller
         return Transaction::where('client_id', $client->id)
             ->where('requires_client_action', true)
             ->where('status', 'client_approval_pending')
-            ->with(['property:id,title'])
+            ->with(['property' => function($q){ $q->withTrashed()->select('id','title'); }])
             ->get()
             ->map(function ($transaction) {
                 $approvals = $transaction->client_approvals ?? [];
                 $pendingApprovals = array_filter($approvals, fn($approval) => $approval['status'] === 'pending');
                 
+                $propertyTitle = $transaction->property?->title ?? 'Unknown Property';
                 return [
                     'transaction_id' => $transaction->id,
                     'transaction_number' => $transaction->transaction_number,
-                    'property_title' => $transaction->property->title,
+                    'property_title' => $propertyTitle,
                     'approvals' => $pendingApprovals,
                     'deadline' => $transaction->client_action_deadline,
                     'days_remaining' => $transaction->client_action_deadline ? 
@@ -176,13 +177,14 @@ class TransactionController extends Controller
         return Transaction::where('client_id', $client->id)
             ->where('requires_client_action', true)
             ->where('status', 'document_collection')
-            ->with(['property:id,title'])
+            ->with(['property' => function($q){ $q->withTrashed()->select('id','title'); }])
             ->get()
             ->map(function ($transaction) {
+                $propertyTitle = $transaction->property?->title ?? 'Unknown Property';
                 return [
                     'transaction_id' => $transaction->id,
                     'transaction_number' => $transaction->transaction_number,
-                    'property_title' => $transaction->property->title,
+                    'property_title' => $propertyTitle,
                     'required_documents' => $this->getDocumentRequirements($transaction),
                     'deadline' => $transaction->client_action_deadline,
                 ];
@@ -197,10 +199,11 @@ class TransactionController extends Controller
     {
         return Meeting::where('client_id', $client->id)
             ->where('scheduled_date', '>=', now())
-            ->with(['transaction.property:id,title'])
+            ->with(['transaction.property' => function($q){ $q->withTrashed()->select('id','title'); }])
             ->orderBy('scheduled_date')
             ->get()
             ->map(function ($meeting) {
+                $propertyTitle = $meeting->transaction && $meeting->transaction->property ? ($meeting->transaction->property->title ?? 'Unknown Property') : 'Unknown Property';
                 return [
                     'id' => $meeting->id,
                     'title' => $meeting->title,
@@ -209,7 +212,7 @@ class TransactionController extends Controller
                     'location' => $meeting->location,
                     'transaction' => $meeting->transaction ? [
                         'id' => $meeting->transaction->id,
-                        'property_title' => $meeting->transaction->property->title,
+                        'property_title' => $propertyTitle,
                     ] : null,
                 ];
             })
@@ -224,13 +227,14 @@ class TransactionController extends Controller
         return Transaction::where('client_id', $client->id)
             ->where('client_satisfaction', 'pending')
             ->whereIn('status', ['finalized', 'offer_accepted', 'contract_signed'])
-            ->with(['property:id,title'])
+            ->with(['property' => function($q){ $q->withTrashed()->select('id','title'); }])
             ->get()
             ->map(function ($transaction) {
+                $propertyTitle = $transaction->property?->title ?? 'Unknown Property';
                 return [
                     'transaction_id' => $transaction->id,
                     'transaction_number' => $transaction->transaction_number,
-                    'property_title' => $transaction->property->title,
+                    'property_title' => $propertyTitle,
                     'status' => $transaction->status,
                     'finalized_date' => $transaction->finalized_date,
                 ];

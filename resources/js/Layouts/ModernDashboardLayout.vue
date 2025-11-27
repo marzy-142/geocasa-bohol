@@ -70,8 +70,35 @@ const logout = () => {
     logoutForm.post(route("logout"));
 };
 
+// Persist sidebar collapsed/expanded state across reloads per-user
+const getSidebarStateKey = () =>
+    `gc_sidebar_open_${page.props.auth?.user?.id ?? "guest"}`;
+
+const persistSidebarState = () => {
+    try {
+        localStorage.setItem(
+            getSidebarStateKey(),
+            sidebarOpen.value ? "1" : "0"
+        );
+    } catch (e) {
+        // ignore storage errors (private mode, etc.)
+    }
+};
+
+const restoreSidebarState = () => {
+    try {
+        const saved = localStorage.getItem(getSidebarStateKey());
+        if (saved !== null) {
+            sidebarOpen.value = saved === "1" || saved === "true";
+        }
+    } catch (e) {
+        // ignore
+    }
+};
+
 const toggleSidebar = () => {
     sidebarOpen.value = !sidebarOpen.value;
+    persistSidebarState();
 };
 
 const toggleMobileMenu = () => {
@@ -270,6 +297,9 @@ onMounted(() => {
     });
     document.addEventListener("touchend", handleTouchEnd, { passive: true });
 
+    // Restore sidebar open/closed state
+    restoreSidebarState();
+
     // Restore scroll position on mount with multiple attempts
     setTimeout(() => restoreSidebarScroll(), 50);
     setTimeout(() => restoreSidebarScroll(), 200);
@@ -289,6 +319,9 @@ onUnmounted(() => {
         );
     }
 });
+
+// Also persist when value changes due to hot updates or other triggers
+watch(sidebarOpen, () => persistSidebarState());
 
 const navigationSections = computed(() => {
     const dashboard = {

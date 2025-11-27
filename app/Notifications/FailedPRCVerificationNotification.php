@@ -57,6 +57,7 @@ class FailedPRCVerificationNotification extends Notification implements ShouldQu
             'license_number' => $this->applicationData['license_number'] ?? null,
             'verification_error' => $this->verificationResult['error'] ?? 'Unknown error',
             'sent_at' => now(),
+            'message' => 'PRC verification failed: ' . ($this->verificationResult['error'] ?? 'Unknown error'),
             'priority' => 'urgent',
             'action_url' => '/admin/broker-applications/' . ($this->applicationData['id'] ?? 'unknown')
         ];
@@ -71,6 +72,7 @@ class FailedPRCVerificationNotification extends Notification implements ShouldQu
             'license_number' => $this->applicationData['license_number'] ?? null,
             'verification_error' => $this->verificationResult['error'] ?? 'Unknown error',
             'sent_at' => now(),
+            'message' => 'PRC verification failed: ' . ($this->verificationResult['error'] ?? 'Unknown error'),
             'priority' => 'urgent'
         ];
     }

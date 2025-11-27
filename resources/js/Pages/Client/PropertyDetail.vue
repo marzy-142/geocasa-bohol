@@ -93,16 +93,13 @@ const currentImage = computed(() => {
 });
 
 // Virtual Tour computed properties
-const hasVirtualTourData = computed(() => {
-    return (
-        props.property.virtual_tour_images &&
-        props.property.virtual_tour_images.length > 0
-    );
-});
-
+// Normalize to an array of objects { url, thumbnail, title, description }
 const virtualTourImages = computed(() => {
-    if (!props.property.virtual_tour_images) return [];
-    let images = props.property.virtual_tour_images;
+    const src = props.property?.virtual_tour_images;
+    if (!src) return [];
+
+    let images = src;
+    // Flatten nested arrays if present
     if (
         Array.isArray(images) &&
         images.length > 0 &&
@@ -110,8 +107,24 @@ const virtualTourImages = computed(() => {
     ) {
         images = images.flat();
     }
-    return images.map((img) => getImageUrl(img)).filter((url) => url);
+
+    return (Array.isArray(images) ? images : [])
+        .map((img, index) => {
+            const url = getImageUrl(img);
+            if (!url) return null;
+            return {
+                url,
+                thumbnail: url,
+                title: `View ${index + 1}`,
+                description: `Panoramic view of ${
+                    props.property?.title || "Property"
+                }`,
+            };
+        })
+        .filter(Boolean);
 });
+
+const hasVirtualTourData = computed(() => virtualTourImages.value.length > 0);
 
 // Status badge helpers
 const getStatusBadgeClass = (status) => {
@@ -723,7 +736,7 @@ onUnmounted(() => {
                         Virtual Tour
                     </h2>
                     <VirtualTourViewer
-                        :images="virtualTourImages"
+                        :tourImages="virtualTourImages"
                         :hotspots="property.tour_hotspots"
                     />
                 </div>

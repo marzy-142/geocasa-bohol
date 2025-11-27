@@ -50,6 +50,8 @@ class NewBrokerApplicationNotification extends Notification implements ShouldQue
             'applicant_email' => $this->applicationData['email'] ?? null,
             'license_number' => $this->applicationData['license_number'] ?? null,
             'submitted_at' => now(),
+            // Added human-readable message so frontend dropdown & index views don't render blank
+            'message' => 'New broker application submitted: ' . (($this->applicationData['first_name'] ?? '') . ' ' . ($this->applicationData['last_name'] ?? '')),            
             'priority' => 'high',
             'action_url' => '/admin/broker-applications/' . ($this->applicationData['id'] ?? 'unknown')
         ];
@@ -64,6 +66,7 @@ class NewBrokerApplicationNotification extends Notification implements ShouldQue
             'applicant_email' => $this->applicationData['email'] ?? null,
             'license_number' => $this->applicationData['license_number'] ?? null,
             'submitted_at' => now(),
+            'message' => 'New broker application submitted: ' . (($this->applicationData['first_name'] ?? '') . ' ' . ($this->applicationData['last_name'] ?? '')),
             'priority' => 'high'
         ];
     }

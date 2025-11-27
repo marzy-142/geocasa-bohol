@@ -35,7 +35,7 @@ class ClientNotificationService
             $notificationData = [
                 'transaction_id' => $transaction->id,
                 'transaction_number' => $transaction->transaction_number,
-                'property_title' => $transaction->property->title,
+                'property_title' => $transaction->property?->title ?? 'Unknown Property',
                 'update_type' => $updateType,
                 'data' => $data,
                 'timestamp' => now()->toISOString(),
@@ -84,7 +84,7 @@ class ClientNotificationService
             $notificationData = [
                 'transaction_id' => $transaction->id,
                 'transaction_number' => $transaction->transaction_number,
-                'property_title' => $transaction->property->title,
+                'property_title' => $transaction->property?->title ?? 'Unknown Property',
                 'requested_documents' => $requestedDocuments,
                 'deadline' => $deadline,
                 'timestamp' => now()->toISOString(),
@@ -131,7 +131,7 @@ class ClientNotificationService
                 'meeting_id' => $meeting->id,
                 'transaction_id' => $meeting->transaction_id,
                 'transaction_number' => $meeting->transaction->transaction_number,
-                'property_title' => $meeting->transaction->property->title,
+                'property_title' => $meeting->transaction->property?->title ?? 'Unknown Property',
                 'meeting_type' => $meeting->type,
                 'scheduled_at' => $meeting->scheduled_at->toISOString(),
                 'location' => $meeting->location,
@@ -174,7 +174,7 @@ class ClientNotificationService
             $notificationData = [
                 'transaction_id' => $transaction->id,
                 'transaction_number' => $transaction->transaction_number,
-                'property_title' => $transaction->property->title,
+                'property_title' => $transaction->property?->title ?? 'Unknown Property',
                 'milestone' => $milestone,
                 'data' => $data,
                 'timestamp' => now()->toISOString(),

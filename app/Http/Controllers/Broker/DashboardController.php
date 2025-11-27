@@ -47,7 +47,10 @@ class DashboardController extends Controller
         $recentInquiries = Inquiry::whereHas('property', function($query) use ($user) {
             $query->where('broker_id', $user->id);
         })
-        ->with(['property:id,title,total_price', 'client:id,name'])
+        ->with([
+            'property' => function($q) { $q->withTrashed()->select('id','title','total_price'); },
+            'client:id,name'
+        ])
         ->select('inquiries.id', 'inquiries.property_id', 'inquiries.client_id', 'inquiries.status', 'inquiries.created_at')
         ->orderBy('inquiries.created_at', 'desc')
         ->take(10)
@@ -55,11 +58,19 @@ class DashboardController extends Controller
         ->map(function($inquiry) {
             return [
                 'id' => $inquiry->id,
-                'property' => $inquiry->property->title,
-                'client' => $inquiry->client->name ?? 'Anonymous',
-                // Ensure numeric formatting works even if total_price is decimal/string
-                'amount' => '₱' . number_format((float) $inquiry->property->total_price),
-                'date' => $inquiry->created_at->format('M d, Y'),
+                // Match the shape expected by the Vue component (object with title)
+                'property' => $inquiry->property ? [
+                    'id' => $inquiry->property->id,
+                    'title' => $inquiry->property->title,
+                    'total_price' => $inquiry->property->total_price,
+                ] : null,
+                // Match the shape expected by the Vue component (object with name)
+                'client' => $inquiry->client ? [
+                    'id' => $inquiry->client->id,
+                    'name' => $inquiry->client->name,
+                ] : null,
+                // Frontend formats created_at itself
+                'created_at' => $inquiry->created_at,
                 'status' => $inquiry->status,
             ];
         });
@@ -69,7 +80,10 @@ class DashboardController extends Controller
 
         // Get recent transactions for the broker
         $recentTransactions = Transaction::where('broker_id', $user->id)
-            ->with(['property:id,title,total_price', 'client:id,name'])
+            ->with([
+                'property' => function($q) { $q->withTrashed()->select('id','title','total_price'); },
+                'client:id,name'
+            ])
             ->select('id', 'property_id', 'client_id', 'status', 'final_price', 'offered_price', 'created_at')
             ->orderBy('created_at', 'desc')
             ->take(10)
@@ -223,27 +237,32 @@ class DashboardController extends Controller
         // Optimized recent inquiries
         $inquiries = Inquiry::whereHas('property', function($query) use ($user) {
             $query->where('broker_id', $user->id);
-        })->with('property:id,title,broker_id')
+        })
+        // Include soft-deleted properties to avoid null relation in activities
+        ->with(['property' => function($q) { $q->withTrashed()->select('id','title','broker_id'); }])
         ->select('id', 'property_id', 'created_at')
         ->latest()->take(5)->get();
 
         foreach ($inquiries as $inquiry) {
+            $propertyTitle = $inquiry->property?->title ?: 'a property';
             $activities->push([
                 'type' => 'inquiry',
-                'message' => "New inquiry for {$inquiry->property->title}",
+                'message' => "New inquiry for {$propertyTitle}",
                 'date' => $inquiry->created_at,
             ]);
         }
 
         // Optimized recent transactions
         $transactions = $user->transactions()
-            ->with('property:id,title,broker_id')
+            // Include soft-deleted properties to avoid null relation in activities
+            ->with(['property' => function($q) { $q->withTrashed()->select('id','title','broker_id'); }])
             ->select('id', 'property_id', 'status', 'created_at')
             ->latest()->take(3)->get();
         foreach ($transactions as $transaction) {
+            $propertyTitle = $transaction->property?->title ?: 'a property';
             $activities->push([
                 'type' => 'transaction',
-                'message' => "Transaction {$transaction->status} for {$transaction->property->title}",
+                'message' => "Transaction {$transaction->status} for {$propertyTitle}",
                 'date' => $transaction->created_at,
             ]);
         }

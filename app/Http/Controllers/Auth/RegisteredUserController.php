@@ -124,18 +124,21 @@ class RegisteredUserController extends Controller
                 'additional_documents'
             ], 'credentials', 'local');
 
+            // Normalize single-file fields to a scalar path (first file if multiple were sent)
             if (isset($storedFiles['prc_id_file'])) {
-                $userData['prc_id_file'] = $storedFiles['prc_id_file'];
+                $prcIdFile = $storedFiles['prc_id_file'];
+                $userData['prc_id_file'] = is_array($prcIdFile) ? ($prcIdFile[0] ?? null) : $prcIdFile;
             }
 
             if (isset($storedFiles['business_permit_file'])) {
-                $userData['business_permit_file'] = $storedFiles['business_permit_file'];
+                $bpFile = $storedFiles['business_permit_file'];
+                $userData['business_permit_file'] = is_array($bpFile) ? ($bpFile[0] ?? null) : $bpFile;
             }
 
             if (isset($storedFiles['additional_documents'])) {
-                // Ensure it's properly formatted as an array
-                $userData['additional_documents'] = is_array($storedFiles['additional_documents']) 
-                    ? $storedFiles['additional_documents'] 
+                // Ensure it's properly formatted as an array; cast on model will JSON-encode
+                $userData['additional_documents'] = is_array($storedFiles['additional_documents'])
+                    ? array_values($storedFiles['additional_documents'])
                     : [$storedFiles['additional_documents']];
             }
         } else {

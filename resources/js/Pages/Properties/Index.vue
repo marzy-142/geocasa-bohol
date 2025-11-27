@@ -63,16 +63,23 @@
                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                 >
                     <div
-                        v-for="property in properties.data"
-                        :key="property.id"
+                        v-for="property in safeProperties"
+                        :key="property.id || property.slug || property.title"
                         class="bg-white rounded-md shadow-sm overflow-hidden hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-blue-300"
                     >
                         <div class="relative">
                             <img
+                                v-if="property.main_image"
                                 :src="property.main_image"
-                                :alt="property.title"
+                                :alt="property.title || 'Property Image'"
                                 class="w-full h-40 object-cover"
                             />
+                            <div
+                                v-else
+                                class="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-400 text-xs"
+                            >
+                                No Image
+                            </div>
                             <div
                                 v-if="property.is_featured"
                                 class="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm"
@@ -97,7 +104,7 @@
                             <h3
                                 class="text-base font-semibold text-gray-900 mb-1.5 line-clamp-2"
                             >
-                                {{ property.title }}
+                                {{ property.title || "Untitled Property" }}
                             </h3>
                             <p
                                 class="text-gray-600 text-xs mb-2 flex items-center"
@@ -193,6 +200,7 @@
 
                             <div class="flex justify-between items-center">
                                 <Link
+                                    v-if="property.slug"
                                     :href="
                                         route(
                                             'broker.properties.show',
@@ -203,6 +211,9 @@
                                 >
                                     View Details →
                                 </Link>
+                                <span v-else class="text-gray-400 text-xs"
+                                    >No details</span
+                                >
                                 <div
                                     v-if="canEditProperty(property)"
                                     class="flex space-x-2"
@@ -232,7 +243,7 @@
 
                 <!-- No Results -->
                 <div
-                    v-if="properties.data.length === 0"
+                    v-if="safeProperties.length === 0"
                     class="text-center py-12"
                 >
                     <div class="text-gray-400 text-4xl mb-3">🏞️</div>
@@ -266,7 +277,7 @@
 
                 <!-- Pagination -->
                 <div
-                    v-if="properties.links && properties.data.length > 0"
+                    v-if="properties.links && safeProperties.length > 0"
                     class="mt-6 border-t border-gray-200 pt-4"
                 >
                     <Pagination
@@ -323,6 +334,22 @@ const props = defineProps({
 });
 
 const page = usePage();
+
+// Defensive computed to avoid nulls from backend or during reactive updates
+const safeProperties = computed(() => {
+    const list =
+        props.properties && Array.isArray(props.properties.data)
+            ? props.properties.data
+            : [];
+    const filtered = list.filter((p) => p && (p.title || p.slug || p.id));
+    if (filtered.length !== list.length) {
+        console.warn("[Properties/Index] Filtered out null/incomplete items", {
+            original: list.length,
+            kept: filtered.length,
+        });
+    }
+    return filtered;
+});
 
 // Initialize filters with proper defaults (type is single-select)
 const filters = ref({

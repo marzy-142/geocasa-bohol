@@ -273,6 +273,55 @@ class Property extends Model
         return $query->where('type', 'beachfront');
     }
 
+    /**
+     * Scope: Basic search across common text attributes.
+     *
+     * Supports simple LIKE matching. If term contains spaces, all words must appear (AND logic).
+     * Falls back gracefully for empty/short input.
+     *
+     * Usage: Property::search('balilihan')->get();
+     */
+    public function scopeSearch($query, $rawTerm)
+    {
+        $term = trim((string) $rawTerm);
+        if ($term === '') {
+            return $query; // no-op
+        }
+
+        // Break into words (alphanumeric) for more focused matching
+        // Split on whitespace; default behavior already discards delimiters.
+        $words = collect(preg_split('/\s+/u', $term))
+            ->filter(fn($w) => $w !== '' && mb_strlen($w) >= 2)
+            ->values();
+
+        // If only one usable word, do a broad OR search; otherwise ensure all words appear somewhere.
+        if ($words->count() <= 1) {
+            $word = $words->first() ?? $term;
+            return $query->where(function ($q) use ($word) {
+                $like = '%' . $word . '%';
+                $q->where('title', 'like', $like)
+                  ->orWhere('description', 'like', $like)
+                  ->orWhere('municipality', 'like', $like)
+                  ->orWhere('barangay', 'like', $like)
+                  ->orWhere('custom_type_text', 'like', $like);
+            });
+        }
+
+        // AND logic: each word must appear in at least one of the searchable columns
+        return $query->where(function ($outer) use ($words) {
+            foreach ($words as $word) {
+                $like = '%' . $word . '%';
+                $outer->where(function ($q) use ($like) {
+                    $q->where('title', 'like', $like)
+                      ->orWhere('description', 'like', $like)
+                      ->orWhere('municipality', 'like', $like)
+                      ->orWhere('barangay', 'like', $like)
+                      ->orWhere('custom_type_text', 'like', $like);
+                });
+            }
+        });
+    }
+
     // Accessors
     public function getFormattedTotalPriceAttribute()
     {

@@ -50,7 +50,8 @@ class Inquiry extends Model
     // Relationships
     public function property()
     {
-        return $this->belongsTo(Property::class);
+        // Include soft-deleted properties so older inquiries still resolve titles
+        return $this->belongsTo(Property::class)->withTrashed();
     }
 
     public function client()

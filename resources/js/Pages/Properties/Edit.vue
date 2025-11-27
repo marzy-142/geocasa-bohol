@@ -438,6 +438,7 @@
                             }"
                             placeholder="5000000"
                             required
+                            @input="calculatePricePerSqm"
                         />
                         <div
                             v-if="errors.total_price"
@@ -1543,8 +1544,19 @@ watch([() => form.lot_area_sqm, () => form.price_per_sqm], () => {
 });
 
 const calculateTotalPrice = () => {
-    if (form.lot_area_sqm && form.price_per_sqm) {
-        form.total_price = form.lot_area_sqm * form.price_per_sqm;
+    const area = Number(form.lot_area_sqm);
+    const price = Number(form.price_per_sqm);
+    if (!isNaN(area) && !isNaN(price) && area > 0 && price >= 0) {
+        form.total_price = area * price;
+    }
+};
+
+// When user edits total price directly, back-compute price per sqm
+const calculatePricePerSqm = () => {
+    const area = Number(form.lot_area_sqm) || 0;
+    const total = Number(form.total_price) || 0;
+    if (area > 0 && total >= 0) {
+        form.price_per_sqm = total / area;
     }
 };
 
@@ -1666,11 +1678,30 @@ const initializeLeafletMap = async () => {
             zoom: mapZoomLevel.value,
             zoomControl: false,
         });
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution:
-                '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19,
-        }).addTo(leafletMap.value);
+        // Base street layer
+        const streetLayer = L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                attribution:
+                    '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19,
+            }
+        ).addTo(leafletMap.value);
+
+        // Satellite layer (Esri World Imagery)
+        const satelliteLayer = L.tileLayer(
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            {
+                attribution:
+                    '© <a href="https://www.esri.com/">Esri</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19,
+            }
+        );
+
+        // Layer control
+        L.control
+            .layers({ "Street Map": streetLayer, Satellite: satelliteLayer })
+            .addTo(leafletMap.value);
         leafletMap.value.on("click", (e) => {
             const { lat, lng } = e.latlng;
             form.coordinates_lat = parseFloat(lat.toFixed(6));
@@ -1678,12 +1709,16 @@ const initializeLeafletMap = async () => {
             addLeafletMarker(lat, lng);
         });
         mapInitialized.value = true;
+
+        const boholBounds = L.latLngBounds([9.45, 123.5], [10.25, 124.7]);
         if (form.coordinates_lat && form.coordinates_lng) {
             addLeafletMarker(form.coordinates_lat, form.coordinates_lng);
             leafletMap.value.setView(
                 [form.coordinates_lat, form.coordinates_lng],
-                15
+                13 // show more surrounding context
             );
+        } else {
+            leafletMap.value.fitBounds(boholBounds, { padding: [30, 30] });
         }
     } catch (error) {
         alert("Unable to load map. Please check your internet connection.");
@@ -1795,6 +1830,40 @@ const searchAddress = async () => {
     searchResults.value = [];
 
     try {
+        // 1) Online geocoding attempt for broader coverage
+        try {
+            const q = addressSearch.value.trim();
+            const regionHint = "Bohol Philippines";
+            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=8&q=${encodeURIComponent(
+                q + " " + regionHint
+            )}`;
+            const response = await fetch(url, {
+                headers: { "User-Agent": "GeoCasaBohol/1.0" },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const mapped = data.map((r) => ({
+                    id: `osm-${r.place_id}`,
+                    name:
+                        (r.display_name || "")
+                            .split(",")
+                            .slice(0, 2)
+                            .join(", ")
+                            .trim() || r.display_name,
+                    description: r.display_name,
+                    lat: parseFloat(r.lat),
+                    lng: parseFloat(r.lon),
+                }));
+                if (mapped.length > 0) {
+                    searchResults.value = mapped.slice(0, 8);
+                    return; // success via Nominatim; skip local fallback
+                }
+            }
+        } catch (e) {
+            // Ignore and fallback
+        }
+
+        // 2) Fallback local dataset
         const bohoLocations = [
             {
                 id: 1,
@@ -1875,6 +1944,14 @@ const searchAddress = async () => {
                 lat: 9.9169,
                 lng: 124.1695,
                 keywords: ["chocolate", "hills", "carmen"],
+            },
+            {
+                id: 120,
+                name: "Dimiao",
+                description: "Municipality in central Bohol",
+                lat: 9.65,
+                lng: 124.0167,
+                keywords: ["dimiao", "municipality"],
             },
         ];
 
@@ -2010,6 +2087,7 @@ const zoomToCurrentLocation = () => {
 };
 
 const resetMapView = () => {
+    // Mirror CreateSimple.vue: province overview
     if (leafletMap.value) {
         leafletMap.value.setView([9.634, 123.853], 10);
         mapZoomLevel.value = 10;

@@ -589,7 +589,7 @@ class InquiryController extends Controller
             Message::create([
                 'conversation_id' => $conversation->id,
                 'sender_id' => null,
-                'content' => "Conversation started. {$user->name} responded to the inquiry about {$inquiry->property->title}.",
+                'content' => "Conversation started. {$user->name} responded to the inquiry about " . (($inquiry->property?->title) ?? 'Unknown Property') . '.',
                 'is_system_message' => true,
             ]);
         }

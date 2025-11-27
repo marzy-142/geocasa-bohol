@@ -46,6 +46,7 @@ class IncompleteBrokerApplicationsNotification extends Notification implements S
             'type' => 'incomplete_broker_applications',
             'incomplete_count' => $this->incompleteCount,
             'sent_at' => now(),
+            'message' => 'There are ' . $this->incompleteCount . ' incomplete broker applications requiring follow-up.',
             'priority' => 'low',
             'action_url' => '/admin/broker-applications?status=incomplete'
         ];
@@ -57,6 +58,7 @@ class IncompleteBrokerApplicationsNotification extends Notification implements S
             'type' => 'incomplete_broker_applications',
             'incomplete_count' => $this->incompleteCount,
             'sent_at' => now(),
+            'message' => 'There are ' . $this->incompleteCount . ' incomplete broker applications requiring follow-up.',
             'priority' => 'low'
         ];
     }

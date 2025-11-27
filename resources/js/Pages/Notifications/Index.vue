@@ -194,7 +194,11 @@
                                         <p
                                             class="text-sm font-medium text-gray-900 mb-1"
                                         >
-                                            {{ notification.data.message }}
+                                            {{
+                                                getNotificationMessage(
+                                                    notification
+                                                )
+                                            }}
                                         </p>
                                         <div
                                             class="flex items-center space-x-4 text-xs text-gray-500"
@@ -421,6 +425,11 @@ const getNotificationIcon = (type) => {
         transaction_status: CurrencyDollarIcon,
         broker_approval: CheckCircleIcon,
         message_received: BellIcon,
+        new_broker_application: InboxIcon,
+        broker_application_status_change: InboxIcon,
+        failed_prc_verification: ExclamationCircleIcon,
+        incomplete_broker_applications: BellIcon,
+        daily_broker_summary: BellIcon,
     };
     return icons[type] || BellIcon;
 };
@@ -432,6 +441,11 @@ const getNotificationIconClass = (type) => {
         transaction_status: "bg-yellow-100 text-yellow-600",
         broker_approval: "bg-purple-100 text-purple-600",
         message_received: "bg-indigo-100 text-indigo-600",
+        new_broker_application: "bg-blue-100 text-blue-600",
+        broker_application_status_change: "bg-blue-100 text-blue-600",
+        failed_prc_verification: "bg-red-100 text-red-600",
+        incomplete_broker_applications: "bg-gray-100 text-gray-600",
+        daily_broker_summary: "bg-gray-100 text-gray-600",
     };
     return classes[type] || "bg-gray-100 text-gray-600";
 };
@@ -443,8 +457,43 @@ const getNotificationTypeLabel = (type) => {
         transaction_status: "Transaction",
         broker_approval: "Approval",
         message_received: "Message",
+        new_broker_application: "Broker Application",
+        broker_application_status_change: "Application Status",
+        failed_prc_verification: "PRC Verification",
+        incomplete_broker_applications: "Incomplete Apps",
+        daily_broker_summary: "Daily Summary",
     };
     return labels[type] || "Notification";
+};
+
+// Unified message fallback (mirrors dropdown component)
+const getNotificationMessage = (notification) => {
+    const data = notification.data || {};
+    if (data.message) return data.message;
+    switch (data.type) {
+        case "new_broker_application":
+            return `New broker application submitted: ${
+                data.applicant_name || "Unknown applicant"
+            }`;
+        case "broker_application_status_change":
+            return `Broker application status changed: ${
+                data.old_status || "?"
+            } → ${data.new_status || "?"}`;
+        case "failed_prc_verification":
+            return `PRC verification failed: ${
+                data.verification_error || "Unknown error"
+            }`;
+        case "incomplete_broker_applications":
+            return `Incomplete broker applications: ${
+                data.incomplete_count ?? "N/A"
+            }`;
+        case "daily_broker_summary":
+            return `Daily summary: ${data.new_applications ?? 0} new, ${
+                data.pending_applications ?? 0
+            } pending.`;
+        default:
+            return "New notification";
+    }
 };
 
 const formatDate = (dateString) => {

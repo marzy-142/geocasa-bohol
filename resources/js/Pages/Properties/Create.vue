@@ -317,19 +317,33 @@
                         v-if="enableGISMapping"
                         class="border border-gray-200 rounded-lg p-4 bg-gray-50"
                     >
-                        <MapLocationPicker
-                            v-model="coordinates"
-                            label="Property Location (GPS Coordinates)"
-                            :google-api-key="googleMapsApiKey"
-                            :error="
-                                errors.coordinates_lat || errors.coordinates_lng
+                        <PropertyLocationMap
+                            :lat="coordinates.lat"
+                            :lng="coordinates.lng"
+                            @update:lat="
+                                (v) => {
+                                    coordinates.lat = v;
+                                    form.coordinates_lat =
+                                        v != null ? v.toString() : '';
+                                }
+                            "
+                            @update:lng="
+                                (v) => {
+                                    coordinates.lng = v;
+                                    form.coordinates_lng =
+                                        v != null ? v.toString() : '';
+                                }
                             "
                             @location-selected="onLocationSelected"
+                            :show-controls="true"
+                            :enable-geolocate="true"
+                            :enable-search="true"
+                            :fit-bohol-bounds="true"
+                            height="520px"
                         />
                         <p class="text-xs text-gray-600 mt-2">
                             💡 Tip: Click on the map to set precise coordinates,
-                            or search for an address to auto-locate the
-                            property.
+                            or use "My Location".
                         </p>
                     </div>
 
@@ -1217,7 +1231,7 @@
 import { ref, computed, watch, nextTick } from "vue";
 import { useForm, usePage, Link } from "@inertiajs/vue3";
 import ModernDashboardLayout from "@/Layouts/ModernDashboardLayout.vue";
-import MapLocationPicker from "@/Components/MapLocationPicker.vue";
+import PropertyLocationMap from "@/Components/PropertyLocationMap.vue";
 import FileUpload from "@/Components/FileUpload.vue";
 import VirtualTourViewer360 from "@/Components/VirtualTourViewer360.vue";
 
@@ -1277,7 +1291,7 @@ const virtualTourFile = ref(null);
 const current360ImageUrl = ref("");
 const nearbyLandmarksText = ref("");
 
-// Map coordinates for the MapLocationPicker component
+// Map coordinates for the PropertyLocationMap component
 const coordinates = ref({
     lat: form.coordinates_lat ? parseFloat(form.coordinates_lat) : null,
     lng: form.coordinates_lng ? parseFloat(form.coordinates_lng) : null,

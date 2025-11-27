@@ -597,7 +597,8 @@ class CommunicationWorkflowService
                 );
 
                 // Update conversation title if needed
-                $newTitle = "Transaction: {$transaction->property->title} ({$transaction->status_label})";
+                $propertyTitle = $transaction->property?->title ?? 'Unknown Property';
+                $newTitle = "Transaction: {$propertyTitle} ({$transaction->status_label})";
                 if ($conversation->title !== $newTitle) {
                     $conversation->update(['title' => $newTitle]);
                 }

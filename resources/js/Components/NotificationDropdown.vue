@@ -108,7 +108,7 @@
                         <!-- Content -->
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-gray-900">
-                                {{ notification.data.message }}
+                                {{ getNotificationMessage(notification) }}
                             </p>
                             <p class="text-xs text-gray-500 mt-1">
                                 {{ formatDate(notification.created_at) }}
@@ -177,8 +177,12 @@ const props = defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 
-// Local reactive notifications state
-const localNotifications = ref([...props.notifications]);
+// Local reactive notifications state (guard against null/invalid shapes)
+// Some parents pass `notifications: null` or an object; ensure we always work with an array
+const initialNotifications = Array.isArray(props.notifications)
+    ? props.notifications
+    : [];
+const localNotifications = ref([...initialNotifications]);
 const hasNewNotification = ref(false);
 const newNotificationTimeout = ref(null);
 
@@ -186,7 +190,9 @@ const newNotificationTimeout = ref(null);
 watch(
     () => props.notifications,
     (newNotifications) => {
-        localNotifications.value = [...newNotifications];
+        localNotifications.value = Array.isArray(newNotifications)
+            ? [...newNotifications]
+            : [];
     },
     { deep: true }
 );
@@ -465,6 +471,11 @@ const getNotificationIcon = (type) => {
         new_message: "ChatBubbleBottomCenterTextIcon",
         broker_approval: "CheckCircleIcon",
         broker_assignment: "InboxIcon",
+        new_broker_application: "InboxIcon",
+        broker_application_status_change: "InboxIcon",
+        failed_prc_verification: "ExclamationTriangleIcon",
+        incomplete_broker_applications: "BellIcon",
+        daily_broker_summary: "BellIcon",
     };
     return icons[type] || "BellIcon";
 };
@@ -478,8 +489,43 @@ const getNotificationIconClass = (type) => {
         new_message: "bg-indigo-100 text-indigo-600",
         broker_approval: "bg-purple-100 text-purple-600",
         broker_assignment: "bg-orange-100 text-orange-600",
+        new_broker_application: "bg-blue-100 text-blue-600",
+        broker_application_status_change: "bg-blue-100 text-blue-600",
+        failed_prc_verification: "bg-red-100 text-red-600",
+        incomplete_broker_applications: "bg-gray-100 text-gray-600",
+        daily_broker_summary: "bg-gray-100 text-gray-600",
     };
     return classes[type] || "bg-gray-100 text-gray-600";
+};
+
+// Build a human-readable message if backend didn't include one (legacy rows)
+const getNotificationMessage = (notification) => {
+    const data = notification.data || {};
+    if (data.message) return data.message;
+    switch (data.type) {
+        case "new_broker_application":
+            return `New broker application submitted: ${
+                data.applicant_name || "Unknown applicant"
+            }`;
+        case "broker_application_status_change":
+            return `Broker application status changed: ${
+                data.old_status || "?"
+            } → ${data.new_status || "?"}`;
+        case "failed_prc_verification":
+            return `PRC verification failed: ${
+                data.verification_error || "Unknown error"
+            }`;
+        case "incomplete_broker_applications":
+            return `Incomplete broker applications: ${
+                data.incomplete_count ?? "N/A"
+            }`;
+        case "daily_broker_summary":
+            return `Daily summary: ${data.new_applications ?? 0} new, ${
+                data.pending_applications ?? 0
+            } pending.`;
+        default:
+            return "New notification";
+    }
 };
 
 const formatDate = (dateString) => {

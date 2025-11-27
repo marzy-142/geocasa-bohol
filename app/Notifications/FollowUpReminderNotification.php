@@ -73,7 +73,7 @@ class FollowUpReminderNotification extends Notification implements ShouldQueue, 
             ->subject('Follow-up Reminder: Unanswered Inquiry')
             ->greeting('Hello ' . $notifiable->name . '!')
             ->line('You have an unanswered inquiry that needs your attention.')
-            ->line('**Property:** ' . $inquiry->property->title)
+            ->line('**Property:** ' . ($inquiry->property?->title ?? 'Unknown Property'))
             ->line('**Client:** ' . $inquiry->client->name)
             ->line('**Inquiry Date:** ' . $inquiry->created_at->format('M j, Y g:i A'))
             ->line('**Time Since Inquiry:** ' . $hoursOld . ' hours ago')
